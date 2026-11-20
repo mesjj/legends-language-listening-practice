@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Oído — Spanish listening</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1><a href="episodes.html" class="home" title="All episodes">Oído</a></h1>
+    <a href="episodes.html" class="eplink">Episodes</a>
+    <select id="episode" aria-label="Episode"></select>
+    <a href="play.html" id="playLink" class="playlink">Play: dictation game</a>
+    <a href="rpg.html" id="rpgLink" class="playlink">Leyendas</a>
+  </div>
+  <div class="modes" role="radiogroup" aria-label="Transcript visibility">
+    <button role="radio" data-mode="hide" title="Hide everything; click a line to reveal it (H)">Hidden</button>
+    <button role="radio" data-mode="trail" title="Lines appear after you've heard them (H)">After hearing</button>
+    <button role="radio" data-mode="show" title="Show everything (H)">Shown</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section id="transcript" class="transcript" aria-label="Transcript" tabindex="-1"></section>
+
+  <aside class="panel" id="panel">
+    <nav class="tabs">
+      <button data-tab="study" class="on">Selection</button>
+      <button data-tab="saved">Saved <span id="savedCount"></span></button>
+      <button data-tab="keys">Keys</button>
+    </nav>
+
+    <div class="tab" data-tab="study">
+      <div id="selEmpty" class="empty">
+        <p>Select words in the transcript to loop, save, explain or turn into an Anki card. In hidden mode you can select the bars too.</p>
+      </div>
+      <div id="selBox" hidden>
+        <blockquote id="selText" class="sel-text"></blockquote>
+        <p class="sel-time" id="selTime"></p>
+        <div class="actions">
+          <button id="actPlay">Play</button>
+          <button id="actLoop">Loop</button>
+          <button id="actSave">Save</button>
+          <button id="actExplain">Explain</button>
+          <button id="actAnki">Anki card</button>
+        </div>
+        <form id="askForm" class="ask">
+          <input id="askInput" placeholder="Ask about this phrase (optional)…" autocomplete="off">
+        </form>
+        <div id="explainOut" class="explain" hidden></div>
+        <details class="fix">
+          <summary>Fix this line of the transcript</summary>
+          <textarea id="fixText" rows="3"></textarea>
+          <button id="fixSave">Save correction</button>
+          <button id="flagToggle" title="Mark this line as not matching the audio. Flagged lines are left out of the games until you fix them.">Flag: text doesn't match audio</button>
+        </details>
+        <details class="fix srcdetails" id="srcDetails">
+          <summary>Compare with Netflix and Whisper</summary>
+          <div class="srcbox" id="srcBox"></div>
+        </details>
+      </div>
+    </div>
+
+    <div class="tab" data-tab="saved" hidden>
+      <div class="saved-tools">
+        <label><input type="checkbox" id="showHard" checked> Missed lines</label>
+        <label><input type="checkbox" id="showSaved" checked> Saved phrases</label>
+        <button id="exportTsv" title="Tab-separated file you can import into Anki">Export TSV</button>
+      </div>
+      <ol id="savedList" class="saved-list"></ol>
+    </div>
+
+    <div class="tab keys" data-tab="keys" hidden>
+      <dl>
+        <dt>Space</dt><dd>Play / pause</dd>
+        <dt>←  ⇧←  ⌥←</dt><dd>Back 5 / 10 / 20 s</dd>
+        <dt>→</dt><dd>Forward 5 s</dd>
+        <dt>R</dt><dd>Replay current line</dd>
+        <dt>T</dt><dd>Reveal current line</dd>
+        <dt>X</dt><dd>Mark current line as missed</dd>
+        <dt>L</dt><dd>Loop current line (or selection)</dd>
+        <dt>Esc</dt><dd>Stop looping</dd>
+        <dt>P</dt><dd>Pause after every line</dd>
+        <dt>[  ]</dt><dd>Slower / faster</dd>
+        <dt>H</dt><dd>Cycle transcript visibility</dd>
+      </dl>
+    </div>
+  </aside>
+</main>
+
+<footer class="transport" aria-label="Player">
+  <div class="loopbar" id="loopbar" hidden>
+    <span id="loopLabel"></span>
+    <label title="After each repeat, pause for as long as the clip so you can repeat it out loud">
+      <input type="checkbox" id="echo"> Pause to shadow
+    </label>
+    <button id="recBtn" title="Play the clip once while recording your voice">Record me</button>
+    <button id="mineBtn" hidden>Play mine</button>
+    <button id="compareBtn" hidden title="Original, then your recording">Compare</button>
+    <button id="loopStop">Stop loop</button>
+  </div>
+  <div class="row">
+    <div class="jumps">
+      <button data-jump="-20" title="Back 20 s (⌥←)">−20</button>
+      <button data-jump="-10" title="Back 10 s (⇧←)">−10</button>
+      <button data-jump="-5" title="Back 5 s (←)">−5</button>
+    </div>
+    <button id="playBtn" class="play" aria-label="Play">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path id="playIcon" d="M7 4l13 8-13 8z"/></svg>
+    </button>
+    <div class="jumps"><button data-jump="5" title="Forward 5 s (→)">+5</button></div>
+    <div class="scrub">
+      <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Position">
+      <span class="clock"><span id="cur">0:00</span> / <span id="dur">0:00</span></span>
+    </div>
+    <div class="opts">
+      <button id="pauseEach" title="Pause after every line (P)">Line by line</button>
+      <label class="speed">
+        <select id="speed" aria-label="Speed">
+          <option value="0.6">0.6×</option><option value="0.7">0.7×</option>
+          <option value="0.8">0.8×</option><option value="0.9">0.9×</option>
+          <option value="1" selected>1×</option><option value="1.1">1.1×</option>
+          <option value="1.25">1.25×</option>
+        </select>
+      </label>
+    </div>
+  </div>
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<audio id="audio" preload="auto"></audio>
+<script src="app.js" type="module"></script>
+</body>
+</html>

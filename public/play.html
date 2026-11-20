@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Oído — Dictado</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="play.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Oído</h1>
+    <a href="episodes.html">Episodes</a>
+    <a href="./" id="listenLink">Listen</a>
+    <span class="here">Play</span>
+    <a href="rpg.html" id="rpgLink">Leyendas</a>
+  </div>
+  <div class="stats" aria-live="polite">
+    <div class="stat" title="Level and points">
+      <span class="lvl" id="lvl">1</span>
+      <span class="xpbar"><span id="xpfill"></span></span>
+      <span class="small" id="xptxt">0 / 100</span>
+    </div>
+    <div class="stat" title="Perfect lines in a row multiply your points"><span class="big" id="combo">×1.0</span><span class="small">combo</span></div>
+    <div class="stat" title="Lines today / daily goal"><span class="big" id="today">0/20</span><span class="small">today</span></div>
+    <div class="stat" title="Days in a row you met the goal"><span class="big" id="streak">0</span><span class="small">day streak</span></div>
+  </div>
+</header>
+
+<section class="map" aria-label="Episode progress">
+  <div class="map-strip" id="map"></div>
+  <div class="map-legend">
+    <span id="mapTxt"></span>
+    <span><i class="k perfect"></i>perfect <i class="k good"></i>good <i class="k rough"></i>rough</span>
+  </div>
+</section>
+
+<main class="stage">
+  <div class="modes" role="radiogroup" aria-label="Game mode">
+    <button role="radio" data-mode="dictation" title="Type the whole line">Dictation</button>
+    <button role="radio" data-mode="cloze" title="Fill in the missing words">Fill the gaps</button>
+  </div>
+
+  <article class="card" id="card">
+    <p class="when" id="when"></p>
+
+    <div class="controls">
+      <button id="playLine" class="play" aria-label="Play line (Tab)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>
+      </button>
+      <button id="slowLine" title="Play at 0.7× (Shift+Tab). Costs 15%">Slow</button>
+      <button id="hintBtn" title="Show each word's first letter. Costs 30%">Hint</button>
+      <span class="cost" id="cost">100%</span>
+    </div>
+
+    <div id="skeleton" class="skeleton" hidden></div>
+    <div id="clozeLine" class="cloze" hidden></div>
+    <textarea id="answer" class="answer" rows="2" placeholder="Type what you hear…" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+
+    <div class="row">
+      <button class="flagBtn" title="The text doesn't match the audio (wrong words, or the clip plays the wrong bit). Removes the line from the games and undoes its score.">Text doesn't match audio</button>
+      <button id="skipBtn">Skip</button>
+      <button id="checkBtn" class="primary">Check <kbd>Enter</kbd></button>
+    </div>
+
+    <div id="result" class="result" hidden>
+      <div class="diff" id="diff"></div>
+      <div class="score"><span id="gain"></span><span id="verdict"></span></div>
+      <div class="row">
+        <button id="againBtn">Hear it again</button>
+        <button id="missBtn">Add to missed lines</button>
+        <button id="explainBtn">Explain</button>
+        <button id="ankiBtn" title="Audio on the front; text and Claude's explanation on the back. Needs Anki open with AnkiConnect">Anki card</button>
+        <button class="flagBtn" title="The text doesn't match the audio (wrong words, or the clip plays the wrong bit). Removes the line from the games and undoes its score.">Text doesn't match audio</button>
+        <button id="nextBtn" class="primary">Next <kbd>Enter</kbd></button>
+      </div>
+      <div id="explainOut" class="explain" hidden></div>
+    </div>
+  </article>
+
+  <p class="help">Tab replays the line, Shift+Tab plays it slowly. Accents and punctuation don't count against you.</p>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<audio id="audio" preload="auto"></audio>
+<script src="play.js" type="module"></script>
+</body>
+</html>

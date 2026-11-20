@@ -1,0 +1,20 @@
+# dependencies and local tools
+node_modules/
+.venv/
+__pycache__/
+.lpc-cache/
+models/
+.env
+.DS_Store
+
+# personal: saved lines, explanations, source documents, the owner's server
+data/
+external-data/
+deploy/
+
+# episodes: only the built-in irregular-verbs course is shared; add your own under media/<id>/
+media/*
+!media/verbos-irregulares/
+media/*/audio16k.wav
+media/*/whisper*.json
+scripts/i18n/strings.json

@@ -1,0 +1,538 @@
+{
+ "sets": {
+  "sombrero": [
+   "arriero",
+   "mohan"
+  ],
+  "ruana": [
+   "arriero",
+   "mohan",
+   "laguna"
+  ],
+  "faja": [
+   "arriero"
+  ],
+  "alpargatas": [
+   "arriero",
+   "mohan",
+   "yogui",
+   "bachue"
+  ],
+  "mascara": [
+   "cacique",
+   "laguna"
+  ],
+  "amuleto": [
+   "cacique",
+   "yogui",
+   "laguna",
+   "origen",
+   "bachue",
+   "luzclara",
+   "dorado"
+  ],
+  "baston": [
+   "cacique",
+   "bachue"
+  ],
+  "brazales": [
+   "cacique",
+   "mohan",
+   "guardian",
+   "laguna"
+  ],
+  "yelmo": [
+   "centinela",
+   "trueno",
+   "condor",
+   "nevado"
+  ],
+  "cota": [
+   "centinela",
+   "nevado"
+  ],
+  "escudotribal": [
+   "centinela"
+  ],
+  "guanteletes": [
+   "centinela",
+   "averno",
+   "condor",
+   "nevado"
+  ],
+  "grebas": [
+   "centinela",
+   "averno",
+   "guardian",
+   "condor",
+   "montana"
+  ],
+  "garras": [
+   "patasola",
+   "cienaga"
+  ],
+  "capucha": [
+   "patasola",
+   "jaguar",
+   "cienaga",
+   "bachue"
+  ],
+  "sortija": [
+   "patasola",
+   "origen",
+   "kalachakra",
+   "madreagua"
+  ],
+  "botas": [
+   "patasola",
+   "jaguar",
+   "cienaga"
+  ],
+  "arcocurvo": [
+   "jaguar"
+  ],
+  "jubon": [
+   "jaguar",
+   "vajra",
+   "kalachakra"
+  ],
+  "guantes": [
+   "jaguar",
+   "vajra"
+  ],
+  "gaban": [
+   "cienaga",
+   "vientos"
+  ],
+  "tridente": [
+   "mohan"
+  ],
+  "panoleta": [
+   "yogui",
+   "vientos",
+   "luzclara"
+  ],
+  "tunica": [
+   "yogui",
+   "origen",
+   "bachue",
+   "luzclara"
+  ],
+  "cordon": [
+   "yogui"
+  ],
+  "cetro": [
+   "vajra",
+   "kalachakra"
+  ],
+  "corona": [
+   "vajra",
+   "origen",
+   "kalachakra"
+  ],
+  "cadena": [
+   "vajra"
+  ],
+  "yelmocornudo": [
+   "averno",
+   "montana"
+  ],
+  "coraza": [
+   "averno",
+   "condor",
+   "montana"
+  ],
+  "mandoble": [
+   "averno"
+  ],
+  "cinturonplacas": [
+   "averno",
+   "montana"
+  ],
+  "lanzalarga": [
+   "trueno"
+  ],
+  "lorica": [
+   "trueno",
+   "sol"
+  ],
+  "munequeras": [
+   "trueno"
+  ],
+  "botasmontar": [
+   "trueno",
+   "nevado"
+  ],
+  "almete": [
+   "sol"
+  ],
+  "espada": [
+   "sol",
+   "vientos"
+  ],
+  "escudocruz": [
+   "sol"
+  ],
+  "botaspunta": [
+   "sol",
+   "luzclara"
+  ],
+  "cascobarbaro": [
+   "guardian"
+  ],
+  "hacha": [
+   "guardian"
+  ],
+  "tabardo": [
+   "guardian"
+  ],
+  "cinto": [
+   "guardian"
+  ],
+  "arco": [
+   "laguna"
+  ],
+  "espadon": [
+   "condor",
+   "nevado"
+  ],
+  "arcolargo": [
+   "origen"
+  ],
+  "botasviaje": [
+   "origen",
+   "vientos"
+  ],
+  "guantescetrero": [
+   "vientos"
+  ],
+  "fajin": [
+   "vientos"
+  ],
+  "mangual": [
+   "montana"
+  ],
+  "pavés": [
+   "montana"
+  ],
+  "medallon": [
+   "kalachakra"
+  ],
+  "zapatos": [
+   "kalachakra"
+  ],
+  "bastonruna": [
+   "luzclara"
+  ],
+  "anillo": [
+   "luzclara"
+  ],
+  "yelmohueso": [
+   "osario"
+  ],
+  "petohueso": [
+   "osario"
+  ],
+  "guadanahueso": [
+   "osario"
+  ],
+  "brazaleshueso": [
+   "osario"
+  ],
+  "botashueso": [
+   "osario"
+  ],
+  "yelmoesmeralda": [
+   "tairona"
+  ],
+  "cotaesmeralda": [
+   "tairona"
+  ],
+  "estoqueesmeralda": [
+   "tairona"
+  ],
+  "guantesesmeralda": [
+   "tairona"
+  ],
+  "fajaesmeralda": [
+   "tairona"
+  ],
+  "yelmotumbaga": [
+   "dorado",
+   "madreagua"
+  ],
+  "corazatumbaga": [
+   "dorado"
+  ],
+  "baculotumbaga": [
+   "dorado"
+  ],
+  "grebastumbaga": [
+   "dorado"
+  ],
+  "cintotumbaga": [
+   "dorado"
+  ],
+  "corazacatatumbo": [
+   "madreagua",
+   "relampago"
+  ],
+  "lanzatumbaga": [
+   "madreagua"
+  ],
+  "guantestumbaga": [
+   "madreagua"
+  ],
+  "botascatatumbo": [
+   "madreagua",
+   "relampago"
+  ],
+  "yelmocatatumbo": [
+   "relampago"
+  ],
+  "martillocatatumbo": [
+   "relampago"
+  ],
+  "guantescatatumbo": [
+   "relampago"
+  ],
+  "yelmoluna": [
+   "vigilia"
+  ],
+  "mantoluna": [
+   "vigilia"
+  ],
+  "arcoluna": [
+   "vigilia"
+  ],
+  "rodelaluna": [
+   "vigilia"
+  ],
+  "brazalesluna": [
+   "vigilia"
+  ],
+  "zapatosluna": [
+   "vigilia"
+  ],
+  "yelmosombra": [
+   "pacto",
+   "caiman"
+  ],
+  "corazasombra": [
+   "pacto",
+   "caiman"
+  ],
+  "mandoblesombra": [
+   "pacto"
+  ],
+  "guantessombra": [
+   "pacto",
+   "caiman"
+  ],
+  "pezunassombra": [
+   "pacto",
+   "caiman"
+  ],
+  "cintosombra": [
+   "pacto"
+  ],
+  "mangualsombra": [
+   "caiman"
+  ],
+  "escudoastral": [
+   "caiman",
+   "firmamento"
+  ],
+  "capiroteastral": [
+   "firmamento",
+   "andes"
+  ],
+  "vestiduraastral": [
+   "firmamento",
+   "andes"
+  ],
+  "espadaastral": [
+   "firmamento"
+  ],
+  "guantesastral": [
+   "firmamento",
+   "andes"
+  ],
+  "zapatillasastral": [
+   "firmamento",
+   "andes"
+  ],
+  "arcoastral": [
+   "andes"
+  ],
+  "fajinastral": [
+   "andes"
+  ]
+ },
+ "uniques": {
+  "daga": [
+   "Mordisco de Tigrillo"
+  ],
+  "machete": [
+   "El Desyerbador"
+  ],
+  "honda": [
+   "Honda de Pastorcito"
+  ],
+  "capucha": [
+   "Capucha del Monaguillo"
+  ],
+  "ruana": [
+   "Ruana de la Abuela"
+  ],
+  "alpargatas": [
+   "Alpargatas del Peregrino"
+  ],
+  "varita": [
+   "Varita de Guadua"
+  ],
+  "faja": [
+   "Faja del Trapiche"
+  ],
+  "sombrero": [
+   "Sombrero de Doce Vueltas"
+  ],
+  "anillo": [
+   "Anillo del Guaquero"
+  ],
+  "latigo": [
+   "Látigo del Arriero Bravo"
+  ],
+  "guantes": [
+   "Guantes del Escribano"
+  ],
+  "hacha": [
+   "Hacha del Leñador Sordo"
+  ],
+  "arco": [
+   "Arco de la Cazadora",
+   "Arco del Pescador de Luna",
+   "Arco de las Siete Lunas"
+  ],
+  "collar": [
+   "Collar de Chaquiras"
+  ],
+  "mascara": [
+   "Máscara del Carnaval"
+  ],
+  "maza": [
+   "Maza del Cacique"
+  ],
+  "botasviaje": [
+   "Botas del Cartero"
+  ],
+  "jubon": [
+   "Jubón del Contrabandista"
+  ],
+  "orbe": [
+   "Orbe del Oráculo"
+  ],
+  "mandoble": [
+   "Mandoble del Juramento"
+  ],
+  "casco": [
+   "Oído de la Montaña"
+  ],
+  "sortija": [
+   "Sortija de la Novia Triste"
+  ],
+  "ballesta": [
+   "Ballesta del Centinela"
+  ],
+  "pavés": [
+   "Pavés de la Muralla"
+  ],
+  "coraza": [
+   "Coraza del Volcán"
+  ],
+  "guadana": [
+   "Guadaña de la Llorona"
+  ],
+  "espada": [
+   "La Mocha"
+  ],
+  "garras": [
+   "Uñas del Mohán"
+  ],
+  "mangual": [
+   "Campanario de Mompox"
+  ],
+  "espadon": [
+   "Espada del Libertador Cansado"
+  ],
+  "martillo": [
+   "Mazo del Trapiche"
+  ],
+  "alabarda": [
+   "Guardia del Virrey"
+  ],
+  "tridente": [
+   "Arpón de Taganga"
+  ],
+  "hachagrande": [
+   "Hacha del Pirata Ciego"
+  ],
+  "baston": [
+   "Bastón del Taita"
+  ],
+  "arcolargo": [
+   "Arco del Último Muisca",
+   "El Vigía del Páramo"
+  ],
+  "arcocurvo": [
+   "Arco de la Madremonte",
+   "Arco de Bochica",
+   "La Flecha que Vuelve"
+  ],
+  "bastonruna": [
+   "Báculo del Páramo Eterno"
+  ],
+  "rodela": [
+   "Rodela del Cimarrón"
+  ],
+  "escudo": [
+   "Escudo de San Jorge"
+  ],
+  "escudotribal": [
+   "Caparazón de Morrocoy"
+  ],
+  "yelmo": [
+   "Yelmo del Conquistador Perdido"
+  ],
+  "tunica": [
+   "Túnica de la Monja Alférez"
+  ],
+  "cota": [
+   "Cota del Fraile Guerrero"
+  ],
+  "brazales": [
+   "Brazales de la Tejedora"
+  ],
+  "guanteletes": [
+   "Guanteletes del Capataz"
+  ],
+  "botas": [
+   "Botas de Siete Leguas"
+  ],
+  "grebas": [
+   "Grebas del Puente de Boyacá"
+  ],
+  "cinturon": [
+   "Cinturón del Contrabando"
+  ],
+  "cinturonplacas": [
+   "Cincha del Caballo de Bolívar"
+  ],
+  "amuleto": [
+   "Amuleto de la Lechuza"
+  ],
+  "corona": [
+   "Corona del Dorado"
+  ]
+ }
+}

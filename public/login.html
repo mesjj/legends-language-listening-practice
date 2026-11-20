@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Leyendas</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --night: #16130f; --panel: #211c16; --edge: #3f3529; --text: #e8dfca; --dim: #9c907a; --gold: #d6a84c; --miss: #e2554d; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 18px;
+    background: radial-gradient(ellipse at 50% 0%, #2a2018 0%, var(--night) 60%) fixed;
+    color: var(--text); font: 17px/1.45 "Alegreya Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+  }
+  main { width: 100%; max-width: 360px; }
+  h1 { font: 700 44px/1 "Alegreya", Georgia, serif; color: var(--gold); margin: 0 0 6px; letter-spacing: .01em; }
+  p.lead { color: var(--dim); margin: 0 0 28px; }
+  label { display: block; margin-bottom: 16px; color: var(--dim); font-size: 15px; }
+  input {
+    display: block; width: 100%; margin-top: 6px; padding: 13px 14px; font: inherit; font-size: 18px; color: var(--text);
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 6px;
+  }
+  input:focus { outline: none; border-color: var(--gold); }
+  button {
+    width: 100%; margin-top: 8px; padding: 14px; font: 700 18px "Alegreya Sans", sans-serif; cursor: pointer;
+    background: #5a3d16; border: 1px solid var(--gold); color: #fbe9c0; border-radius: 6px;
+  }
+  button:disabled { opacity: .6; }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .err { color: var(--miss); min-height: 1.5em; margin: 12px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Leyendas</h1>
+  <p class="lead">Cada golpe es una frase que escuchas.</p>
+  <form id="f">
+    <label>Usuario <input id="u" name="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
+    <label>Contraseña <input id="p" name="password" type="password" autocomplete="current-password" required></label>
+    <button id="go">Entrar</button>
+    <p class="err" id="err" role="alert"></p>
+  </form>
+</main>
+<script>
+  const f = document.getElementById("f"), go = document.getElementById("go"), err = document.getElementById("err");
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    go.disabled = true; err.textContent = "";
+    try {
+      const r = await fetch("api/login", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user: f.username.value, pass: f.password.value }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "No se pudo entrar.");
+      location.replace("rpg.html");
+    } catch (x) { err.textContent = x.message; go.disabled = false; }
+  };
+</script>
+</body>
+</html>

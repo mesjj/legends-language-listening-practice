@@ -1,0 +1,10 @@
+Fight backdrops for Leyendas (scripts/build_scenes.py).
+
+Ground and scenery tiles (water, grass, grassalt, watergrass, dirt, dirt2, lava, lavarock, rock, trunk, treetop, castlewalls,
+castlefloors_outside) and village props (barrel, buckets, cabinets, castle_lightsources, chests, country, kitchen, signs, victoria), tinted: LPC Base Assets by Lanea Zimmerman (Sharm),
+Liberated Pixel Cup. CC-BY-SA 3.0 / GPL 3.0 / OGA-BY 3.0.
+https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
+
+Skies, mountains, mist, treelines, mangroves, reeds, frailejones, moriche palms, fire, smoke, vines, leaves,
+the stone guardians and the stalactites; in the village the houses, walls, floors, stall, card table,
+the bohío, the lagoon, the tunjos, the woven cloth, the sombrero, balance, coins, the copper still and the jeweller's room: original, drawn in code for Leyendas.

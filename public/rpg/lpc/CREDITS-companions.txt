@@ -1,0 +1,6 @@
+Pets and mounts in Leyendas (public/rpg/lpc/companions/)
+
+pet-*.png: the shiba from "[LPC] bears, deer, lions and more" by tapatilorenzo, bluecarrot16, Sevarihk (dog: Sevarihk),
+  CC-BY 4.0, https://opengameart.org/content/lpc-bears-deer-lions-and-more. One frame, recoloured into five coats.
+mount-*.png: "[LPC] Horses" by bluecarrot16, CC-BY 3.0 / GPL 3.0 / GPL 2.0 / OGA-BY 3.0,
+  https://opengameart.org/content/lpc-horses (in the style of daneeklu's LPC farm animals). One standing frame of each colour.

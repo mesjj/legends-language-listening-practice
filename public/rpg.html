@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Leyendas</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="rpg/rpg.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Leyendas</h1>
+    <nav>
+      <a href="episodes.html">Episodios</a>
+      <a href="./" id="listenLink">Escuchar</a>
+      <a href="play.html" id="dictLink">Dictado</a>
+      <a href="bestiario.html">Bestiario</a>
+    </nav>
+  </div>
+  <div class="topright">
+    <label class="epsel">Audio <select id="episode"></select></label>
+    <button id="muteBtn" class="ghost" title="Efectos de sonido (M)">Sonido</button>
+    <button id="musicBtn" class="ghost" title="Música de fondo: una para la aldea y otra para cada zona">Música: no</button>
+    <button id="charBtn" class="ghost" title="Personaje (C)">Personaje</button>
+    <button id="invBtn" class="ghost" title="Inventario (I)">Inventario</button>
+    <button id="optBtn" class="ghost" title="Opciones: qué recoger del suelo">Opciones</button>
+    <button id="langBtn" class="ghost" translate="no" title="Idioma del juego / Game language">English</button>
+  </div>
+</header>
+
+<main id="screen"></main>
+
+<!-- HUD: life, belt, weapon sets, xp, mana -->
+<footer class="hud" id="hud" hidden>
+  <div class="orb life" id="lifeOrb" title="Vida"><div class="fill"></div><span></span></div>
+  <div class="hud-mid">
+    <div class="hud-row">
+      <div class="belt" id="belt" aria-label="Pociones"></div>
+      <div class="spells" id="spells" aria-label="Hechizos" hidden></div>
+      <button class="swap" id="swapBtn" title="Cambiar de arma (Alt+S)"></button>
+    </div>
+    <div class="xp" title="Experiencia"><div class="xpfill" id="xpFill"></div><span id="xpTxt"></span></div>
+  </div>
+  <div class="orb mana" id="manaOrb" title="Maná"><div class="fill"></div><span></span></div>
+</footer>
+
+<aside class="drawer" id="charPanel" hidden aria-label="Personaje"></aside>
+<aside class="drawer right" id="invPanel" hidden aria-label="Inventario"></aside>
+<aside class="drawer right srcpanel" id="srcPanel" hidden aria-label="Netflix y Whisper">
+  <div class="ptitle"><div>Netflix y Whisper</div><button class="x" id="srcClose" aria-label="Cerrar">×</button></div>
+  <div id="srcBody"></div>
+</aside>
+
+<div class="tip" id="tip" hidden></div>
+<div class="menu" id="menu" hidden></div>
+<div class="toast" id="toast" role="status"></div>
+<audio id="audio" preload="auto"></audio>
+<script type="module" src="rpg/main.js"></script>
+</body>
+</html>

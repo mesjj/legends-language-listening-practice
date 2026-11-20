@@ -1,0 +1,6164 @@
+{
+ "id": "verbos-irregulares",
+ "title": "Verbos irregulares",
+ "show": "How to Learn the Horrible List",
+ "source": "external-data/How To Learn the Horrible List - Irregular Verbs-1.pdf (Yolanda Giménez Ballesteros, 2010)",
+ "voice": "933563129e564b19a115bedd57b7406a",
+ "zones": [
+  {
+   "id": "verbos-1",
+   "name": "Verbos importantes",
+   "verbs": [
+    "be",
+    "do",
+    "have",
+    "come",
+    "get",
+    "go",
+    "make",
+    "say",
+    "tell"
+   ]
+  },
+  {
+   "id": "verbos-2",
+   "name": "Percepción y verbos que no cambian",
+   "verbs": [
+    "hear",
+    "see",
+    "smell",
+    "cost",
+    "cut",
+    "hit",
+    "hurt",
+    "let",
+    "put",
+    "read",
+    "shut"
+   ]
+  },
+  {
+   "id": "verbos-3",
+   "name": "I – E / O – E / I – EN (1)",
+   "verbs": [
+    "bite",
+    "break",
+    "choose",
+    "drive",
+    "eat",
+    "fall",
+    "forget",
+    "forgive",
+    "freeze",
+    "give"
+   ]
+  },
+  {
+   "id": "verbos-4",
+   "name": "I – E / O – E / I – EN (2)",
+   "verbs": [
+    "hide",
+    "ride",
+    "rise",
+    "shake",
+    "speak",
+    "steal",
+    "take",
+    "wake up",
+    "write"
+   ]
+  },
+  {
+   "id": "verbos-5",
+   "name": "I / U – A / U y AW – OW / EW / OWN",
+   "verbs": [
+    "begin",
+    "drink",
+    "ring",
+    "sing",
+    "swing",
+    "swim",
+    "blow",
+    "draw",
+    "fly",
+    "grow",
+    "know",
+    "throw"
+   ]
+  },
+  {
+   "id": "verbos-6",
+   "name": "-AUGHT / -OUGHT y -STOOD",
+   "verbs": [
+    "bring",
+    "buy",
+    "catch",
+    "fight",
+    "teach",
+    "think",
+    "stand",
+    "understand"
+   ]
+  },
+  {
+   "id": "verbos-7",
+   "name": "-EE- / -E- y -D / -T",
+   "verbs": [
+    "bleed",
+    "feed",
+    "feel",
+    "keep",
+    "meet",
+    "sleep",
+    "sweep",
+    "build",
+    "lend",
+    "send",
+    "spend"
+   ]
+  },
+  {
+   "id": "verbos-8",
+   "name": "-T / -T",
+   "verbs": [
+    "burn",
+    "dream",
+    "learn",
+    "leave",
+    "light",
+    "lose",
+    "mean",
+    "shoot",
+    "sit",
+    "spell"
+   ]
+  },
+  {
+   "id": "verbos-9",
+   "name": "Variados",
+   "verbs": [
+    "become",
+    "find",
+    "hang",
+    "hold",
+    "lay",
+    "lie",
+    "pay",
+    "run",
+    "sell",
+    "shine",
+    "show",
+    "wear",
+    "win"
+   ]
+  }
+ ],
+ "groups": [
+  {
+   "name": "Verbos importantes",
+   "verbs": [
+    {
+     "v": "be",
+     "past": "was / were",
+     "pp": "been",
+     "es": "ser, estar",
+     "x": [
+      {
+       "s": "We were at home all day.",
+       "f": "were",
+       "h": "estuvimos",
+       "t": "Estuvimos en casa todo el día.",
+       "g": [
+        [
+         "at home",
+         "en casa"
+        ],
+        [
+         "all day",
+         "todo el día"
+        ]
+       ]
+      },
+      {
+       "s": "The museum was closed on Monday.",
+       "f": "was",
+       "h": "estaba",
+       "t": "El museo estaba cerrado el lunes.",
+       "g": [
+        [
+         "museum",
+         "museo"
+        ],
+        [
+         "closed",
+         "cerrado"
+        ],
+        [
+         "on Monday",
+         "el lunes"
+        ]
+       ]
+      },
+      {
+       "s": "Where were you last night?",
+       "f": "were",
+       "h": "estabas",
+       "t": "¿Dónde estabas anoche?",
+       "g": [
+        [
+         "where",
+         "dónde"
+        ],
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "last night",
+         "anoche"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "do",
+     "past": "did",
+     "pp": "done",
+     "es": "hacer",
+     "x": [
+      {
+       "s": "She did her homework after dinner.",
+       "f": "did",
+       "h": "hizo",
+       "t": "Hizo sus tareas después de la cena.",
+       "g": [
+        [
+         "her",
+         "su, sus (de ella)"
+        ],
+        [
+         "homework",
+         "tareas, deberes"
+        ],
+        [
+         "after",
+         "después de"
+        ],
+        [
+         "dinner",
+         "cena"
+        ]
+       ]
+      },
+      {
+       "s": "We did the shopping at the supermarket.",
+       "f": "did",
+       "h": "hicimos",
+       "t": "Hicimos las compras en el supermercado.",
+       "g": [
+        [
+         "the shopping",
+         "las compras"
+        ],
+        [
+         "at the supermarket",
+         "en el supermercado"
+        ]
+       ]
+      },
+      {
+       "s": "Have you done your homework?",
+       "f": "have done",
+       "h": "has hecho",
+       "t": "¿Has hecho tus tareas?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "your homework",
+         "tus tareas"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "have",
+     "past": "had",
+     "pp": "had",
+     "es": "tener; tomar (comida)",
+     "x": [
+      {
+       "s": "We had a big breakfast this morning.",
+       "f": "had",
+       "h": "tomamos",
+       "t": "Tomamos un desayuno grande esta mañana.",
+       "g": [
+        [
+         "big",
+         "grande"
+        ],
+        [
+         "breakfast",
+         "desayuno"
+        ],
+        [
+         "this morning",
+         "esta mañana"
+        ]
+       ]
+      },
+      {
+       "s": "She had long hair when she was a child.",
+       "f": "had",
+       "h": "tenía",
+       "t": "Tenía el pelo largo cuando era niña.",
+       "g": [
+        [
+         "long",
+         "largo"
+        ],
+        [
+         "hair",
+         "pelo, cabello"
+        ],
+        [
+         "when",
+         "cuando"
+        ],
+        [
+         "she was a child",
+         "era niña"
+        ]
+       ]
+      },
+      {
+       "s": "We had a great time at the party.",
+       "f": "had",
+       "h": "la pasamos",
+       "t": "La pasamos muy bien en la fiesta.",
+       "g": [
+        [
+         "a great time",
+         "un rato genial (have a great time: pasarla muy bien)"
+        ],
+        [
+         "at the party",
+         "en la fiesta"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "come",
+     "past": "came",
+     "pp": "come",
+     "es": "venir",
+     "x": [
+      {
+       "s": "My cousin came to the party with her dog.",
+       "f": "came",
+       "h": "vino",
+       "t": "Mi prima vino a la fiesta con su perro.",
+       "g": [
+        [
+         "my",
+         "mi"
+        ],
+        [
+         "cousin",
+         "primo, prima"
+        ],
+        [
+         "to the party",
+         "a la fiesta"
+        ],
+        [
+         "with",
+         "con"
+        ],
+        [
+         "her",
+         "su (de ella)"
+        ],
+        [
+         "dog",
+         "perro"
+        ]
+       ]
+      },
+      {
+       "s": "Our neighbors came for dinner on Saturday.",
+       "f": "came",
+       "h": "vinieron",
+       "t": "Nuestros vecinos vinieron a cenar el sábado.",
+       "g": [
+        [
+         "our neighbors",
+         "nuestros vecinos"
+        ],
+        [
+         "for dinner",
+         "a cenar"
+        ],
+        [
+         "on Saturday",
+         "el sábado"
+        ]
+       ]
+      },
+      {
+       "s": "Spring has come early this year.",
+       "f": "has come",
+       "h": "ha llegado",
+       "t": "La primavera ha llegado pronto este año.",
+       "g": [
+        [
+         "spring",
+         "primavera"
+        ],
+        [
+         "early",
+         "temprano, pronto"
+        ],
+        [
+         "this year",
+         "este año"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "get",
+     "past": "got",
+     "pp": "got",
+     "es": "conseguir, recibir, llegar",
+     "x": [
+      {
+       "s": "I got a letter from my grandmother.",
+       "f": "got",
+       "h": "recibí",
+       "t": "Recibí una carta de mi abuela.",
+       "g": [
+        [
+         "letter",
+         "carta"
+        ],
+        [
+         "from",
+         "de"
+        ],
+        [
+         "grandmother",
+         "abuela"
+        ]
+       ]
+      },
+      {
+       "s": "We got home very late after the concert.",
+       "f": "got",
+       "h": "llegamos",
+       "t": "Llegamos a casa muy tarde después del concierto.",
+       "g": [
+        [
+         "home",
+         "a casa"
+        ],
+        [
+         "very late",
+         "muy tarde"
+        ],
+        [
+         "after",
+         "después de"
+        ],
+        [
+         "concert",
+         "concierto"
+        ]
+       ]
+      },
+      {
+       "s": "He got a new job in the city.",
+       "f": "got",
+       "h": "consiguió",
+       "t": "Consiguió un trabajo nuevo en la ciudad.",
+       "g": [
+        [
+         "new job",
+         "trabajo nuevo"
+        ],
+        [
+         "in the city",
+         "en la ciudad"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "go",
+     "past": "went",
+     "pp": "gone",
+     "es": "ir",
+     "x": [
+      {
+       "s": "They have gone to the beach for the day.",
+       "f": "have gone",
+       "h": "se han ido",
+       "t": "Se han ido a la playa a pasar el día.",
+       "g": [
+        [
+         "to the beach",
+         "a la playa"
+        ],
+        [
+         "for the day",
+         "a pasar el día"
+        ]
+       ]
+      },
+      {
+       "s": "Last Sunday we went to the zoo with the kids.",
+       "f": "went",
+       "h": "fuimos",
+       "t": "El domingo pasado fuimos al zoológico con los niños.",
+       "g": [
+        [
+         "last Sunday",
+         "el domingo pasado"
+        ],
+        [
+         "to the zoo",
+         "al zoológico"
+        ],
+        [
+         "with the kids",
+         "con los niños"
+        ]
+       ]
+      },
+      {
+       "s": "She went to bed early last night.",
+       "f": "went",
+       "h": "se fue",
+       "t": "Anoche se fue a la cama temprano.",
+       "g": [
+        [
+         "to bed",
+         "a la cama"
+        ],
+        [
+         "early",
+         "temprano"
+        ],
+        [
+         "last night",
+         "anoche"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "make",
+     "past": "made",
+     "pp": "made",
+     "es": "hacer, fabricar",
+     "x": [
+      {
+       "s": "Dad made a chocolate cake for my birthday.",
+       "f": "made",
+       "h": "hizo",
+       "t": "Papá hizo una torta de chocolate para mi cumpleaños.",
+       "g": [
+        [
+         "dad",
+         "papá"
+        ],
+        [
+         "chocolate cake",
+         "torta de chocolate"
+        ],
+        [
+         "for",
+         "para"
+        ],
+        [
+         "birthday",
+         "cumpleaños"
+        ]
+       ]
+      },
+      {
+       "s": "I have made a lot of mistakes in this exercise.",
+       "f": "have made",
+       "h": "he cometido",
+       "t": "He cometido muchos errores en este ejercicio.",
+       "g": [
+        [
+         "a lot of",
+         "muchos"
+        ],
+        [
+         "mistakes",
+         "errores"
+        ],
+        [
+         "in this exercise",
+         "en este ejercicio"
+        ]
+       ]
+      },
+      {
+       "s": "Grandma made soup for everyone.",
+       "f": "made",
+       "h": "hizo",
+       "t": "La abuela hizo sopa para todos.",
+       "g": [
+        [
+         "grandma",
+         "abuela"
+        ],
+        [
+         "soup",
+         "sopa"
+        ],
+        [
+         "for everyone",
+         "para todos"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "say",
+     "past": "said",
+     "pp": "said",
+     "es": "decir",
+     "x": [
+      {
+       "s": "What did the teacher say?",
+       "f": "say",
+       "h": "dijo",
+       "t": "¿Qué dijo el profesor?",
+       "g": [
+        [
+         "what",
+         "qué"
+        ],
+        [
+         "did",
+         "auxiliar del pasado en preguntas (el verbo vuelve al infinitivo)"
+        ],
+        [
+         "teacher",
+         "profesor, profesora"
+        ]
+       ]
+      },
+      {
+       "s": "He said goodbye and closed the door.",
+       "f": "said",
+       "h": "dijo",
+       "t": "Dijo adiós y cerró la puerta.",
+       "g": [
+        [
+         "goodbye",
+         "adiós"
+        ],
+        [
+         "and",
+         "y"
+        ],
+        [
+         "closed",
+         "cerró"
+        ],
+        [
+         "door",
+         "puerta"
+        ]
+       ]
+      },
+      {
+       "s": "She said that she was very happy.",
+       "f": "said",
+       "h": "dijo",
+       "t": "Dijo que estaba muy feliz.",
+       "g": [
+        [
+         "that",
+         "que"
+        ],
+        [
+         "she was",
+         "estaba"
+        ],
+        [
+         "very happy",
+         "muy feliz"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "tell",
+     "past": "told",
+     "pp": "told",
+     "es": "decir, contar",
+     "x": [
+      {
+       "s": "She told me a funny story.",
+       "f": "told",
+       "h": "contó",
+       "t": "Me contó una historia divertida.",
+       "g": [
+        [
+         "me",
+         "me, a mí"
+        ],
+        [
+         "funny",
+         "divertida, graciosa"
+        ],
+        [
+         "story",
+         "historia, cuento"
+        ]
+       ]
+      },
+      {
+       "s": "Have you told your parents the good news?",
+       "f": "have told",
+       "h": "les has contado",
+       "t": "¿Les has contado la buena noticia a tus papás?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "your parents",
+         "tus papás"
+        ],
+        [
+         "the good news",
+         "la buena noticia"
+        ]
+       ]
+      },
+      {
+       "s": "The doctor told me to rest.",
+       "f": "told",
+       "h": "dijo",
+       "t": "El médico me dijo que descansara.",
+       "g": [
+        [
+         "doctor",
+         "médico"
+        ],
+        [
+         "me",
+         "me, a mí"
+        ],
+        [
+         "to rest",
+         "que descansara"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Verbos de percepción",
+   "verbs": [
+    {
+     "v": "hear",
+     "past": "heard",
+     "pp": "heard",
+     "es": "oír",
+     "x": [
+      {
+       "s": "I heard a strange noise in the kitchen.",
+       "f": "heard",
+       "h": "oí",
+       "t": "Oí un ruido extraño en la cocina.",
+       "g": [
+        [
+         "strange",
+         "extraño, raro"
+        ],
+        [
+         "noise",
+         "ruido"
+        ],
+        [
+         "in the kitchen",
+         "en la cocina"
+        ]
+       ]
+      },
+      {
+       "s": "Have you heard the new song by that band?",
+       "f": "have heard",
+       "h": "has oído",
+       "t": "¿Has oído la nueva canción de esa banda?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "new song",
+         "nueva canción"
+        ],
+        [
+         "by",
+         "de"
+        ],
+        [
+         "that band",
+         "esa banda, ese grupo"
+        ]
+       ]
+      },
+      {
+       "s": "We heard the birds in the morning.",
+       "f": "heard",
+       "h": "oímos",
+       "t": "Oímos los pájaros por la mañana.",
+       "g": [
+        [
+         "birds",
+         "pájaros"
+        ],
+        [
+         "in the morning",
+         "por la mañana"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "see",
+     "past": "saw",
+     "pp": "seen",
+     "es": "ver",
+     "x": [
+      {
+       "s": "I have never seen the sea.",
+       "f": "have seen",
+       "h": "he visto",
+       "t": "Nunca he visto el mar.",
+       "g": [
+        [
+         "never",
+         "nunca"
+        ],
+        [
+         "sea",
+         "mar"
+        ]
+       ]
+      },
+      {
+       "s": "I saw an old friend at the train station.",
+       "f": "saw",
+       "h": "vi",
+       "t": "Vi a un viejo amigo en la estación de tren.",
+       "g": [
+        [
+         "old friend",
+         "viejo amigo"
+        ],
+        [
+         "at the train station",
+         "en la estación de tren"
+        ]
+       ]
+      },
+      {
+       "s": "Did you see the moon last night?",
+       "f": "see",
+       "h": "viste",
+       "t": "¿Viste la luna anoche?",
+       "g": [
+        [
+         "did",
+         "auxiliar del pasado en preguntas (el verbo vuelve al infinitivo)"
+        ],
+        [
+         "moon",
+         "luna"
+        ],
+        [
+         "last night",
+         "anoche"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "smell",
+     "past": "smelt",
+     "pp": "smelt",
+     "es": "oler",
+     "x": [
+      {
+       "s": "The kitchen smelt of fresh bread.",
+       "f": "smelt",
+       "h": "olía",
+       "t": "La cocina olía a pan recién hecho.",
+       "g": [
+        [
+         "kitchen",
+         "cocina"
+        ],
+        [
+         "of",
+         "a"
+        ],
+        [
+         "fresh bread",
+         "pan recién hecho"
+        ]
+       ]
+      },
+      {
+       "s": "The flowers in the garden smell wonderful.",
+       "f": "smell",
+       "h": "huelen",
+       "t": "Las flores del jardín huelen de maravilla.",
+       "g": [
+        [
+         "flowers",
+         "flores"
+        ],
+        [
+         "in the garden",
+         "del jardín"
+        ],
+        [
+         "wonderful",
+         "de maravilla"
+        ]
+       ]
+      },
+      {
+       "s": "The room smelt of smoke.",
+       "f": "smelt",
+       "h": "olía",
+       "t": "La habitación olía a humo.",
+       "g": [
+        [
+         "room",
+         "habitación, cuarto"
+        ],
+        [
+         "of smoke",
+         "a humo"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "No cambian",
+   "verbs": [
+    {
+     "v": "cost",
+     "past": "cost",
+     "pp": "cost",
+     "es": "costar",
+     "x": [
+      {
+       "s": "These shoes cost forty dollars.",
+       "f": "cost",
+       "h": "costaron",
+       "t": "Estos zapatos costaron cuarenta dólares.",
+       "g": [
+        [
+         "these",
+         "estos, estas"
+        ],
+        [
+         "shoes",
+         "zapatos"
+        ],
+        [
+         "forty",
+         "cuarenta"
+        ],
+        [
+         "dollars",
+         "dólares"
+        ]
+       ]
+      },
+      {
+       "s": "How much did your new phone cost?",
+       "f": "cost",
+       "h": "costó",
+       "t": "¿Cuánto costó tu celular nuevo?",
+       "g": [
+        [
+         "how much",
+         "cuánto"
+        ],
+        [
+         "did",
+         "auxiliar del pasado en preguntas"
+        ],
+        [
+         "your new phone",
+         "tu celular nuevo"
+        ]
+       ]
+      },
+      {
+       "s": "The tickets cost twenty dollars each.",
+       "f": "cost",
+       "h": "costaron",
+       "t": "Las entradas costaron veinte dólares cada una.",
+       "g": [
+        [
+         "tickets",
+         "entradas, boletas"
+        ],
+        [
+         "twenty dollars",
+         "veinte dólares"
+        ],
+        [
+         "each",
+         "cada una"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "cut",
+     "past": "cut",
+     "pp": "cut",
+     "es": "cortar",
+     "x": [
+      {
+       "s": "He cut his finger with a knife.",
+       "f": "cut",
+       "h": "se cortó",
+       "t": "Se cortó el dedo con un cuchillo.",
+       "g": [
+        [
+         "his",
+         "su (de él)"
+        ],
+        [
+         "finger",
+         "dedo"
+        ],
+        [
+         "with",
+         "con"
+        ],
+        [
+         "knife",
+         "cuchillo"
+        ]
+       ]
+      },
+      {
+       "s": "The hairdresser has cut my hair too short.",
+       "f": "has cut",
+       "h": "ha cortado",
+       "t": "La peluquera me ha cortado el pelo demasiado corto.",
+       "g": [
+        [
+         "hairdresser",
+         "peluquero, peluquera"
+        ],
+        [
+         "my hair",
+         "mi pelo"
+        ],
+        [
+         "too short",
+         "demasiado corto"
+        ]
+       ]
+      },
+      {
+       "s": "She cut the bread into small pieces.",
+       "f": "cut",
+       "h": "cortó",
+       "t": "Cortó el pan en trozos pequeños.",
+       "g": [
+        [
+         "bread",
+         "pan"
+        ],
+        [
+         "into small pieces",
+         "en trozos pequeños"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "hit",
+     "past": "hit",
+     "pp": "hit",
+     "es": "golpear",
+     "x": [
+      {
+       "s": "The ball hit the window.",
+       "f": "hit",
+       "h": "golpeó",
+       "t": "La pelota golpeó la ventana.",
+       "g": [
+        [
+         "ball",
+         "pelota, balón"
+        ],
+        [
+         "window",
+         "ventana"
+        ]
+       ]
+      },
+      {
+       "s": "A car hit a tree on the main road.",
+       "f": "hit",
+       "h": "chocó",
+       "t": "Un carro chocó contra un árbol en la carretera principal.",
+       "g": [
+        [
+         "car",
+         "carro"
+        ],
+        [
+         "tree",
+         "árbol"
+        ],
+        [
+         "on the main road",
+         "en la carretera principal"
+        ]
+       ]
+      },
+      {
+       "s": "He hit his head on the door.",
+       "f": "hit",
+       "h": "se golpeó",
+       "t": "Se golpeó la cabeza con la puerta.",
+       "g": [
+        [
+         "his head",
+         "su cabeza (de él)"
+        ],
+        [
+         "on the door",
+         "con la puerta"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "hurt",
+     "past": "hurt",
+     "pp": "hurt",
+     "es": "doler, hacer daño",
+     "x": [
+      {
+       "s": "My back hurts after the long walk.",
+       "f": "hurts",
+       "h": "duele",
+       "t": "Me duele la espalda después de la larga caminata.",
+       "g": [
+        [
+         "my back",
+         "mi espalda"
+        ],
+        [
+         "after",
+         "después de"
+        ],
+        [
+         "long",
+         "largo, larga"
+        ],
+        [
+         "walk",
+         "caminata, paseo"
+        ]
+       ]
+      },
+      {
+       "s": "I fell and hurt my knee.",
+       "f": "hurt",
+       "h": "me lastimé",
+       "t": "Me caí y me lastimé la rodilla.",
+       "g": [
+        [
+         "I fell",
+         "me caí"
+        ],
+        [
+         "and",
+         "y"
+        ],
+        [
+         "my knee",
+         "mi rodilla"
+        ]
+       ]
+      },
+      {
+       "s": "Her words hurt me a lot.",
+       "f": "hurt",
+       "h": "dolieron",
+       "t": "Sus palabras me dolieron mucho.",
+       "g": [
+        [
+         "her words",
+         "sus palabras (de ella)"
+        ],
+        [
+         "me",
+         "me, a mí"
+        ],
+        [
+         "a lot",
+         "mucho"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "let",
+     "past": "let",
+     "pp": "let",
+     "es": "dejar, permitir",
+     "x": [
+      {
+       "s": "My parents let me stay up late.",
+       "f": "let",
+       "h": "dejaron",
+       "t": "Mis papás me dejaron quedarme despierto hasta tarde.",
+       "g": [
+        [
+         "my parents",
+         "mis papás, mis padres"
+        ],
+        [
+         "me",
+         "me, a mí"
+        ],
+        [
+         "stay up",
+         "quedarse despierto"
+        ],
+        [
+         "late",
+         "hasta tarde"
+        ]
+       ]
+      },
+      {
+       "s": "The teacher let us leave early on Friday.",
+       "f": "let",
+       "h": "nos dejó",
+       "t": "La profesora nos dejó salir temprano el viernes.",
+       "g": [
+        [
+         "teacher",
+         "profesor, profesora"
+        ],
+        [
+         "us",
+         "nos"
+        ],
+        [
+         "leave",
+         "salir, irse"
+        ],
+        [
+         "early",
+         "temprano"
+        ],
+        [
+         "on Friday",
+         "el viernes"
+        ]
+       ]
+      },
+      {
+       "s": "Let me help you with your bags.",
+       "f": "let",
+       "h": "deja",
+       "t": "Déjame ayudarte con tus maletas.",
+       "g": [
+        [
+         "me",
+         "me"
+        ],
+        [
+         "help you",
+         "ayudarte"
+        ],
+        [
+         "with your bags",
+         "con tus maletas"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "put",
+     "past": "put",
+     "pp": "put",
+     "es": "poner",
+     "x": [
+      {
+       "s": "Where have you put my keys?",
+       "f": "have put",
+       "h": "has puesto",
+       "t": "¿Dónde has puesto mis llaves?",
+       "g": [
+        [
+         "where",
+         "dónde"
+        ],
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "my keys",
+         "mis llaves"
+        ]
+       ]
+      },
+      {
+       "s": "She put the flowers in a vase on the table.",
+       "f": "put",
+       "h": "puso",
+       "t": "Puso las flores en un florero sobre la mesa.",
+       "g": [
+        [
+         "flowers",
+         "flores"
+        ],
+        [
+         "in a vase",
+         "en un florero"
+        ],
+        [
+         "on the table",
+         "sobre la mesa"
+        ]
+       ]
+      },
+      {
+       "s": "I put my coat on the chair.",
+       "f": "put",
+       "h": "puse",
+       "t": "Puse mi abrigo en la silla.",
+       "g": [
+        [
+         "my coat",
+         "mi abrigo"
+        ],
+        [
+         "on the chair",
+         "en la silla"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "read",
+     "past": "read",
+     "pp": "read",
+     "es": "leer",
+     "x": [
+      {
+       "s": "I read this book last summer.",
+       "f": "read",
+       "h": "leí",
+       "t": "Leí este libro el verano pasado.",
+       "g": [
+        [
+         "this",
+         "este, esta"
+        ],
+        [
+         "book",
+         "libro"
+        ],
+        [
+         "last summer",
+         "el verano pasado"
+        ]
+       ]
+      },
+      {
+       "s": "Have you read the newspaper today?",
+       "f": "have read",
+       "h": "has leído",
+       "t": "¿Has leído el periódico hoy?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "newspaper",
+         "periódico"
+        ],
+        [
+         "today",
+         "hoy"
+        ]
+       ]
+      },
+      {
+       "s": "My mother read us a story every night.",
+       "f": "read",
+       "h": "leía",
+       "t": "Mi mamá nos leía un cuento todas las noches.",
+       "g": [
+        [
+         "my mother",
+         "mi mamá"
+        ],
+        [
+         "us",
+         "nos"
+        ],
+        [
+         "story",
+         "cuento"
+        ],
+        [
+         "every night",
+         "todas las noches"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "shut",
+     "past": "shut",
+     "pp": "shut",
+     "es": "cerrar",
+     "x": [
+      {
+       "s": "Shut the door, please.",
+       "f": "shut",
+       "h": "cierra",
+       "t": "Cierra la puerta, por favor.",
+       "g": [
+        [
+         "door",
+         "puerta"
+        ],
+        [
+         "please",
+         "por favor"
+        ]
+       ]
+      },
+      {
+       "s": "The shops shut early on Sundays.",
+       "f": "shut",
+       "h": "cierran",
+       "t": "Las tiendas cierran temprano los domingos.",
+       "g": [
+        [
+         "shops",
+         "tiendas"
+        ],
+        [
+         "early",
+         "temprano"
+        ],
+        [
+         "on Sundays",
+         "los domingos"
+        ]
+       ]
+      },
+      {
+       "s": "He shut his eyes and fell asleep.",
+       "f": "shut",
+       "h": "cerró",
+       "t": "Cerró los ojos y se quedó dormido.",
+       "g": [
+        [
+         "his eyes",
+         "sus ojos"
+        ],
+        [
+         "and",
+         "y"
+        ],
+        [
+         "fell asleep",
+         "se quedó dormido"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "I – E / O – E / I – EN y otros",
+   "verbs": [
+    {
+     "v": "bite",
+     "past": "bit",
+     "pp": "bitten",
+     "es": "morder",
+     "x": [
+      {
+       "s": "The dog bit the mailman.",
+       "f": "bit",
+       "h": "mordió",
+       "t": "El perro mordió al cartero.",
+       "g": [
+        [
+         "dog",
+         "perro"
+        ],
+        [
+         "mailman",
+         "cartero"
+        ]
+       ]
+      },
+      {
+       "s": "A mosquito has bitten me on the arm.",
+       "f": "has bitten",
+       "h": "ha picado",
+       "t": "Un zancudo me ha picado en el brazo.",
+       "g": [
+        [
+         "mosquito",
+         "zancudo, mosquito"
+        ],
+        [
+         "me",
+         "me, a mí"
+        ],
+        [
+         "on the arm",
+         "en el brazo"
+        ]
+       ]
+      },
+      {
+       "s": "The little dog bit my finger.",
+       "f": "bit",
+       "h": "mordió",
+       "t": "El perrito me mordió el dedo.",
+       "g": [
+        [
+         "little dog",
+         "perrito"
+        ],
+        [
+         "my finger",
+         "mi dedo"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "break",
+     "past": "broke",
+     "pp": "broken",
+     "es": "romper",
+     "x": [
+      {
+       "s": "I have broken my glasses.",
+       "f": "have broken",
+       "h": "he roto",
+       "t": "He roto mis gafas.",
+       "g": [
+        [
+         "my glasses",
+         "mis gafas"
+        ]
+       ]
+      },
+      {
+       "s": "The children broke a window with their ball.",
+       "f": "broke",
+       "h": "rompieron",
+       "t": "Los niños rompieron una ventana con su pelota.",
+       "g": [
+        [
+         "children",
+         "niños"
+        ],
+        [
+         "window",
+         "ventana"
+        ],
+        [
+         "with their ball",
+         "con su pelota"
+        ]
+       ]
+      },
+      {
+       "s": "She broke her leg skiing.",
+       "f": "broke",
+       "h": "se rompió",
+       "t": "Se rompió la pierna esquiando.",
+       "g": [
+        [
+         "her leg",
+         "su pierna"
+        ],
+        [
+         "skiing",
+         "esquiando"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "choose",
+     "past": "chose",
+     "pp": "chosen",
+     "es": "elegir, escoger",
+     "x": [
+      {
+       "s": "She chose the red dress.",
+       "f": "chose",
+       "h": "eligió",
+       "t": "Eligió el vestido rojo.",
+       "g": [
+        [
+         "red",
+         "rojo"
+        ],
+        [
+         "dress",
+         "vestido"
+        ]
+       ]
+      },
+      {
+       "s": "Have you chosen a name for the baby?",
+       "f": "have chosen",
+       "h": "has elegido",
+       "t": "¿Has elegido un nombre para el bebé?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "name",
+         "nombre"
+        ],
+        [
+         "for the baby",
+         "para el bebé"
+        ]
+       ]
+      },
+      {
+       "s": "We chose a small hotel near the beach.",
+       "f": "chose",
+       "h": "elegimos",
+       "t": "Elegimos un hotel pequeño cerca de la playa.",
+       "g": [
+        [
+         "small hotel",
+         "hotel pequeño"
+        ],
+        [
+         "near the beach",
+         "cerca de la playa"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "drive",
+     "past": "drove",
+     "pp": "driven",
+     "es": "manejar, conducir",
+     "x": [
+      {
+       "s": "My uncle drove us to the airport.",
+       "f": "drove",
+       "h": "nos llevó en carro",
+       "t": "Mi tío nos llevó en carro al aeropuerto.",
+       "g": [
+        [
+         "my uncle",
+         "mi tío"
+        ],
+        [
+         "us",
+         "nos, a nosotros"
+        ],
+        [
+         "to the airport",
+         "al aeropuerto"
+        ]
+       ]
+      },
+      {
+       "s": "Have you ever driven in another country?",
+       "f": "have driven",
+       "h": "has manejado",
+       "t": "¿Alguna vez has manejado en otro país?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "ever",
+         "alguna vez"
+        ],
+        [
+         "in another country",
+         "en otro país"
+        ]
+       ]
+      },
+      {
+       "s": "She drove to work in the snow.",
+       "f": "drove",
+       "h": "manejó",
+       "t": "Manejó al trabajo bajo la nieve.",
+       "g": [
+        [
+         "to work",
+         "al trabajo"
+        ],
+        [
+         "in the snow",
+         "bajo la nieve"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "eat",
+     "past": "ate",
+     "pp": "eaten",
+     "es": "comer",
+     "x": [
+      {
+       "s": "Have you eaten anything today?",
+       "f": "have eaten",
+       "h": "has comido",
+       "t": "¿Has comido algo hoy?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "anything",
+         "algo (en preguntas)"
+        ],
+        [
+         "today",
+         "hoy"
+        ]
+       ]
+      },
+      {
+       "s": "We ate pizza and salad on the terrace.",
+       "f": "ate",
+       "h": "comimos",
+       "t": "Comimos pizza y ensalada en la terraza.",
+       "g": [
+        [
+         "pizza",
+         "pizza"
+        ],
+        [
+         "and salad",
+         "y ensalada"
+        ],
+        [
+         "on the terrace",
+         "en la terraza"
+        ]
+       ]
+      },
+      {
+       "s": "The children ate all the cookies.",
+       "f": "ate",
+       "h": "se comieron",
+       "t": "Los niños se comieron todas las galletas.",
+       "g": [
+        [
+         "children",
+         "niños"
+        ],
+        [
+         "all",
+         "todas"
+        ],
+        [
+         "cookies",
+         "galletas"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "fall",
+     "past": "fell",
+     "pp": "fallen",
+     "es": "caer(se)",
+     "x": [
+      {
+       "s": "The little boy fell off his bike.",
+       "f": "fell",
+       "h": "se cayó",
+       "t": "El niño se cayó de la bicicleta.",
+       "g": [
+        [
+         "little boy",
+         "niño"
+        ],
+        [
+         "off",
+         "de (hacia abajo)"
+        ],
+        [
+         "his",
+         "su (de él)"
+        ],
+        [
+         "bike",
+         "bicicleta, bici"
+        ]
+       ]
+      },
+      {
+       "s": "The leaves have fallen from the trees.",
+       "f": "have fallen",
+       "h": "se han caído",
+       "t": "Las hojas se han caído de los árboles.",
+       "g": [
+        [
+         "leaves",
+         "hojas"
+        ],
+        [
+         "from the trees",
+         "de los árboles"
+        ]
+       ]
+      },
+      {
+       "s": "I fell asleep on the sofa.",
+       "f": "fell",
+       "h": "me quedé",
+       "t": "Me quedé dormida en el sofá.",
+       "g": [
+        [
+         "asleep",
+         "dormido (fall asleep: quedarse dormido)"
+        ],
+        [
+         "on the sofa",
+         "en el sofá"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "forget",
+     "past": "forgot",
+     "pp": "forgotten",
+     "es": "olvidar",
+     "x": [
+      {
+       "s": "I forgot my umbrella at the café.",
+       "f": "forgot",
+       "h": "olvidé",
+       "t": "Olvidé mi paraguas en la cafetería.",
+       "g": [
+        [
+         "my umbrella",
+         "mi paraguas, mi sombrilla"
+        ],
+        [
+         "at the café",
+         "en la cafetería"
+        ]
+       ]
+      },
+      {
+       "s": "Have you forgotten your password again?",
+       "f": "have forgotten",
+       "h": "has olvidado",
+       "t": "¿Has olvidado tu contraseña otra vez?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "your password",
+         "tu contraseña"
+        ],
+        [
+         "again",
+         "otra vez"
+        ]
+       ]
+      },
+      {
+       "s": "He forgot his sister's birthday.",
+       "f": "forgot",
+       "h": "olvidó",
+       "t": "Olvidó el cumpleaños de su hermana.",
+       "g": [
+        [
+         "his sister's birthday",
+         "el cumpleaños de su hermana"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "forgive",
+     "past": "forgave",
+     "pp": "forgiven",
+     "es": "perdonar",
+     "x": [
+      {
+       "s": "She has forgiven her brother.",
+       "f": "has forgiven",
+       "h": "ha perdonado",
+       "t": "Ha perdonado a su hermano.",
+       "g": [
+        [
+         "her",
+         "su (de ella)"
+        ],
+        [
+         "brother",
+         "hermano"
+        ]
+       ]
+      },
+      {
+       "s": "Please forgive me for being late.",
+       "f": "forgive",
+       "h": "perdona",
+       "t": "Por favor, perdóname por llegar tarde.",
+       "g": [
+        [
+         "please",
+         "por favor"
+        ],
+        [
+         "me",
+         "me"
+        ],
+        [
+         "for being late",
+         "por llegar tarde"
+        ]
+       ]
+      },
+      {
+       "s": "Her friend forgave her the next day.",
+       "f": "forgave",
+       "h": "perdonó",
+       "t": "Su amiga la perdonó al día siguiente.",
+       "g": [
+        [
+         "her friend",
+         "su amiga"
+        ],
+        [
+         "her",
+         "la, a ella"
+        ],
+        [
+         "the next day",
+         "al día siguiente"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "freeze",
+     "past": "froze",
+     "pp": "frozen",
+     "es": "congelar(se)",
+     "x": [
+      {
+       "s": "The lake froze in January.",
+       "f": "froze",
+       "h": "se congeló",
+       "t": "El lago se congeló en enero.",
+       "g": [
+        [
+         "lake",
+         "lago"
+        ],
+        [
+         "in January",
+         "en enero"
+        ]
+       ]
+      },
+      {
+       "s": "My hands froze while I waited for the bus.",
+       "f": "froze",
+       "h": "se congelaron",
+       "t": "Se me congelaron las manos mientras esperaba el bus.",
+       "g": [
+        [
+         "my hands",
+         "mis manos"
+        ],
+        [
+         "while",
+         "mientras"
+        ],
+        [
+         "I waited for",
+         "esperaba"
+        ],
+        [
+         "bus",
+         "bus"
+        ]
+       ]
+      },
+      {
+       "s": "Have you frozen the rest of the soup?",
+       "f": "have frozen",
+       "h": "has congelado",
+       "t": "¿Has congelado el resto de la sopa?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "the rest of",
+         "el resto de"
+        ],
+        [
+         "soup",
+         "sopa"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "give",
+     "past": "gave",
+     "pp": "given",
+     "es": "dar",
+     "x": [
+      {
+       "s": "My friends gave me a present.",
+       "f": "gave",
+       "h": "dieron",
+       "t": "Mis amigos me dieron un regalo.",
+       "g": [
+        [
+         "my friends",
+         "mis amigos"
+        ],
+        [
+         "me",
+         "me, a mí"
+        ],
+        [
+         "present",
+         "regalo"
+        ]
+       ]
+      },
+      {
+       "s": "The waiter gave us the wrong bill.",
+       "f": "gave",
+       "h": "dio",
+       "t": "El mesero nos dio la cuenta equivocada.",
+       "g": [
+        [
+         "waiter",
+         "mesero"
+        ],
+        [
+         "us",
+         "nos"
+        ],
+        [
+         "wrong",
+         "equivocada"
+        ],
+        [
+         "bill",
+         "cuenta"
+        ]
+       ]
+      },
+      {
+       "s": "She has given me her phone number.",
+       "f": "has given",
+       "h": "ha dado",
+       "t": "Me ha dado su número de teléfono.",
+       "g": [
+        [
+         "me",
+         "me"
+        ],
+        [
+         "her phone number",
+         "su número de teléfono"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "hide",
+     "past": "hid",
+     "pp": "hidden",
+     "es": "esconder(se)",
+     "x": [
+      {
+       "s": "The cat hid under the bed.",
+       "f": "hid",
+       "h": "se escondió",
+       "t": "El gato se escondió debajo de la cama.",
+       "g": [
+        [
+         "cat",
+         "gato"
+        ],
+        [
+         "under",
+         "debajo de"
+        ],
+        [
+         "bed",
+         "cama"
+        ]
+       ]
+      },
+      {
+       "s": "Where have you hidden the presents?",
+       "f": "have hidden",
+       "h": "has escondido",
+       "t": "¿Dónde has escondido los regalos?",
+       "g": [
+        [
+         "where",
+         "dónde"
+        ],
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "presents",
+         "regalos"
+        ]
+       ]
+      },
+      {
+       "s": "The children hid behind the tree.",
+       "f": "hid",
+       "h": "se escondieron",
+       "t": "Los niños se escondieron detrás del árbol.",
+       "g": [
+        [
+         "children",
+         "niños"
+        ],
+        [
+         "behind",
+         "detrás de"
+        ],
+        [
+         "tree",
+         "árbol"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "ride",
+     "past": "rode",
+     "pp": "ridden",
+     "es": "montar (a caballo, en bici)",
+     "x": [
+      {
+       "s": "Have you ever ridden a horse?",
+       "f": "have ridden",
+       "h": "has montado",
+       "t": "¿Alguna vez has montado a caballo?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "ever",
+         "alguna vez"
+        ],
+        [
+         "horse",
+         "caballo"
+        ]
+       ]
+      },
+      {
+       "s": "We rode our bikes along the river.",
+       "f": "rode",
+       "h": "montamos",
+       "t": "Montamos en bicicleta a lo largo del río.",
+       "g": [
+        [
+         "our bikes",
+         "nuestras bicicletas"
+        ],
+        [
+         "along the river",
+         "a lo largo del río"
+        ]
+       ]
+      },
+      {
+       "s": "She rode a camel in the desert.",
+       "f": "rode",
+       "h": "montó",
+       "t": "Montó en camello en el desierto.",
+       "g": [
+        [
+         "camel",
+         "camello"
+        ],
+        [
+         "in the desert",
+         "en el desierto"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "rise",
+     "past": "rose",
+     "pp": "risen",
+     "es": "subir, levantarse, salir (el sol)",
+     "x": [
+      {
+       "s": "The sun rose at six o'clock.",
+       "f": "rose",
+       "h": "salió",
+       "t": "El sol salió a las seis.",
+       "g": [
+        [
+         "sun",
+         "sol"
+        ],
+        [
+         "at six o'clock",
+         "a las seis"
+        ]
+       ]
+      },
+      {
+       "s": "Prices have risen a lot this year.",
+       "f": "have risen",
+       "h": "han subido",
+       "t": "Los precios han subido mucho este año.",
+       "g": [
+        [
+         "prices",
+         "precios"
+        ],
+        [
+         "a lot",
+         "mucho"
+        ],
+        [
+         "this year",
+         "este año"
+        ]
+       ]
+      },
+      {
+       "s": "The moon rose over the mountains.",
+       "f": "rose",
+       "h": "salió",
+       "t": "La luna salió sobre las montañas.",
+       "g": [
+        [
+         "moon",
+         "luna"
+        ],
+        [
+         "over the mountains",
+         "sobre las montañas"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "shake",
+     "past": "shook",
+     "pp": "shaken",
+     "es": "sacudir, agitar, temblar",
+     "x": [
+      {
+       "s": "He shook my hand and smiled.",
+       "f": "shook",
+       "h": "estrechó",
+       "t": "Me estrechó la mano y sonrió.",
+       "g": [
+        [
+         "my hand",
+         "mi mano"
+        ],
+        [
+         "and",
+         "y"
+        ],
+        [
+         "smiled",
+         "sonrió"
+        ]
+       ]
+      },
+      {
+       "s": "The house shook during the earthquake.",
+       "f": "shook",
+       "h": "tembló",
+       "t": "La casa tembló durante el terremoto.",
+       "g": [
+        [
+         "house",
+         "casa"
+        ],
+        [
+         "during",
+         "durante"
+        ],
+        [
+         "earthquake",
+         "terremoto"
+        ]
+       ]
+      },
+      {
+       "s": "Shake the bottle before you open it.",
+       "f": "shake",
+       "h": "agita",
+       "t": "Agita la botella antes de abrirla.",
+       "g": [
+        [
+         "bottle",
+         "botella"
+        ],
+        [
+         "before",
+         "antes de"
+        ],
+        [
+         "you open it",
+         "abrirla"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "speak",
+     "past": "spoke",
+     "pp": "spoken",
+     "es": "hablar",
+     "x": [
+      {
+       "s": "We spoke English all evening.",
+       "f": "spoke",
+       "h": "hablamos",
+       "t": "Hablamos inglés toda la noche.",
+       "g": [
+        [
+         "English",
+         "inglés"
+        ],
+        [
+         "all evening",
+         "toda la tarde, toda la noche"
+        ]
+       ]
+      },
+      {
+       "s": "Have you spoken to the manager?",
+       "f": "have spoken",
+       "h": "has hablado",
+       "t": "¿Has hablado con el gerente?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "to",
+         "con"
+        ],
+        [
+         "manager",
+         "gerente"
+        ]
+       ]
+      },
+      {
+       "s": "He spoke very slowly so we could understand.",
+       "f": "spoke",
+       "h": "habló",
+       "t": "Habló muy despacio para que pudiéramos entender.",
+       "g": [
+        [
+         "very slowly",
+         "muy despacio"
+        ],
+        [
+         "so",
+         "para que"
+        ],
+        [
+         "we could understand",
+         "pudiéramos entender"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "steal",
+     "past": "stole",
+     "pp": "stolen",
+     "es": "robar",
+     "x": [
+      {
+       "s": "Someone has stolen my bike!",
+       "f": "has stolen",
+       "h": "ha robado",
+       "t": "¡Alguien me ha robado la bicicleta!",
+       "g": [
+        [
+         "someone",
+         "alguien"
+        ],
+        [
+         "my bike",
+         "mi bicicleta"
+        ]
+       ]
+      },
+      {
+       "s": "A man stole my wallet on the train.",
+       "f": "stole",
+       "h": "robó",
+       "t": "Un hombre me robó la billetera en el tren.",
+       "g": [
+        [
+         "man",
+         "hombre"
+        ],
+        [
+         "my wallet",
+         "mi billetera"
+        ],
+        [
+         "on the train",
+         "en el tren"
+        ]
+       ]
+      },
+      {
+       "s": "Who stole the cookies from the jar?",
+       "f": "stole",
+       "h": "se robó",
+       "t": "¿Quién se robó las galletas del frasco?",
+       "g": [
+        [
+         "who",
+         "quién"
+        ],
+        [
+         "cookies",
+         "galletas"
+        ],
+        [
+         "from the jar",
+         "del frasco"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "take",
+     "past": "took",
+     "pp": "taken",
+     "es": "tomar, llevar; sacar (fotos)",
+     "x": [
+      {
+       "s": "I took a lot of photos on vacation.",
+       "f": "took",
+       "h": "saqué",
+       "t": "Saqué muchas fotos en las vacaciones.",
+       "g": [
+        [
+         "a lot of",
+         "muchos, muchas"
+        ],
+        [
+         "photos",
+         "fotos"
+        ],
+        [
+         "on vacation",
+         "en las vacaciones"
+        ]
+       ]
+      },
+      {
+       "s": "It took two hours to get to the village.",
+       "f": "took",
+       "h": "tomó",
+       "t": "Nos tomó dos horas llegar al pueblo.",
+       "g": [
+        [
+         "it",
+         "(sujeto vacío)"
+        ],
+        [
+         "two hours",
+         "dos horas"
+        ],
+        [
+         "to get to",
+         "llegar a"
+        ],
+        [
+         "village",
+         "pueblo"
+        ]
+       ]
+      },
+      {
+       "s": "Have you taken your medicine today?",
+       "f": "have taken",
+       "h": "te has tomado",
+       "t": "¿Te has tomado la medicina hoy?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "your medicine",
+         "tu medicina"
+        ],
+        [
+         "today",
+         "hoy"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "wake up",
+     "past": "woke up",
+     "pp": "woken up",
+     "es": "despertarse",
+     "x": [
+      {
+       "s": "I woke up at seven this morning.",
+       "f": "woke up",
+       "h": "me desperté",
+       "t": "Me desperté a las siete esta mañana.",
+       "g": [
+        [
+         "at seven",
+         "a las siete"
+        ],
+        [
+         "this morning",
+         "esta mañana"
+        ]
+       ]
+      },
+      {
+       "s": "The noise woke me up at three in the morning.",
+       "f": "woke up",
+       "h": "me despertó",
+       "t": "El ruido me despertó a las tres de la mañana.",
+       "g": [
+        [
+         "noise",
+         "ruido"
+        ],
+        [
+         "me",
+         "me"
+        ],
+        [
+         "at three in the morning",
+         "a las tres de la mañana"
+        ]
+       ]
+      },
+      {
+       "s": "Has the baby woken up yet?",
+       "f": "has woken up",
+       "h": "se ha despertado",
+       "t": "¿Ya se ha despertado el bebé?",
+       "g": [
+        [
+         "baby",
+         "bebé"
+        ],
+        [
+         "yet",
+         "ya (en preguntas)"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "write",
+     "past": "wrote",
+     "pp": "written",
+     "es": "escribir",
+     "x": [
+      {
+       "s": "She wrote a long email to her boss.",
+       "f": "wrote",
+       "h": "escribió",
+       "t": "Le escribió un correo largo a su jefe.",
+       "g": [
+        [
+         "long",
+         "largo"
+        ],
+        [
+         "email",
+         "correo"
+        ],
+        [
+         "to",
+         "a"
+        ],
+        [
+         "her boss",
+         "su jefe (de ella)"
+        ]
+       ]
+      },
+      {
+       "s": "My grandfather has written a book about his life.",
+       "f": "has written",
+       "h": "ha escrito",
+       "t": "Mi abuelo ha escrito un libro sobre su vida.",
+       "g": [
+        [
+         "my grandfather",
+         "mi abuelo"
+        ],
+        [
+         "book",
+         "libro"
+        ],
+        [
+         "about his life",
+         "sobre su vida"
+        ]
+       ]
+      },
+      {
+       "s": "I wrote your number on a piece of paper.",
+       "f": "wrote",
+       "h": "escribí",
+       "t": "Escribí tu número en un papel.",
+       "g": [
+        [
+         "your number",
+         "tu número"
+        ],
+        [
+         "on a piece of paper",
+         "en un papel"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "I / U – A / U",
+   "verbs": [
+    {
+     "v": "begin",
+     "past": "began",
+     "pp": "begun",
+     "es": "empezar, comenzar",
+     "x": [
+      {
+       "s": "The movie began at nine.",
+       "f": "began",
+       "h": "empezó",
+       "t": "La película empezó a las nueve.",
+       "g": [
+        [
+         "movie",
+         "película"
+        ],
+        [
+         "at nine",
+         "a las nueve"
+        ]
+       ]
+      },
+      {
+       "s": "It has begun to rain.",
+       "f": "has begun",
+       "h": "ha empezado",
+       "t": "Ha empezado a llover.",
+       "g": [
+        [
+         "it",
+         "(sujeto vacío)"
+        ],
+        [
+         "to rain",
+         "a llover"
+        ]
+       ]
+      },
+      {
+       "s": "Classes began on Monday.",
+       "f": "began",
+       "h": "empezaron",
+       "t": "Las clases empezaron el lunes.",
+       "g": [
+        [
+         "classes",
+         "clases"
+        ],
+        [
+         "on Monday",
+         "el lunes"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "drink",
+     "past": "drank",
+     "pp": "drunk",
+     "es": "beber, tomar",
+     "x": [
+      {
+       "s": "Have you drunk all the milk?",
+       "f": "have drunk",
+       "h": "te has tomado",
+       "t": "¿Te has tomado toda la leche?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "all",
+         "todo, toda"
+        ],
+        [
+         "milk",
+         "leche"
+        ]
+       ]
+      },
+      {
+       "s": "We drank hot chocolate by the fire.",
+       "f": "drank",
+       "h": "tomamos",
+       "t": "Tomamos chocolate caliente junto al fuego.",
+       "g": [
+        [
+         "hot chocolate",
+         "chocolate caliente"
+        ],
+        [
+         "by the fire",
+         "junto al fuego"
+        ]
+       ]
+      },
+      {
+       "s": "He drank a glass of water.",
+       "f": "drank",
+       "h": "se tomó",
+       "t": "Se tomó un vaso de agua.",
+       "g": [
+        [
+         "a glass of water",
+         "un vaso de agua"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "ring",
+     "past": "rang",
+     "pp": "rung",
+     "es": "sonar (un timbre, un teléfono)",
+     "x": [
+      {
+       "s": "The phone rang in the middle of the night.",
+       "f": "rang",
+       "h": "sonó",
+       "t": "El teléfono sonó en mitad de la noche.",
+       "g": [
+        [
+         "phone",
+         "teléfono"
+        ],
+        [
+         "in the middle of",
+         "en mitad de"
+        ],
+        [
+         "night",
+         "noche"
+        ]
+       ]
+      },
+      {
+       "s": "The church bells rang at midday.",
+       "f": "rang",
+       "h": "sonaron",
+       "t": "Las campanas de la iglesia sonaron al mediodía.",
+       "g": [
+        [
+         "church bells",
+         "campanas de la iglesia"
+        ],
+        [
+         "at midday",
+         "al mediodía"
+        ]
+       ]
+      },
+      {
+       "s": "Your phone rang while you were out.",
+       "f": "rang",
+       "h": "sonó",
+       "t": "Tu teléfono sonó mientras estabas fuera.",
+       "g": [
+        [
+         "your phone",
+         "tu teléfono"
+        ],
+        [
+         "while",
+         "mientras"
+        ],
+        [
+         "you were out",
+         "estabas fuera"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "sing",
+     "past": "sang",
+     "pp": "sung",
+     "es": "cantar",
+     "x": [
+      {
+       "s": "The children sang a song for their mother.",
+       "f": "sang",
+       "h": "cantaron",
+       "t": "Los niños le cantaron una canción a su mamá.",
+       "g": [
+        [
+         "children",
+         "niños"
+        ],
+        [
+         "song",
+         "canción"
+        ],
+        [
+         "for",
+         "para"
+        ],
+        [
+         "their",
+         "su, sus (de ellos)"
+        ],
+        [
+         "mother",
+         "madre, mamá"
+        ]
+       ]
+      },
+      {
+       "s": "Have you ever sung in a choir?",
+       "f": "have sung",
+       "h": "has cantado",
+       "t": "¿Alguna vez has cantado en un coro?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "ever",
+         "alguna vez"
+        ],
+        [
+         "in a choir",
+         "en un coro"
+        ]
+       ]
+      },
+      {
+       "s": "We sang songs around the campfire.",
+       "f": "sang",
+       "h": "cantamos",
+       "t": "Cantamos canciones alrededor de la fogata.",
+       "g": [
+        [
+         "songs",
+         "canciones"
+        ],
+        [
+         "around",
+         "alrededor de"
+        ],
+        [
+         "campfire",
+         "fogata"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "swing",
+     "past": "swung",
+     "pp": "swung",
+     "es": "balancear(se), columpiar(se)",
+     "x": [
+      {
+       "s": "The monkey swung from tree to tree.",
+       "f": "swung",
+       "h": "se balanceó",
+       "t": "El mono se balanceó de árbol en árbol.",
+       "g": [
+        [
+         "monkey",
+         "mono"
+        ],
+        [
+         "from tree to tree",
+         "de árbol en árbol"
+        ]
+       ]
+      },
+      {
+       "s": "The door swung open in the wind.",
+       "f": "swung",
+       "h": "se abrió",
+       "t": "La puerta se abrió con el viento.",
+       "g": [
+        [
+         "door",
+         "puerta"
+        ],
+        [
+         "open",
+         "abierta (swing open: abrirse de golpe)"
+        ],
+        [
+         "in the wind",
+         "con el viento"
+        ]
+       ]
+      },
+      {
+       "s": "The kids swung on the swings in the park.",
+       "f": "swung",
+       "h": "se columpiaron",
+       "t": "Los niños se columpiaron en los columpios del parque.",
+       "g": [
+        [
+         "kids",
+         "niños"
+        ],
+        [
+         "on the swings",
+         "en los columpios"
+        ],
+        [
+         "in the park",
+         "del parque"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "swim",
+     "past": "swam",
+     "pp": "swum",
+     "es": "nadar",
+     "x": [
+      {
+       "s": "We swam in the river after lunch.",
+       "f": "swam",
+       "h": "nadamos",
+       "t": "Nadamos en el río después del almuerzo.",
+       "g": [
+        [
+         "in the river",
+         "en el río"
+        ],
+        [
+         "after lunch",
+         "después del almuerzo"
+        ]
+       ]
+      },
+      {
+       "s": "Have you ever swum in the ocean?",
+       "f": "have swum",
+       "h": "has nadado",
+       "t": "¿Alguna vez has nadado en el océano?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "ever",
+         "alguna vez"
+        ],
+        [
+         "in the ocean",
+         "en el océano"
+        ]
+       ]
+      },
+      {
+       "s": "The fish swam around the rocks.",
+       "f": "swam",
+       "h": "nadaban",
+       "t": "Los peces nadaban alrededor de las rocas.",
+       "g": [
+        [
+         "fish",
+         "peces, pez"
+        ],
+        [
+         "around",
+         "alrededor de"
+        ],
+        [
+         "rocks",
+         "rocas"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "AW – OW / EW / OWN",
+   "verbs": [
+    {
+     "v": "blow",
+     "past": "blew",
+     "pp": "blown",
+     "es": "soplar",
+     "x": [
+      {
+       "s": "The wind blew all night.",
+       "f": "blew",
+       "h": "sopló",
+       "t": "El viento sopló toda la noche.",
+       "g": [
+        [
+         "wind",
+         "viento"
+        ],
+        [
+         "all night",
+         "toda la noche"
+        ]
+       ]
+      },
+      {
+       "s": "She blew out the candles on her cake.",
+       "f": "blew",
+       "h": "sopló",
+       "t": "Sopló las velas de su torta.",
+       "g": [
+        [
+         "out",
+         "(blow out: apagar soplando)"
+        ],
+        [
+         "candles",
+         "velas"
+        ],
+        [
+         "on her cake",
+         "de su torta"
+        ]
+       ]
+      },
+      {
+       "s": "The wind has blown the leaves away.",
+       "f": "has blown",
+       "h": "se ha llevado",
+       "t": "El viento se ha llevado las hojas.",
+       "g": [
+        [
+         "wind",
+         "viento"
+        ],
+        [
+         "leaves",
+         "hojas"
+        ],
+        [
+         "away",
+         "lejos"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "draw",
+     "past": "drew",
+     "pp": "drawn",
+     "es": "dibujar",
+     "x": [
+      {
+       "s": "My son drew a picture of our house.",
+       "f": "drew",
+       "h": "hizo un dibujo",
+       "t": "Mi hijo hizo un dibujo de nuestra casa.",
+       "g": [
+        [
+         "my son",
+         "mi hijo"
+        ],
+        [
+         "picture",
+         "dibujo"
+        ],
+        [
+         "of",
+         "de"
+        ],
+        [
+         "our house",
+         "nuestra casa"
+        ]
+       ]
+      },
+      {
+       "s": "The artist drew a portrait of the queen.",
+       "f": "drew",
+       "h": "dibujó",
+       "t": "El artista dibujó un retrato de la reina.",
+       "g": [
+        [
+         "artist",
+         "artista"
+        ],
+        [
+         "portrait",
+         "retrato"
+        ],
+        [
+         "of the queen",
+         "de la reina"
+        ]
+       ]
+      },
+      {
+       "s": "The kids drew animals on the wall.",
+       "f": "drew",
+       "h": "dibujaron",
+       "t": "Los niños dibujaron animales en la pared.",
+       "g": [
+        [
+         "kids",
+         "niños"
+        ],
+        [
+         "animals",
+         "animales"
+        ],
+        [
+         "on the wall",
+         "en la pared"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "fly",
+     "past": "flew",
+     "pp": "flown",
+     "es": "volar",
+     "x": [
+      {
+       "s": "We flew to London last month.",
+       "f": "flew",
+       "h": "volamos",
+       "t": "Volamos a Londres el mes pasado.",
+       "g": [
+        [
+         "to London",
+         "a Londres"
+        ],
+        [
+         "last month",
+         "el mes pasado"
+        ]
+       ]
+      },
+      {
+       "s": "A bird flew into the classroom.",
+       "f": "flew",
+       "h": "entró volando",
+       "t": "Un pájaro entró volando al salón.",
+       "g": [
+        [
+         "bird",
+         "pájaro"
+        ],
+        [
+         "into",
+         "dentro de, a"
+        ],
+        [
+         "classroom",
+         "salón de clase"
+        ]
+       ]
+      },
+      {
+       "s": "Have you ever flown in a helicopter?",
+       "f": "have flown",
+       "h": "has volado",
+       "t": "¿Alguna vez has volado en helicóptero?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "ever",
+         "alguna vez"
+        ],
+        [
+         "in a helicopter",
+         "en helicóptero"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "grow",
+     "past": "grew",
+     "pp": "grown",
+     "es": "crecer; cultivar",
+     "x": [
+      {
+       "s": "These tomatoes grew in my garden.",
+       "f": "grew",
+       "h": "crecieron",
+       "t": "Estos tomates crecieron en mi huerta.",
+       "g": [
+        [
+         "these",
+         "estos, estas"
+        ],
+        [
+         "tomatoes",
+         "tomates"
+        ],
+        [
+         "in my garden",
+         "en mi huerta, en mi jardín"
+        ]
+       ]
+      },
+      {
+       "s": "Your son has grown a lot!",
+       "f": "has grown",
+       "h": "ha crecido",
+       "t": "¡Tu hijo ha crecido mucho!",
+       "g": [
+        [
+         "your son",
+         "tu hijo"
+        ],
+        [
+         "a lot",
+         "mucho"
+        ]
+       ]
+      },
+      {
+       "s": "My grandfather grew potatoes on his farm.",
+       "f": "grew",
+       "h": "cultivaba",
+       "t": "Mi abuelo cultivaba papas en su finca.",
+       "g": [
+        [
+         "my grandfather",
+         "mi abuelo"
+        ],
+        [
+         "potatoes",
+         "papas"
+        ],
+        [
+         "on his farm",
+         "en su finca"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "know",
+     "past": "knew",
+     "pp": "known",
+     "es": "saber, conocer",
+     "x": [
+      {
+       "s": "I have known her for ten years.",
+       "f": "have known",
+       "h": "conozco",
+       "t": "La conozco desde hace diez años.",
+       "g": [
+        [
+         "her",
+         "la, a ella"
+        ],
+        [
+         "for ten years",
+         "desde hace diez años"
+        ]
+       ]
+      },
+      {
+       "s": "I knew the answer, but I was nervous.",
+       "f": "knew",
+       "h": "sabía",
+       "t": "Sabía la respuesta, pero estaba nerviosa.",
+       "g": [
+        [
+         "answer",
+         "respuesta"
+        ],
+        [
+         "but",
+         "pero"
+        ],
+        [
+         "I was nervous",
+         "estaba nerviosa"
+        ]
+       ]
+      },
+      {
+       "s": "Did you know that he speaks French?",
+       "f": "know",
+       "h": "sabías",
+       "t": "¿Sabías que habla francés?",
+       "g": [
+        [
+         "did",
+         "auxiliar del pasado en preguntas"
+        ],
+        [
+         "that",
+         "que"
+        ],
+        [
+         "he speaks French",
+         "habla francés"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "throw",
+     "past": "threw",
+     "pp": "thrown",
+     "es": "lanzar, tirar",
+     "x": [
+      {
+       "s": "He threw the ball to his dog.",
+       "f": "threw",
+       "h": "tiró",
+       "t": "Le tiró la pelota a su perro.",
+       "g": [
+        [
+         "ball",
+         "pelota"
+        ],
+        [
+         "to his dog",
+         "a su perro"
+        ]
+       ]
+      },
+      {
+       "s": "Who has thrown this paper on the floor?",
+       "f": "has thrown",
+       "h": "ha tirado",
+       "t": "¿Quién ha tirado este papel al suelo?",
+       "g": [
+        [
+         "who",
+         "quién"
+        ],
+        [
+         "this paper",
+         "este papel"
+        ],
+        [
+         "on the floor",
+         "al suelo"
+        ]
+       ]
+      },
+      {
+       "s": "She threw the old clothes in the trash.",
+       "f": "threw",
+       "h": "botó",
+       "t": "Botó la ropa vieja a la basura.",
+       "g": [
+        [
+         "old clothes",
+         "ropa vieja"
+        ],
+        [
+         "in the trash",
+         "a la basura"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "-AUGHT / -OUGHT",
+   "verbs": [
+    {
+     "v": "bring",
+     "past": "brought",
+     "pp": "brought",
+     "es": "traer",
+     "x": [
+      {
+       "s": "She brought some cake to work.",
+       "f": "brought",
+       "h": "trajo",
+       "t": "Trajo torta al trabajo.",
+       "g": [
+        [
+         "some",
+         "un poco de, algo de"
+        ],
+        [
+         "cake",
+         "torta, pastel"
+        ],
+        [
+         "to work",
+         "al trabajo"
+        ]
+       ]
+      },
+      {
+       "s": "Have you brought your passport?",
+       "f": "have brought",
+       "h": "has traído",
+       "t": "¿Has traído tu pasaporte?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "your passport",
+         "tu pasaporte"
+        ]
+       ]
+      },
+      {
+       "s": "Our guests brought wine and flowers.",
+       "f": "brought",
+       "h": "trajeron",
+       "t": "Nuestros invitados trajeron vino y flores.",
+       "g": [
+        [
+         "our guests",
+         "nuestros invitados"
+        ],
+        [
+         "wine",
+         "vino"
+        ],
+        [
+         "and flowers",
+         "y flores"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "buy",
+     "past": "bought",
+     "pp": "bought",
+     "es": "comprar",
+     "x": [
+      {
+       "s": "What have you bought?",
+       "f": "have bought",
+       "h": "has comprado",
+       "t": "¿Qué has comprado?",
+       "g": [
+        [
+         "what",
+         "qué"
+        ],
+        [
+         "you",
+         "tú"
+        ]
+       ]
+      },
+      {
+       "s": "We bought fresh fruit at the market.",
+       "f": "bought",
+       "h": "compramos",
+       "t": "Compramos fruta fresca en el mercado.",
+       "g": [
+        [
+         "fresh fruit",
+         "fruta fresca"
+        ],
+        [
+         "at the market",
+         "en el mercado"
+        ]
+       ]
+      },
+      {
+       "s": "He bought a ticket to Madrid.",
+       "f": "bought",
+       "h": "compró",
+       "t": "Compró un pasaje a Madrid.",
+       "g": [
+        [
+         "ticket",
+         "pasaje, boleto"
+        ],
+        [
+         "to Madrid",
+         "a Madrid"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "catch",
+     "past": "caught",
+     "pp": "caught",
+     "es": "atrapar, agarrar; tomar (un bus)",
+     "x": [
+      {
+       "s": "I caught the last bus home.",
+       "f": "caught",
+       "h": "tomé",
+       "t": "Tomé el último bus a casa.",
+       "g": [
+        [
+         "last",
+         "último"
+        ],
+        [
+         "bus",
+         "bus"
+        ],
+        [
+         "home",
+         "a casa"
+        ]
+       ]
+      },
+      {
+       "s": "My little brother has caught a cold.",
+       "f": "has caught",
+       "h": "se ha resfriado",
+       "t": "Mi hermanito se ha resfriado.",
+       "g": [
+        [
+         "my little brother",
+         "mi hermanito"
+        ],
+        [
+         "a cold",
+         "un resfriado (catch a cold: resfriarse)"
+        ]
+       ]
+      },
+      {
+       "s": "The goalkeeper caught the ball.",
+       "f": "caught",
+       "h": "atrapó",
+       "t": "El arquero atrapó el balón.",
+       "g": [
+        [
+         "goalkeeper",
+         "arquero, portero"
+        ],
+        [
+         "ball",
+         "balón"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "fight",
+     "past": "fought",
+     "pp": "fought",
+     "es": "pelear, luchar",
+     "x": [
+      {
+       "s": "The two brothers fought over the toy.",
+       "f": "fought",
+       "h": "se pelearon",
+       "t": "Los dos hermanos se pelearon por el juguete.",
+       "g": [
+        [
+         "two",
+         "dos"
+        ],
+        [
+         "brothers",
+         "hermanos"
+        ],
+        [
+         "over",
+         "por"
+        ],
+        [
+         "toy",
+         "juguete"
+        ]
+       ]
+      },
+      {
+       "s": "My grandfather fought in the war.",
+       "f": "fought",
+       "h": "luchó",
+       "t": "Mi abuelo luchó en la guerra.",
+       "g": [
+        [
+         "my grandfather",
+         "mi abuelo"
+        ],
+        [
+         "in the war",
+         "en la guerra"
+        ]
+       ]
+      },
+      {
+       "s": "The cats fought all night in the garden.",
+       "f": "fought",
+       "h": "se pelearon",
+       "t": "Los gatos se pelearon toda la noche en el jardín.",
+       "g": [
+        [
+         "cats",
+         "gatos"
+        ],
+        [
+         "all night",
+         "toda la noche"
+        ],
+        [
+         "in the garden",
+         "en el jardín"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "teach",
+     "past": "taught",
+     "pp": "taught",
+     "es": "enseñar",
+     "x": [
+      {
+       "s": "Who taught you to cook?",
+       "f": "taught",
+       "h": "enseñó",
+       "t": "¿Quién te enseñó a cocinar?",
+       "g": [
+        [
+         "who",
+         "quién"
+        ],
+        [
+         "you",
+         "te, a ti"
+        ],
+        [
+         "to cook",
+         "a cocinar"
+        ]
+       ]
+      },
+      {
+       "s": "She has taught English for twenty years.",
+       "f": "has taught",
+       "h": "ha enseñado",
+       "t": "Ha enseñado inglés durante veinte años.",
+       "g": [
+        [
+         "English",
+         "inglés"
+        ],
+        [
+         "for twenty years",
+         "durante veinte años"
+        ]
+       ]
+      },
+      {
+       "s": "My father taught me to ride a bike.",
+       "f": "taught",
+       "h": "enseñó",
+       "t": "Mi papá me enseñó a montar en bicicleta.",
+       "g": [
+        [
+         "my father",
+         "mi papá"
+        ],
+        [
+         "me",
+         "me"
+        ],
+        [
+         "to ride a bike",
+         "a montar en bicicleta"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "think",
+     "past": "thought",
+     "pp": "thought",
+     "es": "pensar, creer",
+     "x": [
+      {
+       "s": "I thought the store was closed.",
+       "f": "thought",
+       "h": "pensé",
+       "t": "Pensé que la tienda estaba cerrada.",
+       "g": [
+        [
+         "store",
+         "tienda"
+        ],
+        [
+         "was closed",
+         "estaba cerrada"
+        ]
+       ]
+      },
+      {
+       "s": "Have you thought about your future?",
+       "f": "have thought",
+       "h": "has pensado",
+       "t": "¿Has pensado en tu futuro?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "about",
+         "en, sobre"
+        ],
+        [
+         "your future",
+         "tu futuro"
+        ]
+       ]
+      },
+      {
+       "s": "I thought it was a good idea.",
+       "f": "thought",
+       "h": "pensé",
+       "t": "Pensé que era una buena idea.",
+       "g": [
+        [
+         "it was",
+         "era"
+        ],
+        [
+         "a good idea",
+         "una buena idea"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "-STAND / -STOOD",
+   "verbs": [
+    {
+     "v": "stand",
+     "past": "stood",
+     "pp": "stood",
+     "es": "estar de pie, pararse",
+     "x": [
+      {
+       "s": "We stood in the rain for an hour.",
+       "f": "stood",
+       "h": "estuvimos de pie",
+       "t": "Estuvimos de pie bajo la lluvia una hora.",
+       "g": [
+        [
+         "in the rain",
+         "bajo la lluvia"
+        ],
+        [
+         "for an hour",
+         "durante una hora"
+        ]
+       ]
+      },
+      {
+       "s": "The children stood in line for the bus.",
+       "f": "stood",
+       "h": "hicieron fila",
+       "t": "Los niños hicieron fila para el bus.",
+       "g": [
+        [
+         "children",
+         "niños"
+        ],
+        [
+         "in line",
+         "en fila"
+        ],
+        [
+         "for the bus",
+         "para el bus"
+        ]
+       ]
+      },
+      {
+       "s": "She stood at the window for a long time.",
+       "f": "stood",
+       "h": "se quedó de pie",
+       "t": "Se quedó de pie junto a la ventana mucho tiempo.",
+       "g": [
+        [
+         "at the window",
+         "junto a la ventana"
+        ],
+        [
+         "for a long time",
+         "mucho tiempo"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "understand",
+     "past": "understood",
+     "pp": "understood",
+     "es": "entender",
+     "x": [
+      {
+       "s": "Sorry, I didn't understand the question.",
+       "f": "didn't understand",
+       "h": "no entendí",
+       "t": "Perdón, no entendí la pregunta.",
+       "g": [
+        [
+         "sorry",
+         "perdón, lo siento"
+        ],
+        [
+         "question",
+         "pregunta"
+        ]
+       ]
+      },
+      {
+       "s": "Have you understood the instructions?",
+       "f": "have understood",
+       "h": "has entendido",
+       "t": "¿Has entendido las instrucciones?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "instructions",
+         "instrucciones"
+        ]
+       ]
+      },
+      {
+       "s": "Finally, I understood the joke.",
+       "f": "understood",
+       "h": "entendí",
+       "t": "Por fin entendí el chiste.",
+       "g": [
+        [
+         "finally",
+         "por fin"
+        ],
+        [
+         "joke",
+         "chiste"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "-EE- / -E- / -E-",
+   "verbs": [
+    {
+     "v": "bleed",
+     "past": "bled",
+     "pp": "bled",
+     "es": "sangrar",
+     "x": [
+      {
+       "s": "His nose bled after the soccer game.",
+       "f": "bled",
+       "h": "sangró",
+       "t": "Le sangró la nariz después del partido de fútbol.",
+       "g": [
+        [
+         "his nose",
+         "su nariz (de él)"
+        ],
+        [
+         "after",
+         "después de"
+        ],
+        [
+         "soccer game",
+         "partido de fútbol"
+        ]
+       ]
+      },
+      {
+       "s": "My finger bled a little after the cut.",
+       "f": "bled",
+       "h": "sangró",
+       "t": "Me sangró un poco el dedo después del corte.",
+       "g": [
+        [
+         "my finger",
+         "mi dedo"
+        ],
+        [
+         "a little",
+         "un poco"
+        ],
+        [
+         "after the cut",
+         "después del corte"
+        ]
+       ]
+      },
+      {
+       "s": "His knee bled when he fell.",
+       "f": "bled",
+       "h": "sangró",
+       "t": "Le sangró la rodilla cuando se cayó.",
+       "g": [
+        [
+         "his knee",
+         "su rodilla"
+        ],
+        [
+         "when he fell",
+         "cuando se cayó"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "feed",
+     "past": "fed",
+     "pp": "fed",
+     "es": "dar de comer, alimentar",
+     "x": [
+      {
+       "s": "Have you fed the cat?",
+       "f": "have fed",
+       "h": "has dado de comer",
+       "t": "¿Le has dado de comer al gato?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "cat",
+         "gato"
+        ]
+       ]
+      },
+      {
+       "s": "She fed the ducks at the lake.",
+       "f": "fed",
+       "h": "les dio de comer",
+       "t": "Les dio de comer a los patos en el lago.",
+       "g": [
+        [
+         "ducks",
+         "patos"
+        ],
+        [
+         "at the lake",
+         "en el lago"
+        ]
+       ]
+      },
+      {
+       "s": "Who fed the dog this morning?",
+       "f": "fed",
+       "h": "le dio de comer",
+       "t": "¿Quién le dio de comer al perro esta mañana?",
+       "g": [
+        [
+         "who",
+         "quién"
+        ],
+        [
+         "dog",
+         "perro"
+        ],
+        [
+         "this morning",
+         "esta mañana"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "feel",
+     "past": "felt",
+     "pp": "felt",
+     "es": "sentir(se)",
+     "x": [
+      {
+       "s": "I felt tired after work.",
+       "f": "felt",
+       "h": "me sentí",
+       "t": "Me sentí cansada después del trabajo.",
+       "g": [
+        [
+         "tired",
+         "cansado, cansada"
+        ],
+        [
+         "after work",
+         "después del trabajo"
+        ]
+       ]
+      },
+      {
+       "s": "I have felt much better since I started yoga.",
+       "f": "have felt",
+       "h": "me he sentido",
+       "t": "Me he sentido mucho mejor desde que empecé yoga.",
+       "g": [
+        [
+         "much better",
+         "mucho mejor"
+        ],
+        [
+         "since",
+         "desde que"
+        ],
+        [
+         "I started yoga",
+         "empecé yoga"
+        ]
+       ]
+      },
+      {
+       "s": "She felt happy on her first day at work.",
+       "f": "felt",
+       "h": "se sintió",
+       "t": "Se sintió feliz en su primer día de trabajo.",
+       "g": [
+        [
+         "happy",
+         "feliz"
+        ],
+        [
+         "on her first day",
+         "en su primer día"
+        ],
+        [
+         "at work",
+         "de trabajo"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "keep",
+     "past": "kept",
+     "pp": "kept",
+     "es": "guardar, quedarse con, mantener",
+     "x": [
+      {
+       "s": "She kept all his letters in a box.",
+       "f": "kept",
+       "h": "guardó",
+       "t": "Guardó todas sus cartas en una caja.",
+       "g": [
+        [
+         "all",
+         "todas, todos"
+        ],
+        [
+         "his letters",
+         "sus cartas (de él)"
+        ],
+        [
+         "in a box",
+         "en una caja"
+        ]
+       ]
+      },
+      {
+       "s": "Keep the change.",
+       "f": "keep",
+       "h": "quédese con",
+       "t": "Quédese con el cambio.",
+       "g": [
+        [
+         "the change",
+         "el cambio, las vueltas"
+        ]
+       ]
+      },
+      {
+       "s": "He kept the secret for many years.",
+       "f": "kept",
+       "h": "guardó",
+       "t": "Guardó el secreto durante muchos años.",
+       "g": [
+        [
+         "secret",
+         "secreto"
+        ],
+        [
+         "for many years",
+         "durante muchos años"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "meet",
+     "past": "met",
+     "pp": "met",
+     "es": "conocer (a alguien), encontrarse con",
+     "x": [
+      {
+       "s": "I met my best friend at school.",
+       "f": "met",
+       "h": "conocí",
+       "t": "Conocí a mi mejor amiga en el colegio.",
+       "g": [
+        [
+         "my best friend",
+         "mi mejor amigo, mi mejor amiga"
+        ],
+        [
+         "at school",
+         "en el colegio"
+        ]
+       ]
+      },
+      {
+       "s": "Have you met my girlfriend?",
+       "f": "have met",
+       "h": "has conocido",
+       "t": "¿Has conocido a mi novia?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "my girlfriend",
+         "mi novia"
+        ]
+       ]
+      },
+      {
+       "s": "We met at a café in the city center.",
+       "f": "met",
+       "h": "nos encontramos",
+       "t": "Nos encontramos en un café en el centro.",
+       "g": [
+        [
+         "at a café",
+         "en un café"
+        ],
+        [
+         "in the city center",
+         "en el centro"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "sleep",
+     "past": "slept",
+     "pp": "slept",
+     "es": "dormir",
+     "x": [
+      {
+       "s": "The baby slept for ten hours.",
+       "f": "slept",
+       "h": "durmió",
+       "t": "El bebé durmió diez horas.",
+       "g": [
+        [
+         "baby",
+         "bebé"
+        ],
+        [
+         "for ten hours",
+         "(durante) diez horas"
+        ]
+       ]
+      },
+      {
+       "s": "I haven't slept well this week.",
+       "f": "haven't slept",
+       "h": "no he dormido",
+       "t": "No he dormido bien esta semana.",
+       "g": [
+        [
+         "well",
+         "bien"
+        ],
+        [
+         "this week",
+         "esta semana"
+        ]
+       ]
+      },
+      {
+       "s": "We slept in a tent by the lake.",
+       "f": "slept",
+       "h": "dormimos",
+       "t": "Dormimos en una carpa junto al lago.",
+       "g": [
+        [
+         "in a tent",
+         "en una carpa"
+        ],
+        [
+         "by the lake",
+         "junto al lago"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "sweep",
+     "past": "swept",
+     "pp": "swept",
+     "es": "barrer",
+     "x": [
+      {
+       "s": "He swept the floor before the party.",
+       "f": "swept",
+       "h": "barrió",
+       "t": "Barrió el piso antes de la fiesta.",
+       "g": [
+        [
+         "floor",
+         "piso, suelo"
+        ],
+        [
+         "before",
+         "antes de"
+        ],
+        [
+         "party",
+         "fiesta"
+        ]
+       ]
+      },
+      {
+       "s": "Have you swept the kitchen?",
+       "f": "have swept",
+       "h": "has barrido",
+       "t": "¿Has barrido la cocina?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "kitchen",
+         "cocina"
+        ]
+       ]
+      },
+      {
+       "s": "The wind swept the leaves into the street.",
+       "f": "swept",
+       "h": "arrastró",
+       "t": "El viento arrastró las hojas hasta la calle.",
+       "g": [
+        [
+         "wind",
+         "viento"
+        ],
+        [
+         "leaves",
+         "hojas"
+        ],
+        [
+         "into the street",
+         "hasta la calle"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "-D / -T / -T",
+   "verbs": [
+    {
+     "v": "build",
+     "past": "built",
+     "pp": "built",
+     "es": "construir",
+     "x": [
+      {
+       "s": "They built a new hospital in our town.",
+       "f": "built",
+       "h": "construyeron",
+       "t": "Construyeron un hospital nuevo en nuestro pueblo.",
+       "g": [
+        [
+         "new",
+         "nuevo"
+        ],
+        [
+         "hospital",
+         "hospital"
+        ],
+        [
+         "in our town",
+         "en nuestro pueblo"
+        ]
+       ]
+      },
+      {
+       "s": "The birds have built a nest on our roof.",
+       "f": "have built",
+       "h": "han hecho",
+       "t": "Los pájaros han hecho un nido en nuestro techo.",
+       "g": [
+        [
+         "birds",
+         "pájaros"
+        ],
+        [
+         "nest",
+         "nido"
+        ],
+        [
+         "on our roof",
+         "en nuestro techo"
+        ]
+       ]
+      },
+      {
+       "s": "My grandparents built this house fifty years ago.",
+       "f": "built",
+       "h": "construyeron",
+       "t": "Mis abuelos construyeron esta casa hace cincuenta años.",
+       "g": [
+        [
+         "my grandparents",
+         "mis abuelos"
+        ],
+        [
+         "this house",
+         "esta casa"
+        ],
+        [
+         "fifty years ago",
+         "hace cincuenta años"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "lend",
+     "past": "lent",
+     "pp": "lent",
+     "es": "prestar",
+     "x": [
+      {
+       "s": "My sister lent me her car.",
+       "f": "lent",
+       "h": "prestó",
+       "t": "Mi hermana me prestó su carro.",
+       "g": [
+        [
+         "my sister",
+         "mi hermana"
+        ],
+        [
+         "me",
+         "me, a mí"
+        ],
+        [
+         "her car",
+         "su carro (de ella)"
+        ]
+       ]
+      },
+      {
+       "s": "Have you lent your car to anyone?",
+       "f": "have lent",
+       "h": "has prestado",
+       "t": "¿Le has prestado tu carro a alguien?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "your car",
+         "tu carro"
+        ],
+        [
+         "to anyone",
+         "a alguien"
+        ]
+       ]
+      },
+      {
+       "s": "The bank lent them money for the house.",
+       "f": "lent",
+       "h": "prestó",
+       "t": "El banco les prestó dinero para la casa.",
+       "g": [
+        [
+         "bank",
+         "banco"
+        ],
+        [
+         "them",
+         "les, a ellos"
+        ],
+        [
+         "money",
+         "dinero"
+        ],
+        [
+         "for the house",
+         "para la casa"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "send",
+     "past": "sent",
+     "pp": "sent",
+     "es": "enviar, mandar",
+     "x": [
+      {
+       "s": "I have sent you a message.",
+       "f": "have sent",
+       "h": "he mandado",
+       "t": "Te he mandado un mensaje.",
+       "g": [
+        [
+         "you",
+         "te, a ti"
+        ],
+        [
+         "message",
+         "mensaje"
+        ]
+       ]
+      },
+      {
+       "s": "My aunt sent me a postcard from Paris.",
+       "f": "sent",
+       "h": "mandó",
+       "t": "Mi tía me mandó una postal desde París.",
+       "g": [
+        [
+         "my aunt",
+         "mi tía"
+        ],
+        [
+         "me",
+         "me"
+        ],
+        [
+         "postcard",
+         "postal"
+        ],
+        [
+         "from Paris",
+         "desde París"
+        ]
+       ]
+      },
+      {
+       "s": "We sent the package last week.",
+       "f": "sent",
+       "h": "enviamos",
+       "t": "Enviamos el paquete la semana pasada.",
+       "g": [
+        [
+         "package",
+         "paquete"
+        ],
+        [
+         "last week",
+         "la semana pasada"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "spend",
+     "past": "spent",
+     "pp": "spent",
+     "es": "gastar (dinero); pasar (tiempo)",
+     "x": [
+      {
+       "s": "We spent the weekend in the mountains.",
+       "f": "spent",
+       "h": "pasamos",
+       "t": "Pasamos el fin de semana en las montañas.",
+       "g": [
+        [
+         "weekend",
+         "fin de semana"
+        ],
+        [
+         "in the mountains",
+         "en las montañas"
+        ]
+       ]
+      },
+      {
+       "s": "She has spent all her money on clothes.",
+       "f": "has spent",
+       "h": "se ha gastado",
+       "t": "Se ha gastado todo su dinero en ropa.",
+       "g": [
+        [
+         "all her money",
+         "todo su dinero"
+        ],
+        [
+         "on clothes",
+         "en ropa"
+        ]
+       ]
+      },
+      {
+       "s": "I spent two hours on my homework.",
+       "f": "spent",
+       "h": "pasé",
+       "t": "Pasé dos horas haciendo mis tareas.",
+       "g": [
+        [
+         "two hours",
+         "dos horas"
+        ],
+        [
+         "on my homework",
+         "en mis tareas"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "-T / -T",
+   "verbs": [
+    {
+     "v": "burn",
+     "past": "burnt",
+     "pp": "burnt",
+     "es": "quemar",
+     "x": [
+      {
+       "s": "I burnt the toast again.",
+       "f": "burnt",
+       "h": "quemé",
+       "t": "Quemé las tostadas otra vez.",
+       "g": [
+        [
+         "toast",
+         "tostadas, pan tostado"
+        ],
+        [
+         "again",
+         "otra vez"
+        ]
+       ]
+      },
+      {
+       "s": "I burnt my hand on the hot pan.",
+       "f": "burnt",
+       "h": "me quemé",
+       "t": "Me quemé la mano con la sartén caliente.",
+       "g": [
+        [
+         "my hand",
+         "mi mano"
+        ],
+        [
+         "on",
+         "con"
+        ],
+        [
+         "hot pan",
+         "sartén caliente"
+        ]
+       ]
+      },
+      {
+       "s": "The fire has burnt the whole forest.",
+       "f": "has burnt",
+       "h": "ha quemado",
+       "t": "El fuego ha quemado todo el bosque.",
+       "g": [
+        [
+         "fire",
+         "fuego, incendio"
+        ],
+        [
+         "the whole forest",
+         "todo el bosque"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "dream",
+     "past": "dreamt",
+     "pp": "dreamt",
+     "es": "soñar",
+     "x": [
+      {
+       "s": "Last night I dreamt about the sea.",
+       "f": "dreamt",
+       "h": "soñé",
+       "t": "Anoche soñé con el mar.",
+       "g": [
+        [
+         "last night",
+         "anoche"
+        ],
+        [
+         "about",
+         "con, sobre"
+        ],
+        [
+         "sea",
+         "mar"
+        ]
+       ]
+      },
+      {
+       "s": "Have you ever dreamt of flying?",
+       "f": "have dreamt",
+       "h": "has soñado",
+       "t": "¿Alguna vez has soñado que volabas?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "ever",
+         "alguna vez"
+        ],
+        [
+         "of flying",
+         "que volabas, con volar"
+        ]
+       ]
+      },
+      {
+       "s": "He dreamt that he was a famous singer.",
+       "f": "dreamt",
+       "h": "soñó",
+       "t": "Soñó que era un cantante famoso.",
+       "g": [
+        [
+         "that",
+         "que"
+        ],
+        [
+         "he was",
+         "era"
+        ],
+        [
+         "famous singer",
+         "cantante famoso"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "learn",
+     "past": "learnt",
+     "pp": "learnt",
+     "es": "aprender",
+     "x": [
+      {
+       "s": "She learnt to swim when she was five.",
+       "f": "learnt",
+       "h": "aprendió",
+       "t": "Aprendió a nadar cuando tenía cinco años.",
+       "g": [
+        [
+         "to swim",
+         "a nadar"
+        ],
+        [
+         "when",
+         "cuando"
+        ],
+        [
+         "she was five",
+         "tenía cinco años"
+        ]
+       ]
+      },
+      {
+       "s": "I have learnt a lot of new words this month.",
+       "f": "have learnt",
+       "h": "he aprendido",
+       "t": "He aprendido muchas palabras nuevas este mes.",
+       "g": [
+        [
+         "a lot of",
+         "muchas"
+        ],
+        [
+         "new words",
+         "palabras nuevas"
+        ],
+        [
+         "this month",
+         "este mes"
+        ]
+       ]
+      },
+      {
+       "s": "We learnt about the planets at school.",
+       "f": "learnt",
+       "h": "aprendimos",
+       "t": "Aprendimos sobre los planetas en el colegio.",
+       "g": [
+        [
+         "about",
+         "sobre"
+        ],
+        [
+         "planets",
+         "planetas"
+        ],
+        [
+         "at school",
+         "en el colegio"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "leave",
+     "past": "left",
+     "pp": "left",
+     "es": "irse, salir; dejar",
+     "x": [
+      {
+       "s": "The train left ten minutes ago.",
+       "f": "left",
+       "h": "salió",
+       "t": "El tren salió hace diez minutos.",
+       "g": [
+        [
+         "train",
+         "tren"
+        ],
+        [
+         "ten minutes ago",
+         "hace diez minutos"
+        ]
+       ]
+      },
+      {
+       "s": "I left my keys on the kitchen table.",
+       "f": "left",
+       "h": "dejé",
+       "t": "Dejé mis llaves en la mesa de la cocina.",
+       "g": [
+        [
+         "my keys",
+         "mis llaves"
+        ],
+        [
+         "on the kitchen table",
+         "en la mesa de la cocina"
+        ]
+       ]
+      },
+      {
+       "s": "Has the plane left yet?",
+       "f": "has left",
+       "h": "ha salido",
+       "t": "¿Ya ha salido el avión?",
+       "g": [
+        [
+         "plane",
+         "avión"
+        ],
+        [
+         "yet",
+         "ya (en preguntas)"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "light",
+     "past": "lit",
+     "pp": "lit",
+     "es": "encender, prender",
+     "x": [
+      {
+       "s": "He lit the candles on the cake.",
+       "f": "lit",
+       "h": "prendió",
+       "t": "Prendió las velas de la torta.",
+       "g": [
+        [
+         "candles",
+         "velas"
+        ],
+        [
+         "on the cake",
+         "de la torta"
+        ]
+       ]
+      },
+      {
+       "s": "We lit a fire on the beach.",
+       "f": "lit",
+       "h": "prendimos",
+       "t": "Prendimos una fogata en la playa.",
+       "g": [
+        [
+         "fire",
+         "fuego, fogata"
+        ],
+        [
+         "on the beach",
+         "en la playa"
+        ]
+       ]
+      },
+      {
+       "s": "Have you lit the oven?",
+       "f": "have lit",
+       "h": "has prendido",
+       "t": "¿Has prendido el horno?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "oven",
+         "horno"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "lose",
+     "past": "lost",
+     "pp": "lost",
+     "es": "perder",
+     "x": [
+      {
+       "s": "I have lost my phone.",
+       "f": "have lost",
+       "h": "he perdido",
+       "t": "He perdido mi celular.",
+       "g": [
+        [
+         "my phone",
+         "mi celular, mi teléfono"
+        ]
+       ]
+      },
+      {
+       "s": "Our team lost the final.",
+       "f": "lost",
+       "h": "perdió",
+       "t": "Nuestro equipo perdió la final.",
+       "g": [
+        [
+         "our team",
+         "nuestro equipo"
+        ],
+        [
+         "final",
+         "final"
+        ]
+       ]
+      },
+      {
+       "s": "She lost her way in the old town.",
+       "f": "lost",
+       "h": "se perdió",
+       "t": "Se perdió en el centro histórico.",
+       "g": [
+        [
+         "her way",
+         "su camino (lose your way: perderse)"
+        ],
+        [
+         "in the old town",
+         "en el centro histórico"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "mean",
+     "past": "meant",
+     "pp": "meant",
+     "es": "significar, querer decir",
+     "x": [
+      {
+       "s": "What does this word mean?",
+       "f": "mean",
+       "h": "significa",
+       "t": "¿Qué significa esta palabra?",
+       "g": [
+        [
+         "what",
+         "qué"
+        ],
+        [
+         "does",
+         "auxiliar del presente en preguntas (con he, she, it)"
+        ],
+        [
+         "this word",
+         "esta palabra"
+        ]
+       ]
+      },
+      {
+       "s": "Sorry, I didn't mean to hurt you.",
+       "f": "didn't mean",
+       "h": "no quise",
+       "t": "Perdón, no quise hacerte daño.",
+       "g": [
+        [
+         "sorry",
+         "perdón"
+        ],
+        [
+         "to hurt you",
+         "hacerte daño"
+        ]
+       ]
+      },
+      {
+       "s": "What did he mean by that?",
+       "f": "mean",
+       "h": "quiso decir",
+       "t": "¿Qué quiso decir con eso?",
+       "g": [
+        [
+         "what",
+         "qué"
+        ],
+        [
+         "did",
+         "auxiliar del pasado en preguntas"
+        ],
+        [
+         "by that",
+         "con eso"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "shoot",
+     "past": "shot",
+     "pp": "shot",
+     "es": "disparar; chutar (el balón)",
+     "x": [
+      {
+       "s": "The player shot and scored a goal.",
+       "f": "shot",
+       "h": "disparó",
+       "t": "El jugador disparó y marcó un gol.",
+       "g": [
+        [
+         "player",
+         "jugador"
+        ],
+        [
+         "and",
+         "y"
+        ],
+        [
+         "scored",
+         "marcó, anotó"
+        ],
+        [
+         "goal",
+         "gol"
+        ]
+       ]
+      },
+      {
+       "s": "They shot the movie in Colombia.",
+       "f": "shot",
+       "h": "rodaron",
+       "t": "Rodaron la película en Colombia.",
+       "g": [
+        [
+         "movie",
+         "película"
+        ],
+        [
+         "in Colombia",
+         "en Colombia"
+        ]
+       ]
+      },
+      {
+       "s": "The hunter shot at the bird but missed.",
+       "f": "shot",
+       "h": "disparó",
+       "t": "El cazador le disparó al pájaro, pero falló.",
+       "g": [
+        [
+         "hunter",
+         "cazador"
+        ],
+        [
+         "at the bird",
+         "al pájaro"
+        ],
+        [
+         "but",
+         "pero"
+        ],
+        [
+         "missed",
+         "falló"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "sit",
+     "past": "sat",
+     "pp": "sat",
+     "es": "sentarse",
+     "x": [
+      {
+       "s": "We sat next to the window.",
+       "f": "sat",
+       "h": "nos sentamos",
+       "t": "Nos sentamos junto a la ventana.",
+       "g": [
+        [
+         "next to",
+         "junto a, al lado de"
+        ],
+        [
+         "window",
+         "ventana"
+        ]
+       ]
+      },
+      {
+       "s": "Have you ever sat in the front row?",
+       "f": "have sat",
+       "h": "te has sentado",
+       "t": "¿Alguna vez te has sentado en la primera fila?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "ever",
+         "alguna vez"
+        ],
+        [
+         "in the front row",
+         "en la primera fila"
+        ]
+       ]
+      },
+      {
+       "s": "The old man sat on a bench in the park.",
+       "f": "sat",
+       "h": "se sentó",
+       "t": "El anciano se sentó en un banco del parque.",
+       "g": [
+        [
+         "old man",
+         "anciano"
+        ],
+        [
+         "on a bench",
+         "en un banco"
+        ],
+        [
+         "in the park",
+         "del parque"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "spell",
+     "past": "spelt",
+     "pp": "spelt",
+     "es": "deletrear",
+     "x": [
+      {
+       "s": "How do you spell your name?",
+       "f": "spell",
+       "h": "se escribe",
+       "t": "¿Cómo se escribe tu nombre?",
+       "g": [
+        [
+         "how",
+         "cómo"
+        ],
+        [
+         "do",
+         "auxiliar del presente en preguntas"
+        ],
+        [
+         "your name",
+         "tu nombre"
+        ]
+       ]
+      },
+      {
+       "s": "You have spelt my name wrong.",
+       "f": "have spelt",
+       "h": "has escrito",
+       "t": "Has escrito mal mi nombre.",
+       "g": [
+        [
+         "my name",
+         "mi nombre"
+        ],
+        [
+         "wrong",
+         "mal"
+        ]
+       ]
+      },
+      {
+       "s": "The teacher spelt the word on the board.",
+       "f": "spelt",
+       "h": "deletreó",
+       "t": "La profesora deletreó la palabra en el tablero.",
+       "g": [
+        [
+         "teacher",
+         "profesora"
+        ],
+        [
+         "the word",
+         "la palabra"
+        ],
+        [
+         "on the board",
+         "en el tablero"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Variados",
+   "verbs": [
+    {
+     "v": "become",
+     "past": "became",
+     "pp": "become",
+     "es": "llegar a ser, convertirse en, volverse",
+     "x": [
+      {
+       "s": "She became a doctor at twenty-eight.",
+       "f": "became",
+       "h": "se hizo",
+       "t": "Se hizo médica a los veintiocho años.",
+       "g": [
+        [
+         "doctor",
+         "médico, médica"
+        ],
+        [
+         "at twenty-eight",
+         "a los veintiocho años"
+        ]
+       ]
+      },
+      {
+       "s": "The little village has become a big city.",
+       "f": "has become",
+       "h": "se ha convertido",
+       "t": "El pueblito se ha convertido en una gran ciudad.",
+       "g": [
+        [
+         "little village",
+         "pueblito"
+        ],
+        [
+         "a big city",
+         "una gran ciudad"
+        ]
+       ]
+      },
+      {
+       "s": "It became cold when the sun went down.",
+       "f": "became",
+       "h": "empezó a hacer",
+       "t": "Empezó a hacer frío cuando se puso el sol.",
+       "g": [
+        [
+         "it",
+         "(sujeto vacío)"
+        ],
+        [
+         "cold",
+         "frío"
+        ],
+        [
+         "when",
+         "cuando"
+        ],
+        [
+         "the sun went down",
+         "se puso el sol"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "find",
+     "past": "found",
+     "pp": "found",
+     "es": "encontrar",
+     "x": [
+      {
+       "s": "I found some money in my old jacket.",
+       "f": "found",
+       "h": "encontré",
+       "t": "Encontré algo de plata en mi chaqueta vieja.",
+       "g": [
+        [
+         "some money",
+         "algo de dinero, algo de plata"
+        ],
+        [
+         "in my",
+         "en mi"
+        ],
+        [
+         "old",
+         "viejo, vieja"
+        ],
+        [
+         "jacket",
+         "chaqueta"
+        ]
+       ]
+      },
+      {
+       "s": "Have you found a new apartment?",
+       "f": "have found",
+       "h": "has encontrado",
+       "t": "¿Has encontrado un apartamento nuevo?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "new apartment",
+         "apartamento nuevo"
+        ]
+       ]
+      },
+      {
+       "s": "The police found the missing child.",
+       "f": "found",
+       "h": "encontró",
+       "t": "La policía encontró al niño perdido.",
+       "g": [
+        [
+         "police",
+         "policía"
+        ],
+        [
+         "missing child",
+         "niño perdido, desaparecido"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "hang",
+     "past": "hung",
+     "pp": "hung",
+     "es": "colgar",
+     "x": [
+      {
+       "s": "We hung the picture on the wall.",
+       "f": "hung",
+       "h": "colgamos",
+       "t": "Colgamos el cuadro en la pared.",
+       "g": [
+        [
+         "picture",
+         "cuadro"
+        ],
+        [
+         "on the wall",
+         "en la pared"
+        ]
+       ]
+      },
+      {
+       "s": "She hung the wet clothes outside.",
+       "f": "hung",
+       "h": "colgó",
+       "t": "Colgó la ropa mojada afuera.",
+       "g": [
+        [
+         "wet clothes",
+         "ropa mojada"
+        ],
+        [
+         "outside",
+         "afuera"
+        ]
+       ]
+      },
+      {
+       "s": "Have you hung up your coat?",
+       "f": "have hung",
+       "h": "has colgado",
+       "t": "¿Has colgado tu abrigo?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "up",
+         "(hang up: colgar)"
+        ],
+        [
+         "your coat",
+         "tu abrigo"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "hold",
+     "past": "held",
+     "pp": "held",
+     "es": "sostener, tener en la mano, agarrar",
+     "x": [
+      {
+       "s": "He held the baby in his arms.",
+       "f": "held",
+       "h": "sostuvo",
+       "t": "Sostuvo al bebé en sus brazos.",
+       "g": [
+        [
+         "baby",
+         "bebé"
+        ],
+        [
+         "in his arms",
+         "en sus brazos"
+        ]
+       ]
+      },
+      {
+       "s": "She held the door open for me.",
+       "f": "held",
+       "h": "sostuvo",
+       "t": "Me sostuvo la puerta abierta.",
+       "g": [
+        [
+         "the door",
+         "la puerta"
+        ],
+        [
+         "open",
+         "abierta"
+        ],
+        [
+         "for me",
+         "para mí"
+        ]
+       ]
+      },
+      {
+       "s": "They held hands in the cinema.",
+       "f": "held",
+       "h": "se tomaron",
+       "t": "Se tomaron de la mano en el cine.",
+       "g": [
+        [
+         "hands",
+         "manos (hold hands: tomarse de la mano)"
+        ],
+        [
+         "in the cinema",
+         "en el cine"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "lay",
+     "past": "laid",
+     "pp": "laid",
+     "es": "poner, colocar (algo); poner (la mesa)",
+     "x": [
+      {
+       "s": "She laid the table for dinner.",
+       "f": "laid",
+       "h": "puso",
+       "t": "Puso la mesa para la cena.",
+       "g": [
+        [
+         "the table",
+         "la mesa"
+        ],
+        [
+         "for dinner",
+         "para la cena"
+        ]
+       ]
+      },
+      {
+       "s": "The hen has laid three eggs.",
+       "f": "has laid",
+       "h": "ha puesto",
+       "t": "La gallina ha puesto tres huevos.",
+       "g": [
+        [
+         "hen",
+         "gallina"
+        ],
+        [
+         "three eggs",
+         "tres huevos"
+        ]
+       ]
+      },
+      {
+       "s": "He laid the baby gently on the bed.",
+       "f": "laid",
+       "h": "acostó",
+       "t": "Acostó al bebé con cuidado en la cama.",
+       "g": [
+        [
+         "baby",
+         "bebé"
+        ],
+        [
+         "gently",
+         "con cuidado"
+        ],
+        [
+         "on the bed",
+         "en la cama"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "lie",
+     "past": "lay",
+     "pp": "lain",
+     "es": "estar acostado, tumbarse",
+     "x": [
+      {
+       "s": "I lay on the beach all afternoon.",
+       "f": "lay",
+       "h": "estuve acostada",
+       "t": "Estuve acostada en la playa toda la tarde.",
+       "g": [
+        [
+         "on the beach",
+         "en la playa"
+        ],
+        [
+         "all afternoon",
+         "toda la tarde"
+        ]
+       ]
+      },
+      {
+       "s": "The dog lay by the fire all evening.",
+       "f": "lay",
+       "h": "estuvo echado",
+       "t": "El perro estuvo echado junto al fuego toda la tarde.",
+       "g": [
+        [
+         "dog",
+         "perro"
+        ],
+        [
+         "by the fire",
+         "junto al fuego"
+        ],
+        [
+         "all evening",
+         "toda la tarde"
+        ]
+       ]
+      },
+      {
+       "s": "I have lain in bed all day with a cold.",
+       "f": "have lain",
+       "h": "he estado acostada",
+       "t": "He estado acostada todo el día con un resfriado.",
+       "g": [
+        [
+         "in bed",
+         "en la cama"
+        ],
+        [
+         "all day",
+         "todo el día"
+        ],
+        [
+         "with a cold",
+         "con un resfriado"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "pay",
+     "past": "paid",
+     "pp": "paid",
+     "es": "pagar",
+     "x": [
+      {
+       "s": "Who paid for the drinks?",
+       "f": "paid",
+       "h": "pagó",
+       "t": "¿Quién pagó las bebidas?",
+       "g": [
+        [
+         "who",
+         "quién"
+        ],
+        [
+         "for the drinks",
+         "las bebidas"
+        ]
+       ]
+      },
+      {
+       "s": "Have you paid the electricity bill?",
+       "f": "have paid",
+       "h": "has pagado",
+       "t": "¿Has pagado la cuenta de la luz?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "electricity bill",
+         "cuenta de la luz"
+        ]
+       ]
+      },
+      {
+       "s": "I paid by card at the supermarket.",
+       "f": "paid",
+       "h": "pagué",
+       "t": "Pagué con tarjeta en el supermercado.",
+       "g": [
+        [
+         "by card",
+         "con tarjeta"
+        ],
+        [
+         "at the supermarket",
+         "en el supermercado"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "run",
+     "past": "ran",
+     "pp": "run",
+     "es": "correr",
+     "x": [
+      {
+       "s": "I have run five kilometers today.",
+       "f": "have run",
+       "h": "he corrido",
+       "t": "Hoy he corrido cinco kilómetros.",
+       "g": [
+        [
+         "five kilometers",
+         "cinco kilómetros"
+        ],
+        [
+         "today",
+         "hoy"
+        ]
+       ]
+      },
+      {
+       "s": "The children ran to the ice cream truck.",
+       "f": "ran",
+       "h": "corrieron",
+       "t": "Los niños corrieron hacia el carro de los helados.",
+       "g": [
+        [
+         "children",
+         "niños"
+        ],
+        [
+         "to",
+         "hacia"
+        ],
+        [
+         "ice cream truck",
+         "carro de los helados"
+        ]
+       ]
+      },
+      {
+       "s": "She ran a marathon last year.",
+       "f": "ran",
+       "h": "corrió",
+       "t": "Corrió una maratón el año pasado.",
+       "g": [
+        [
+         "marathon",
+         "maratón"
+        ],
+        [
+         "last year",
+         "el año pasado"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "sell",
+     "past": "sold",
+     "pp": "sold",
+     "es": "vender",
+     "x": [
+      {
+       "s": "They sold their house last year.",
+       "f": "sold",
+       "h": "vendieron",
+       "t": "Vendieron su casa el año pasado.",
+       "g": [
+        [
+         "their house",
+         "su casa (de ellos)"
+        ],
+        [
+         "last year",
+         "el año pasado"
+        ]
+       ]
+      },
+      {
+       "s": "Have you sold your old bike?",
+       "f": "have sold",
+       "h": "has vendido",
+       "t": "¿Has vendido tu bicicleta vieja?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "your old bike",
+         "tu bicicleta vieja"
+        ]
+       ]
+      },
+      {
+       "s": "The bakery sold all its bread by noon.",
+       "f": "sold",
+       "h": "vendió",
+       "t": "La panadería vendió todo su pan antes del mediodía.",
+       "g": [
+        [
+         "bakery",
+         "panadería"
+        ],
+        [
+         "all its bread",
+         "todo su pan"
+        ],
+        [
+         "by noon",
+         "antes del mediodía"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "shine",
+     "past": "shone",
+     "pp": "shone",
+     "es": "brillar",
+     "x": [
+      {
+       "s": "The sun shone all day.",
+       "f": "shone",
+       "h": "brilló",
+       "t": "El sol brilló todo el día.",
+       "g": [
+        [
+         "sun",
+         "sol"
+        ],
+        [
+         "all day",
+         "todo el día"
+        ]
+       ]
+      },
+      {
+       "s": "Her eyes shone with happiness.",
+       "f": "shone",
+       "h": "brillaban",
+       "t": "Sus ojos brillaban de felicidad.",
+       "g": [
+        [
+         "her eyes",
+         "sus ojos"
+        ],
+        [
+         "with happiness",
+         "de felicidad"
+        ]
+       ]
+      },
+      {
+       "s": "The stars shone brightly over the sea.",
+       "f": "shone",
+       "h": "brillaban",
+       "t": "Las estrellas brillaban con fuerza sobre el mar.",
+       "g": [
+        [
+         "stars",
+         "estrellas"
+        ],
+        [
+         "brightly",
+         "con fuerza, intensamente"
+        ],
+        [
+         "over the sea",
+         "sobre el mar"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "show",
+     "past": "showed",
+     "pp": "shown",
+     "es": "mostrar, enseñar",
+     "x": [
+      {
+       "s": "She showed me her new apartment.",
+       "f": "showed",
+       "h": "mostró",
+       "t": "Me mostró su apartamento nuevo.",
+       "g": [
+        [
+         "me",
+         "me, a mí"
+        ],
+        [
+         "her",
+         "su (de ella)"
+        ],
+        [
+         "new",
+         "nuevo"
+        ],
+        [
+         "apartment",
+         "apartamento"
+        ]
+       ]
+      },
+      {
+       "s": "Have you shown your photos to your family?",
+       "f": "have shown",
+       "h": "has mostrado",
+       "t": "¿Les has mostrado tus fotos a tu familia?",
+       "g": [
+        [
+         "you",
+         "tú"
+        ],
+        [
+         "your photos",
+         "tus fotos"
+        ],
+        [
+         "to your family",
+         "a tu familia"
+        ]
+       ]
+      },
+      {
+       "s": "The guide showed us the old castle.",
+       "f": "showed",
+       "h": "mostró",
+       "t": "El guía nos mostró el castillo antiguo.",
+       "g": [
+        [
+         "guide",
+         "guía"
+        ],
+        [
+         "us",
+         "nos"
+        ],
+        [
+         "old castle",
+         "castillo antiguo"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "wear",
+     "past": "wore",
+     "pp": "worn",
+     "es": "llevar puesto, usar (ropa)",
+     "x": [
+      {
+       "s": "He wore a blue shirt to the wedding.",
+       "f": "wore",
+       "h": "llevó",
+       "t": "Llevó una camisa azul a la boda.",
+       "g": [
+        [
+         "blue",
+         "azul"
+        ],
+        [
+         "shirt",
+         "camisa"
+        ],
+        [
+         "to the wedding",
+         "a la boda"
+        ]
+       ]
+      },
+      {
+       "s": "She has worn the same dress three times.",
+       "f": "has worn",
+       "h": "se ha puesto",
+       "t": "Se ha puesto el mismo vestido tres veces.",
+       "g": [
+        [
+         "same dress",
+         "mismo vestido"
+        ],
+        [
+         "three times",
+         "tres veces"
+        ]
+       ]
+      },
+      {
+       "s": "He wore glasses when he was young.",
+       "f": "wore",
+       "h": "usaba",
+       "t": "Usaba gafas cuando era joven.",
+       "g": [
+        [
+         "glasses",
+         "gafas"
+        ],
+        [
+         "when",
+         "cuando"
+        ],
+        [
+         "he was young",
+         "era joven"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "v": "win",
+     "past": "won",
+     "pp": "won",
+     "es": "ganar",
+     "x": [
+      {
+       "s": "Our team has won the game!",
+       "f": "has won",
+       "h": "ha ganado",
+       "t": "¡Nuestro equipo ha ganado el partido!",
+       "g": [
+        [
+         "our team",
+         "nuestro equipo"
+        ],
+        [
+         "game",
+         "partido"
+        ]
+       ]
+      },
+      {
+       "s": "She won first prize in the competition.",
+       "f": "won",
+       "h": "ganó",
+       "t": "Ganó el primer premio en el concurso.",
+       "g": [
+        [
+         "first prize",
+         "primer premio"
+        ],
+        [
+         "in the competition",
+         "en el concurso"
+        ]
+       ]
+      },
+      {
+       "s": "Who won the game last night?",
+       "f": "won",
+       "h": "ganó",
+       "t": "¿Quién ganó el partido anoche?",
+       "g": [
+        [
+         "who",
+         "quién"
+        ],
+        [
+         "game",
+         "partido"
+        ],
+        [
+         "last night",
+         "anoche"
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "levels": {
+  "verb": "El verbo. Oyes y lees la frase: ¿qué significa el verbo? Piénsalo, mira la respuesta y di qué tal te fue.",
+  "word": "Palabra por palabra. Una palabra de la frase cada vez: ¿qué significa aquí? Piénsalo, mira la respuesta y di qué tal te fue.",
+  "gap": "Escribe el verbo. Escúchalo y escríbelo en inglés; la pista te dice en español qué va ahí.",
+  "vocab": "Toda la frase. ¿Entiendes cada palabra? Piénsalo, mira la respuesta y di qué tal te fue."
+ }
+}
