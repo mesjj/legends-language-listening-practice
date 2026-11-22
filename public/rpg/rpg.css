@@ -916,10 +916,6 @@ button.cast.rec { background: #3a1f2a; border-color: var(--miss); color: #ffd9d6
   .stage .foe .fname { overflow-wrap: anywhere; }
 }
 
-/* the item you just won at the gamble: lit up for 3 s with its tooltip open */
-.item.justgot { position: relative; z-index: 2; outline: 2px solid var(--gold); outline-offset: 1px; animation: justgot .6s ease-in-out 5 alternate; }
-@keyframes justgot { from { box-shadow: 0 0 4px 1px rgba(214,168,76,.35); filter: brightness(1); } to { box-shadow: 0 0 16px 4px rgba(214,168,76,.8); filter: brightness(1.35); } }
-@media (prefers-reduced-motion: reduce) { .item.justgot { animation: none; box-shadow: 0 0 12px 3px rgba(214,168,76,.7); } }
 .fighthead .combo .luck { color: #8fd8c8; margin-left: 4px; cursor: help; }
 /* runeword tooltips: the word, each rune, the total */
 .tpart { margin-top: 7px; }
@@ -1515,18 +1511,7 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .toast.r-tunjo { border-color: #ffb6f0; font: 500 23px var(--serif); box-shadow: 0 0 24px rgba(255,182,240,.45); }
 .toast.r-tunjo, .toast.r-tunjo * { background: var(--rainbow); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .idreveal.tunjo { border-image: var(--rainbow) 1; }
-.tcoll { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
-.tcard { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 10px 8px; border: 1px solid #4a3d2c; border-radius: 6px; background: rgba(0,0,0,.25); }
-.tcard .tpic { width: 72px; height: 72px; display: grid; place-items: center; }
-.tcard .tpic .ico { width: 64px; height: 64px; }
-.tcard.unknown .tpic .ico { filter: brightness(0) opacity(.55); }
-.tcard[data-tcoll] { border: 2px solid transparent; background: linear-gradient(#1b1611, #1b1611) padding-box, var(--rainbow) border-box; }
-.tshelf { position: absolute; left: 4%; right: 4%; bottom: 7%; display: flex; justify-content: space-between; align-items: flex-end; }
-.tshelf span { width: 7%; aspect-ratio: 1; display: grid; place-items: center; filter: drop-shadow(0 2px 2px rgba(0,0,0,.6)); }
-.tshelf span .ico { width: 100%; height: 100%; }
-.tshelf span.off .ico { filter: brightness(0) opacity(.45); }
-@media (prefers-reduced-motion: no-preference) { .tshelf span.on { animation: tFloat 3s ease-in-out infinite; animation-delay: calc(var(--i) * -0.25s); } }
-@keyframes tFloat { 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: no-preference) { @keyframes tFloat { 50% { transform: translateY(-3px); } }
 .srow.none { opacity: .55; }
 .tprizes { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin: 8px 0 14px; }
 .tprize { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; padding: 8px 6px; border-radius: 6px; border: 1px solid var(--edge); background: rgba(0,0,0,.2); }
@@ -1534,3 +1519,5 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .tprize b { font-family: var(--serif); font-size: 14px; line-height: 1.2; }
 .tprize.can { border: 2px solid transparent; background: linear-gradient(#1b1611, #1b1611) padding-box, var(--rainbow) border-box; }
 .tprize.have { opacity: .45; }
+.tprize .small { margin-top: 4px; }
+.tprize.have:has([data-tback]) { opacity: .8; }

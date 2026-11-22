@@ -628,23 +628,6 @@ document.addEventListener("mouseover", (e) => {
   tip.hidden = false;
   placeTip(el);
 });
-// After a gamble: the new item lights up in the bag with its tooltip open, as if hovered, for 3 s.
-let boughtTimer = 0;
-function showBought(it) {
-  clearTimeout(boughtTimer);
-  document.querySelectorAll(".item.justgot").forEach((e) => e.classList.remove("justgot"));
-  const el = document.querySelector(`#invPanel [data-id="${it.id}"]`);
-  if (!el) return;
-  el.classList.add("justgot");
-  el.scrollIntoView({ block: "nearest" });
-  tip.innerHTML = tooltipHtml(it);
-  tip.hidden = false;
-  placeTip(el);
-  boughtTimer = setTimeout(() => {
-    el.classList.remove("justgot");
-    if (!el.matches(":hover")) tip.hidden = true;
-  }, 3000);
-}
 function placeTip(el) {
   const r = el.getBoundingClientRect();
   const w = tip.offsetWidth, hh = tip.offsetHeight;
@@ -1524,12 +1507,11 @@ const narrow = () => innerWidth < 760;
 const touch = () => matchMedia("(hover: none)").matches;
 // on a phone the inventory panel would cover the stash or the alembic: show the bag right here instead
 const invInline = () => (narrow() ? `<h3 class="rwtitle">Tu inventario <span class="dim">${ch.inv.length}/${INV_SIZE}</span></h3><div class="grid">${grid(ch.inv, INV_SIZE)}</div>` : "");
-// Town: merchant (potions, gambling), stash, alembic, and the road out.
+// Town: merchant (potions), stash, alembic, and the road out.
 // Each village tab has its own scene (scripts/build_scenes.py, v-<tab>.png) and what moves in it,
 // placed in % of the picture: [kind, x, y, count or size, spread].
 const TOWN_FX = {
   merchant: [["glow", 25, 80, 70, "255,150,60"], ["flame", 25, 82, 1], ["ember", 25, 78, 10, 3], ["smoke", 25, 70, 3, 2], ["glow", 62, 50, 120, "255,210,150"]],
-  gamble: [["glow", 41.6, 26, 160, "255,220,140"], ["flame", 78.4, 22, 1], ["flame", 82.5, 22, 1], ["flame", 86.7, 22, 1], ["glow", 82.5, 24, 90, "255,190,90"], ["smoke", 50, 40, 4, 30]],
   casetes: [["pulse", 52.5, 50, 70, "255,210,110"], ["ring", 52.5, 42, 3], ["sparkle", 52.5, 50, 4, 2], ["sparkle", 36, 64, 5, 7], ["sparkle", 80.6, 38, 3, 4], ["sparkle", 19.4, 62, 3, 2], ["glow", 45.7, 56, 70, "255,190,100"], ["flame", 45.7, 57, 1], ["glow", 25.2, 56, 70, "255,190,100"], ["flame", 25.2, 57, 1], ["glow", 83, 33, 120, "255,160,80"], ["flame", 77.5, 33, 1], ["flame", 80, 33, 1], ["flame", 88.6, 33, 1], ["flame", 90.7, 33, 1], ["dust", 50, 30, 8, 14]],
   sell: [["sparkle", 37, 52, 4, 3], ["sparkle", 63.5, 54, 3, 2], ["shaft", 49, 30, 1], ["dust", 49, 40, 10, 8]],
   stash: [["flame", 32.6, 40, 1], ["flame", 68, 40, 1], ["glow", 32.6, 30, 110, "255,160,70"], ["glow", 68, 30, 110, "255,160,70"], ["dust", 50, 50, 12, 40]],
@@ -1548,14 +1530,6 @@ function hungShirts() {
     const set = SETS.find((s) => s.id === sid);
     return `<b class="hungneck${ch.equip.shirt?.setShirt === sid ? " worn" : ""}" title="${esc(set?.name || sid)}" style="left:${x}%;top:${y}%;width:${(cw / W) * 100}%;height:${(ch_ / H) * 100}%;background-image:url('${url}');background-size:${n * 100}% 100%;background-position:${(i / (n - 1)) * 100}% 0"></b>`;
   }).join("");
-}
-// Colección's scene: the rainbow items you've won, set out along Doña Remedios' counter, the rest as shadows
-function collectionShelf() {
-  const book = tunjoBook(), n = TUNJO_ITEMS.length;
-  return `<div class="tshelf">${TUNJO_ITEMS.map((d, i) => {
-    const it = book[d.id] || { base: d.look, rarity: "tunjo", tunjo: d.id, look: d.look };
-    return `<span class="${book[d.id] ? "on" : "off"}" style="--i:${i};--n:${n}" title="${book[d.id] ? esc(it.name) : "¿?"}">${itemIco(it)}</span>`;
-  }).join("")}</div>`;
 }
 // ---------- the Montón: perfect gems thrown on a pile, for nothing but the pile ----------
 // Where the k-th gem lies: the pile is always a pyramid (rows b, b-1 … 1) being finished. Going from
@@ -1685,16 +1659,15 @@ function townScene(tab) {
     return Array.from({ length: n }, () => `<i class="tfx-${k}" style="left:${(x + (Math.random() * 2 - 1) * spread).toFixed(2)}%;top:${y}%;--d:${r(0.7, 1.4)};--t:${r(-1, 0)};--k:${Math.random() < 0.5 ? -1 : 1}"></i>`);
   }).join("");
   if (tab === "monton") return moundScene();
-  if (tab === "coleccion") return `<div class="townscene" style="background-image:url('${new URL("rpg/scenes/v-casetes.png", location.href).href}')" aria-hidden="true">${collectionShelf()}</div>`;
   return `<div class="townscene" style="background-image:url('${new URL(`rpg/scenes/v-${tab}.png`, location.href).href}')" aria-hidden="true">${fx}${tab === "camisetas" ? hungShirts() : ""}</div>`;
 }
 function renderTown() {
   dropRunes(); necklacesToShirts(); attuneTunjo();
   const st = stats();
   ch.life = st.maxLife; ch.mana = st.maxMana; // rest in town
-  S.townTab = S.townTab === "collares" ? "camisetas" : S.townTab || "merchant";
+  S.townTab = S.townTab === "collares" ? "camisetas" : S.townTab === "gamble" || S.townTab === "coleccion" ? "merchant" : S.townTab || "merchant"; // (Apuestas and Colección are gone)
   const tierNow = ch.level >= 24 ? 2 : ch.level >= 10 ? 1 : 0;
-  const tabs = [["merchant", "Mercader"], ["gamble", "Apuestas"], ["casetes", "Tunjos"], ["sell", "Vender"], ["stash", "Alijo"], ["alembic", "Alambique"], ["camisetas", "Camisetas"], ["coleccion", "Colección"], ["monton", "Montón"]];
+  const tabs = [["merchant", "Mercader"], ["casetes", "Tunjos"], ["sell", "Vender"], ["stash", "Alijo"], ["alembic", "Alambique"], ["camisetas", "Camisetas"], ["monton", "Montón"]];
   let body = "";
   if (S.townTab === "merchant") {
     body = `<p class="dim">Pociones para el camino. Para vender, la pestaña Vender.</p><div class="shop">` +
@@ -1703,10 +1676,6 @@ function renderTown() {
         const tmp = E.makePotion(type, tier);
         return `<div class="ware">${itemIco(tmp)}<div><b>${esc(E.itemName(tmp))}</b><span class="dim">${price} de oro</span></div><button data-buy="${type}" ${ch.gold < price ? "disabled" : ""}>Comprar</button></div>`;
       }).join("") + `</div><button id="fillBelt">Llenar el cinturón</button>`;
-  } else if (S.townTab === "gamble") {
-    const slots = [["weapon", "Arma"], ["off", "Escudo"], ["head", "Cabeza"], ["body", "Torso"], ["hands", "Manos"], ["feet", "Pies"], ["belt", "Cintura"], ["neck", "Amuleto"], ["ring", "Anillo"]];
-    body = `<p class="dim">Pagas por un objeto sin ver qué es. Casi siempre mágico; a veces raro; muy de vez en cuando, algo legendario.</p><div class="shop">` +
-      slots.map(([s, l]) => { const p = E.gamblePrice(ch, s); return `<div class="ware"><b>${l}</b><span class="dim">${p} de oro</span><button data-gamble="${s}" ${ch.gold < p ? "disabled" : ""}>Apostar</button></div>`; }).join("") + `</div>`;
   } else if (S.townTab === "casetes") {
     const p = tunjoPrice(), wait = tunjoWait(), G = ch.grimoire || [];
     const short = Math.max(0, p - ch.gold);
@@ -1719,8 +1688,6 @@ function renderTown() {
       ${CFG.online ? "" : G.length ? `<ol class="grimoire">${G.map((g, i) => `<li><b>${esc(g.name)}</b><p class="gtext">${esc(g.text)}</p>${g.ep === S.ep ? `<button data-gplay="${i}">▶ Oír</button>` : ""}</li>`).join("")}</ol>
         <p class="dim">En combate, después de una frase: Grimorio (G), y lees el pasaje en voz alta.</p>`
       : `<p class="dim">Vacío. La frase de un tunjo que entiendas queda aquí como conjuro.</p>`}`;
-  } else if (S.townTab === "coleccion") {
-    body = collectionPanel();
   } else if (S.townTab === "sell") {
     const back = S.sold || [];
     body = `<p class="dim">${touch() ? "Toca" : "Clic en"} un objeto del inventario y se vende al momento. Lo equipado y el cinturón no se venden así.</p>${invInline()}
@@ -1769,18 +1736,6 @@ function renderTown() {
     save(); renderHud(); renderPanels(); renderTown();
   }));
   $("#fillBelt")?.addEventListener("click", () => { while (ch.belt.length < stats().beltSlots && buyPotion("life", true) && ch.belt.length < stats().beltSlots && buyPotion("mana", true)); renderTown(); });
-  screen.querySelectorAll("[data-gamble]").forEach((b) => (b.onclick = () => {
-    const price = E.gamblePrice(ch, b.dataset.gamble);
-    if (ch.gold < price) return;
-    if (ch.inv.length >= INV_SIZE) return toast("El inventario está lleno");
-    ch.gold -= price;
-    const it = E.gamble(ch, b.dataset.gamble);
-    ch.inv.push(it);
-    toast(`Te tocó: ${E.itemName(it)}`, `r-${it.rarity}`);
-    save(); renderTown(); renderPanels(); renderHud();
-    if ($("#invPanel").hidden) { $("#invPanel").hidden = false; renderPanels(); }
-    showBought(it);
-  }));
   screen.querySelectorAll("[data-alem]").forEach((b) => (b.onclick = () => { ch.inv.push(S.alembic.splice(+b.dataset.alem, 1)[0]); save(); renderTown(); renderPanels(); }));
   $("#massGems")?.addEventListener("click", massGems);
   $("#emptyAlem")?.addEventListener("click", () => { ch.inv.push(...S.alembic); S.alembic = []; save(); renderTown(); renderPanels(); });
@@ -4445,7 +4400,7 @@ function identify(id) {
 // and there's one a day: after you buy one, the next is 24 hours away. It says one whole sentence from
 // anywhere in the episode, and you get one answer. Every word right (a slip of spelling or an accent
 // is forgiven) and a rainbow item falls that comes from nowhere else, one you don't have yet
-// (data.js TUNJO_ITEMS; kept in Colección). Wrong, and the gold and the day are gone.
+// (data.js TUNJO_ITEMS; listed under the buy button). Wrong, and the gold and the day are gone.
 const TUNJO_WAIT = 24 * 3600 * 1000;
 const tunjoPrice = () => Math.round(((10 + 6 * ch.level) * 4000) / 1000) * 1000;
 const tunjoWait = () => Math.max(0, (ch.tunjoNext || 0) - Date.now());
@@ -4458,12 +4413,12 @@ function tunjoLine() {
   const long = S.lines.filter((si) => seg(si).words.length >= 6);
   return E.pick(ok.length ? ok : long.length ? long : S.lines);
 }
-// what you've won so far, by item id: a copy of each (to give it back if it's lost or tossed)
+// what you've won so far, by item id: a copy of each (Recuperar gives it back if it's sold, lost or tossed)
 const tunjoBook = () => (ch.tunjoBook ||= {});
 const ownsNow = (id) => [...ch.inv, ...ch.stash, ...Object.values(ch.equip)].some((x) => x?.tunjo === id);
 function tunjoPrize() {
   const book = tunjoBook(), band = bandOf(ch.level), left = tunjoLeft();
-  // all twelve still growing: one of them again, with other properties, its fifty levels from now (the collection keeps it)
+  // all twelve still growing: one of them again, with other properties, its thirty levels from now (the collection keeps it)
   const def = E.pick(left.length ? left : TUNJO_ITEMS), it = E.makeTunjoItem(def, ch.level + 2);
   it.band = band;
   const old = book[def.id];
@@ -4471,7 +4426,7 @@ function tunjoPrize() {
   return { it, again: !!old && (old.band?.[1] ?? 0) >= ch.level };
 }
 // what the tunjo can still give you
-// (the ones you don't have, and the ones whose fifty levels you've already left behind)
+// (the ones you don't have, and the ones whose thirty levels you've already left behind)
 const tunjoLeft = () => { const book = tunjoBook(); return TUNJO_ITEMS.filter((d) => !book[d.id] || (book[d.id].band?.[1] ?? 0) < ch.level); };
 function buyTunjo() {
   const price = tunjoPrice();
@@ -4500,7 +4455,7 @@ function buyTunjo() {
       setTimeout(() => sfx.drop("mitico"), 300);
       return `<p class="good">¡Lo entendiste entero! Al tunjo le salen colores, y a sus pies:</p>
         <div class="idreveal tunjo" style="--c:${RARITY.tunjo.color}">${tooltipHtml(it, false)}</div>
-        <p class="dim">${again ? "Ya lo tenías: este sale con otras propiedades y sus cincuenta niveles desde ahora, y es el que queda en la Colección. " : `Nuevo en tu Colección, para los ${bandText(it.band)}. `}Va ${where || "a la Colección (no te cabía)"}.${spell ? ` Y la frase queda en tu grimorio: <b>${esc(spell.name)}</b>.` : ""}</p>`;
+        <p class="dim">${again ? "Ya lo tenías: este sale con otras propiedades y sus treinta niveles desde ahora. " : `Nuevo, para los ${bandText(it.band)}. `}Va ${where || "a la Colección (no te cabía)"}.${spell ? ` Y la frase queda en tu grimorio: <b>${esc(spell.name)}</b>.` : ""}</p>`;
     },
   });
 }
@@ -4509,16 +4464,18 @@ function buyTunjo() {
 function tunjoPrizes() {
   const book = tunjoBook(), band = bandOf(ch.level), left = new Set(tunjoLeft().map((d) => d.id)), all = !left.size;
   return `<h3 class="rwtitle">El premio: uno de estos</h3>
-    <p class="dim">Un objeto del arcoíris crece contigo durante cincuenta niveles desde el que tienes al ganarlo, y luego se queda como está: el que ganes ahora, ${bandText(band)}. ${all ? "Todos los tuyos siguen creciendo: el tunjo te da uno de los doce otra vez, con otras propiedades y sus cincuenta niveles desde ahora." : left.size === 1 ? "Solo te falta uno (o uno de los tuyos ya dejó de crecer): si aciertas, es ese." : `Si aciertas, te toca al azar uno de estos ${left.size}: los que no tienes y los que ya dejaron de crecer.`}</p>
+    <p class="dim">Un objeto del arcoíris crece contigo durante treinta niveles desde el que tienes al ganarlo, y luego se queda como está: el que ganes ahora, ${bandText(band)}. ${all ? "Todos los tuyos siguen creciendo: el tunjo te da uno de los doce otra vez, con otras propiedades y sus treinta niveles desde ahora." : left.size === 1 ? "Solo te falta uno (o uno de los tuyos ya dejó de crecer): si aciertas, es ese." : `Si aciertas, te toca al azar uno de estos ${left.size}: los que no tienes y los que ya dejaron de crecer.`}</p>
     <div class="tprizes">${TUNJO_ITEMS.map((d) => {
       const it = book[d.id], can = all || left.has(d.id), show = it || { base: d.look, rarity: "tunjo", tunjo: d.id, look: d.look, name: d.name };
       const note = can ? (it?.band ? `puede tocarte (el tuyo dejó de crecer en el ${it.band[1]})` : "puede tocarte") : `ya lo tienes (${it.band[0]}–${it.band[1]})`;
-      return `<div class="tprize${can ? " can" : " have"}" title="${esc(d.name)} · ${note}">${itemIco(show)}<b class="${can ? "rainbow" : ""}">${esc(d.name)}</b><span class="dim small">${esc(SLOTS[BASE[d.look].slot])} · ${note}</span></div>`;
+      const back = it && !ownsNow(d.id) ? `<button class="small" data-tback="${d.id}" title="Lo vendiste, lo tiraste o lo perdiste: te lo devuelve">Recuperar</button>` : "";
+      return `<div class="tprize${can ? " can" : " have"}" title="${esc(d.name)} · ${note}">${itemIco(show)}<b class="${can ? "rainbow" : ""}">${esc(d.name)}</b><span class="dim small">${esc(SLOTS[BASE[d.look].slot])} · ${note}</span>${back}</div>`;
     }).join("")}</div>`;
 }
-// A rainbow item's band: fifty levels from the one you won it at (at 51: 51–100). It grows with you
-// through them, then stays as it was at the last.
-const bandOf = (L) => [L, L + 49];
+// A rainbow item's band: thirty levels from the one you won it at (at 51: 51–80). It grows with you
+// through them, then stays as it was at the last. (Bands were fifty levels once: those are cut to thirty.)
+const BAND = 30;
+const bandOf = (L) => [L, L + BAND - 1];
 const bandText = (b) => `niveles ${b[0]}–${b[1]}`;
 // The rainbow items grow with you inside their band: each is made again at your level (or its band's
 // last, once you're past it; its seed keeps its character), keeping its place, its sockets and the
@@ -4528,6 +4485,7 @@ function attuneTunjo() {
   let changed = false;
   for (const it of all) {
     if (it?.rarity !== "tunjo") continue;
+    if (it.band && it.band[1] - it.band[0] >= BAND) it.band = [it.band[0], it.band[0] + BAND - 1];
     const band = it.band || bandOf(ch.level), lvl = Math.min(Math.max(ch.level, band[0]), band[1]) + 2;
     if (it.ilvl === lvl && it.seed != null && it.lreq === 1 && it.band) continue;
     const def = TUNJO_ITEMS.find((d) => d.id === it.tunjo);
@@ -4540,18 +4498,6 @@ function attuneTunjo() {
   }
   if (changed) save();
   return changed;
-}
-// Colección: the twelve rainbow items, the ones you have and the shapes of the rest
-function collectionPanel() {
-  const book = tunjoBook(), n = TUNJO_ITEMS.filter((d) => book[d.id]).length;
-  return `<p class="dim">Los objetos del arcoíris solo los da el tunjo de Doña Remedios, uno por frase entendida. Se venden por 1 de oro. Si vendes, pierdes o tiras uno, aquí te lo devuelve. Tienes ${n} de ${TUNJO_ITEMS.length}.</p>
-    <div class="tcoll">${TUNJO_ITEMS.map((d) => {
-      const it = book[d.id];
-      if (!it) return `<div class="tcard unknown"><div class="tpic">${itemIco({ base: d.look, rarity: "tunjo", tunjo: d.id, look: d.look })}</div><b>¿?</b><span class="dim">${SLOTS[BASE[d.look].slot]} · aún no</span></div>`;
-      const has = ownsNow(d.id);
-      return `<div class="tcard" data-tcoll="${d.id}"><div class="tpic">${itemIco(it)}</div><b class="rainbow">${esc(it.name)}</b><span class="dim">${SLOTS[BASE[it.base].slot]} · ${it.band ? bandText(it.band) : ""}</span>
-        ${has ? `<span class="dim small">Lo llevas contigo</span>` : `<button data-tback="${d.id}">Recuperar</button>`}</div>`;
-    }).join("")}</div>`;
 }
 function tunjoBack(id) {
   const it = tunjoBook()[id];

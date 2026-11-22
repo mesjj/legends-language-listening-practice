@@ -857,15 +857,3 @@ export function rewardItem(ilvl, rarity, slot = null) {
   return makeItem(pickBase(ilvl, slot).id, rarity, ilvl);
 }
 
-// ---------- gambling ----------
-export function gamblePrice(ch, slot) {
-  return Math.round((60 + ch.level * 25) * (slot === "ring" || slot === "neck" ? 1.6 : 1));
-}
-export function gamble(ch, slot) {
-  const r = Math.random();
-  const rarity = r < 0.006 ? "unique" : r < 0.02 ? "set" : r < 0.12 ? "rare" : "magic";
-  const ilvl = Math.max(1, ch.level + rnd(-3, 4));
-  if (rarity === "unique" || rarity === "set") return randomItem(ilvl, 99999, 99, slot);
-  const base = pickBase(ilvl, slot);
-  return makeItem(base.id, rarity, ilvl);
-}

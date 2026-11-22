@@ -2455,4 +2455,10 @@
 "ya lo tienes ({0}–{1})":"you already have it ({0}–{1})",
 "Un objeto del arcoíris crece contigo durante cincuenta niveles desde el que tienes al ganarlo, y luego se queda como está: el que ganes ahora, {0}. {1}":"A rainbow item grows with you for fifty levels from the one you have when you win it, and then stays as it is: the one you win now, {0}. {1}",
 "niveles {0}–{1}":"levels {0}–{1}",
-"Los objetos del arcoíris solo los da el tunjo de Doña Remedios, uno por frase entendida. Se venden por 1 de oro. Si vendes, pierdes o tiras uno, aquí te lo devuelve. Tienes {0} de {1}.":"The rainbow items come only from Doña Remedios's tunjo, one for each line you understand. They sell for 1 gold. If you sell, lose or throw one away, she gives it back to you here. You have {0} of {1}."}
+"Los objetos del arcoíris solo los da el tunjo de Doña Remedios, uno por frase entendida. Se venden por 1 de oro. Si vendes, pierdes o tiras uno, aquí te lo devuelve. Tienes {0} de {1}.":"The rainbow items come only from Doña Remedios's tunjo, one for each line you understand. They sell for 1 gold. If you sell, lose or throw one away, she gives it back to you here. You have {0} of {1}.",
+"Ya lo tenías: este sale con otras propiedades y sus treinta niveles desde ahora, y es el que queda en la Colección.":"You already had this one: it comes out with different properties and its thirty levels starting now, and it's the one that stays in the Collection.",
+"Todos los tuyos siguen creciendo: el tunjo te da uno de los doce otra vez, con otras propiedades y sus treinta niveles desde ahora.":"All of yours keep growing: the tunjo gives you one of the twelve again, with different properties and its thirty levels starting now.",
+"Un objeto del arcoíris crece contigo durante treinta niveles desde el que tienes al ganarlo, y luego se queda como está: el que ganes ahora, {0}. {1}":"A rainbow item grows with you for thirty levels from the one you have when you win it, and then stays as it is: the one you win now, {0}. {1}",
+"Ya lo tenías: este sale con otras propiedades y sus treinta niveles desde ahora.":"You already had this one: it now comes with different properties and its thirty levels from here on.",
+"Nuevo, para los {0}.":"New, for the {0}.",
+"Lo vendiste, lo tiraste o lo perdiste: te lo devuelve":"You sold it, threw it away or lost it: it gives it back to you"}

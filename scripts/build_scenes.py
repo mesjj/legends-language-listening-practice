@@ -687,50 +687,6 @@ def v_merchant():
     return im
 
 
-def v_gamble():
-    """A back room: dark wood panelling, a card table under a lamp, candles, a curtained window."""
-    im = Image.new("RGBA", (VW_, VH_))
-    d = ImageDraw.Draw(im)
-    d.rectangle([0, 0, VW_, 80], fill=hexrgb("#3a2418"))
-    for x in range(0, VW_, 24):  # panels
-        d.rectangle([x + 3, 12, x + 20, 70], outline=hexrgb("#2a180e"))
-        d.line([(x + 4, 13), (x + 19, 13)], fill=hexrgb("#4e3020"))
-    d.rectangle([0, 0, VW_, 6], fill=hexrgb("#1e120a"))
-    window(d, 40, 18, 26, 30, sky=("#0e1430", "#2a2a5a"))
-    d.ellipse([56, 22, 60, 26], fill=hexrgb("#e8e4c0"))
-    put(im, sprite("victoria", (261, 1, 347, 96), 0.55, pal=("#3a0e14", "#c23a3a")), 30, 62)
-    wood_floor(im, 80, a="#4a2c1a", b="#3e2414", line="#24140a")
-    # the table: green felt, a wooden rim, cards and dice and coins
-    tx, ty = 200, 74
-    d.ellipse([tx - 70, ty - 10, tx + 70, ty + 14], fill=hexrgb("#5a3418"))
-    d.ellipse([tx - 64, ty - 8, tx + 64, ty + 10], fill=hexrgb("#1f5a34"))
-    d.ellipse([tx - 50, ty - 5, tx + 50, ty + 6], outline=hexrgb("#2f7a48"))
-    d.rectangle([tx - 4, ty + 12, tx + 4, ty + 34], fill=hexrgb("#3e2414"))
-    for i, (cx, cy, rot) in enumerate([(tx - 30, ty - 2, 0), (tx - 22, ty, 1), (tx + 18, ty - 3, 0), (tx + 26, ty - 1, 1)]):
-        d.rectangle([cx, cy, cx + 5, cy + 7], fill=hexrgb("#f4eedc"), outline=hexrgb("#2a1a12"))
-        d.point((cx + 2, cy + 3), fill=hexrgb("#c23a2a" if i % 2 else "#1a1a1a"))
-    for dx in (tx - 4, tx + 4):
-        d.rectangle([dx, ty - 1, dx + 3, ty + 2], fill=hexrgb("#f0ece0"))
-        d.point((dx + 1, ty), fill=hexrgb("#1a1a1a"))
-    for i in range(5):
-        d.ellipse([tx + 34 + i, ty + 1 - i, tx + 38 + i, ty + 3 - i], fill=hexrgb("#e8c040"), outline=hexrgb("#8a6a1a"))
-    # the hanging lamp and its pool of light
-    d.line([(tx, 0), (tx, 22)], fill=hexrgb("#1a1008"))
-    d.polygon([(tx - 9, 30), (tx - 4, 22), (tx + 4, 22), (tx + 9, 30)], fill=hexrgb("#2a4a2a"))
-    over = Image.new("RGBA", (VW_, VH_))
-    od = ImageDraw.Draw(over)
-    od.polygon([(tx - 9, 30), (tx + 9, 30), (tx + 80, VH_), (tx - 80, VH_)], fill=(255, 220, 140, 34))
-    im.alpha_composite(over)
-    for x in (tx - 40, tx + 44):  # chairs (LPC, darkened)
-        put(im, sprite("country", (99, 16, 125, 48), mul=(0.6, 0.5, 0.45)), x - 12, 100)
-    # candles on the side table, a cabinet
-    put(im, sprite("cabinets", (0, 101, 160, 170), 0.55, mul=(0.6, 0.5, 0.45)), 360, 84)
-    for x in (372, 392, 412):
-        put(im, sprite("castle_lightsources", (29, 6, 35, 31)), x, 48)
-    vignette(im, 0.6)
-    return im
-
-
 def glyph(d, kind, x, y, col, k=1):
     """Petroglyphs, original: a spiral, a frog, a sun face, a zigzag, a figure, an eye."""
     c = hexrgb(col)
@@ -1148,7 +1104,7 @@ def v_collares():
     return im
 
 
-VILLAGE = {"v-camisetas": v_collares, "v-merchant": v_merchant, "v-gamble": v_gamble, "v-casetes": v_casetes, "v-sell": v_sell, "v-stash": v_stash, "v-alembic": v_alembic}
+VILLAGE = {"v-camisetas": v_collares, "v-merchant": v_merchant, "v-casetes": v_casetes, "v-sell": v_sell, "v-stash": v_stash, "v-alembic": v_alembic}
 
 SCENES.update(VILLAGE)
 
