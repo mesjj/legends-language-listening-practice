@@ -124,7 +124,8 @@ function defs() {
   return "";
 }
 
-export function figureSvg(ch, { cls = "" } = {}) {
+// still: no glows (their animated filters are costly where many figures share a page, as on the Camisetas shelf)
+export function figureSvg(ch, { cls = "", still = false } = {}) {
   if (!A) return `<div class="portrait ${cls}"></div>`;
   const look = lookOfChar(ch), body = look.body;
   const mine = lookLayers(look);
@@ -136,7 +137,7 @@ export function figureSvg(ch, { cls = "" } = {}) {
   for (const [, it] of shownGear(ch)) {
     if (!it) continue;
     const L = lookOf(it, body);
-    const glow = glowOf(it);
+    const glow = still ? "" : glowOf(it);
     if (L) for (const l of L) parts.push({ z: l[1], html: () => frame(l), glow });
   }
   for (const k of ornamentKeys(ch)) for (const l of A.looks[k] || []) parts.push({ z: l[1], html: () => frame(l) });
@@ -147,13 +148,13 @@ export function figureSvg(ch, { cls = "" } = {}) {
 }
 
 // An item's icon, cropped from its own layers, or null when there's none (potions, gems, some bases).
-export function itemIconSvg(it, cls = "") {
+export function itemIconSvg(it, cls = "", { still = false } = {}) {
   if (!A || !it.base) return null;
   for (const st of styles(it)) {
     const r = A.icons[`item:${root(it)}:${st}`];
     if (!r) continue;
     const [x, y, w, h] = r;
-    const glow = glowOf(it) ? ` filter="url(#${glowOf(it)})"` : "";
+    const glow = !still && glowOf(it) ? ` filter="url(#${glowOf(it)})"` : "";
     // the inner svg crops the icon sheet to exactly this icon; the outer one scales it to the box
     const m = 1.5;
     return `<svg class="ico px ${cls}" viewBox="${-m} ${-m} ${w + 2 * m} ${h + 2 * m}" aria-hidden="true">${glow ? defs() : ""}<g${glow}>

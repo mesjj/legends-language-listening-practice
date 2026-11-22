@@ -44,7 +44,8 @@ function toast(msg, cls = "", ms = 2400) {
 }
 const icon = (name, color, cls = "") =>
   `<i class="ico ${cls}" style="-webkit-mask-image:url(rpg/icons/${name}.svg);mask-image:url(rpg/icons/${name}.svg);background:${color}"></i>`;
-const itemIco = (it) => (it.kind === "relic" ? `<span class="ico relic-ico" aria-hidden="true"><i></i></span>` : itemIconSvg(it) || icon(E.itemIcon(it), E.itemColor(it)));
+// still: without the glow filter (for long lists, where many filters make scrolling stutter)
+const itemIco = (it, still = false) => (it.kind === "relic" ? `<span class="ico relic-ico" aria-hidden="true"><i></i></span>` : itemIconSvg(it, "", { still }) || icon(E.itemIcon(it), E.itemColor(it)));
 const socketLine = (g, slot) => {
   const e = E.socketEffect(g, slot);
   return `<div class="tgem" style="color:${GEMS[g.gem].shades?.[g.grade] || GEMS[g.gem].color}">◆ ${esc(E.propText(e.prop, e.value))}</div>`;
@@ -1284,10 +1285,10 @@ function shirtShelf() {
     const it = ch.shirts?.[set.id] || (worn === set.id ? ch.equip.shirt : null), color = RARITY[set.tier || "set"].color;
     const sub = set.tier ? `Conjunto ${RARITY[set.tier].name.toLowerCase()} · ` : "";
     return `<div class="neckcard${it ? "" : " missing"}${worn === set.id ? " worn" : ""}" style="--nc:${color}">
-      <div class="neckfig" ${it ? `title="Así te ves con ${esc(set.name)}"` : `aria-hidden="true"`}>${figureSvg(dressedIn(set))}</div>
+      <div class="neckfig" ${it ? `title="Así te ves con ${esc(set.name)}"` : `aria-hidden="true"`}>${figureSvg(dressedIn(set), { still: true })}</div>
       <b style="color:${color}">${esc(set.name)}</b>
       <span class="dim small">${sub}nivel ${set.lvl} · ${set.pieces.length} piezas</span>
-      <div class="neckfoot">${it ? `<button class="cell item r-${it.rarity}" data-id="${it.id}" title="${esc(E.itemName(it))}">${itemIco(it)}</button>` : `<span class="cell neckempty">${icon("leather-vest", color)}</span>`}
+      <div class="neckfoot">${it ? `<button class="cell item r-${it.rarity}" data-id="${it.id}" title="${esc(E.itemName(it))}">${itemIco(it, true)}</button>` : `<span class="cell neckempty">${icon("leather-vest", color)}</span>`}
         <span class="small">${worn === set.id ? "La llevas puesta" : it ? `${touch() ? "Toca" : "Haz clic en"} la camiseta para ponértela` : "Aún no la tienes"}</span></div>
     </div>`;
   }).join("")}</div>`;

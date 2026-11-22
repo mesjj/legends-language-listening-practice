@@ -1174,7 +1174,7 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .classdlg .classes { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 /* the village's Collares tab: one card per set, you dressed in it (a shadow while you don't have it) */
 .necks { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-top: 10px; }
-.neckcard { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px; border: 1px solid var(--edge); border-radius: 8px; background: #17130e; text-align: center; }
+.neckcard { content-visibility: auto; contain-intrinsic-block-size: auto 260px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px; border: 1px solid var(--edge); border-radius: 8px; background: #17130e; text-align: center; }
 .neckfig { width: 140px; border-radius: 6px; background: radial-gradient(ellipse at 50% 45%, #3a2e22, #14110d 75%); }
 .neckfig .portrait { width: 100%; }
 .neckcard b { font-size: 15px; margin-top: 4px; }
