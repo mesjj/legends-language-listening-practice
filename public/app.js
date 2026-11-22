@@ -164,7 +164,7 @@ function paintLoop() {
 }
 
 // ---------- playback tick ----------
-function tick() {
+function step() {
   const t = audio.currentTime;
   const { words } = state;
 
@@ -228,8 +228,11 @@ function tick() {
     store.set("pos:" + state.ep, t);
     tick._saved = t;
   }
-  requestAnimationFrame(tick);
 }
+// animation frames stop in a background tab, but the audio keeps going: the audio's own progress
+// events keep loops, play-once and pause-each working there (a few times a second)
+function tick() { step(); requestAnimationFrame(tick); }
+audio.addEventListener("timeupdate", () => { if (document.hidden) step(); });
 
 function follow() {
   if (Date.now() - state.userScrolledAt < 6000) return;

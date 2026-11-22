@@ -1,8 +1,8 @@
 // Leyendas: a listening RPG. Every attack is a listening exercise on a line of the episode.
 import { $, esc, store, api, md, CFG, logout, playable, chooseBlanks, isSound, scoreDictation, scoreCloze, flagLine, norm, hash, accentKey } from "../listen-core.js";
-import { RARITY, SLOTS, BASE, CLASSES, ZONES, BOSSES, EASY_ROSTER, MONSTER_MODS, POTIONS, SETS, GEMS, RUNE, RUNES, RUNEWORDS, CRAFT, TIERS, BANDS, SPELLS, PETS, PET_KIND, MOUNTS, MOUNT_PROPS, COMPANION_MIN_SECONDS, PROPS } from "./data.js";
+import { RARITY, SLOTS, BASE, CLASSES, ZONES, BOSSES, EASY_ROSTER, MONSTER_MODS, POTIONS, SETS, GEMS, RUNE, CRAFT, TIERS, BANDS, SPELLS, PETS, PET_KIND, MOUNTS, MOUNT_PROPS, COMPANION_MIN_SECONDS, PROPS, TUNJO_ITEMS } from "./data.js";
 import * as E from "./engine.js";
-import { figureSvg, itemIconSvg, monsterSvg, loadFigure, loadAnims, fightFigure, attackAnim, lookOfChar, stanceLoop } from "./figure.js";
+import { figureSvg, itemIconSvg, monsterSvg, loadFigure, loadAnims, fightFigure, attackAnim, lookOfChar, stanceLoop, SHOW_SLOTS, setPieceFor, shirtChoice } from "./figure.js";
 import { loadLook, lookData, prepareLook, defaultLook, randomLook, fixLook, fits } from "./look.js";
 import * as FX from "./fx.js";
 import { sourcesHtml } from "../sources.js";
@@ -20,7 +20,7 @@ setBusy(() => !audio.paused || !cardAudio.paused); // no effect sounds over the 
 MUSIC.setBusy(() => !audio.paused || !cardAudio.paused); // and the music drops while it plays
 const screen = $("#screen");
 const INV_SIZE = 56, STASH_SIZE = 200; // the bag: 7 rows of 8
-// the haber runes are Spanish grammar: other languages don't drop them
+// forms of haber (and the tenses near them) get their tense named when you miss one; Spanish only
 const runeOf = (w) => (CFG.lang === "es" ? runeOfEs(w) : null);
 // online: no Anki, no Claude, no voice (they need the owner's computer); see .online in rpg.css
 if (CFG.online) document.body.classList.add("online");
@@ -44,11 +44,10 @@ function toast(msg, cls = "", ms = 2400) {
 }
 const icon = (name, color, cls = "") =>
   `<i class="ico ${cls}" style="-webkit-mask-image:url(rpg/icons/${name}.svg);mask-image:url(rpg/icons/${name}.svg);background:${color}"></i>`;
-const itemIco = (it) => (it.kind === "relic" ? `<span class="ico relic-ico" aria-hidden="true"><i></i></span>` : it.kind === "rune" ? `<span class="ico rune-ico${RUNE[it.rune]?.grammar ? " grune" : ""}${it.rune.length > 3 ? " long" : ""}">${esc(it.rune)}</span>` : itemIconSvg(it) || icon(E.itemIcon(it), E.itemColor(it)));
+const itemIco = (it) => (it.kind === "relic" ? `<span class="ico relic-ico" aria-hidden="true"><i></i></span>` : itemIconSvg(it) || icon(E.itemIcon(it), E.itemColor(it)));
 const socketLine = (g, slot) => {
   const e = E.socketEffect(g, slot);
-  return g.rune ? `<div class="tgem rune">${esc(g.rune)} · ${esc(E.propText(e.prop, e.value))}</div>`
-    : `<div class="tgem" style="color:${GEMS[g.gem].shades?.[g.grade] || GEMS[g.gem].color}">◆ ${esc(E.propText(e.prop, e.value))}</div>`;
+  return `<div class="tgem" style="color:${GEMS[g.gem].shades?.[g.grade] || GEMS[g.gem].color}">◆ ${esc(E.propText(e.prop, e.value))}</div>`;
 };
 const h = (html) => { const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstElementChild; };
 const findItem = (id) => {
@@ -57,7 +56,7 @@ const findItem = (id) => {
     if (i >= 0) return { it: list[i], where, list, i };
   }
   for (const [slot, it] of Object.entries(ch.equip)) if (it?.id === id) return { it, where: "equip", slot };
-  for (const [sid, it] of Object.entries(ch.necklaces || {})) if (it?.id === id) return { it, where: "necks", sid };
+  for (const [sid, it] of Object.entries(ch.shirts || {})) if (it?.id === id) return { it, where: "shirts", sid };
   return null;
 };
 
@@ -89,6 +88,57 @@ const modeOf = (zid) => ch.zones[zid]?.mode || "verb";
 const UNID = new Set(["set", "ancestral", "legendario", "mitico"]);
 function identifyOld() {
   for (const it of [...ch.inv, ...(ch.stash || [])]) if (it?.unid && !UNID.has(it.rarity)) delete it.unid;
+}
+// Runes were taken out of the game. In an older save, loose ones are sold at their price, socketed
+// ones come out (refunded the same, so the socket is free again), and a runeword keeps everything it
+// gave, the runes' own effects included, with its sockets closed. Then it's an ordinary item.
+function dropRunes() {
+  if (!ch) return;
+  const all = () => [...Object.values(ch.equip || {}), ...ch.inv, ...(ch.stash || [])].filter(Boolean);
+  if (!all().some((it) => it.kind === "rune" || it.runeword || it.gems?.some((g) => g.rune))) return;
+  let gold = 0, n = 0, words = 0;
+  const price = (id) => E.itemValue({ kind: "rune", rune: id });
+  const loose = (list) => list.filter((it) => { if (it?.kind !== "rune") return true; gold += price(it.rune); n++; return false; });
+  ch.inv = loose(ch.inv);
+  if (ch.stash) ch.stash = loose(ch.stash);
+  for (const it of all()) {
+    if (it.kind || !(it.runeword || it.gems?.some((g) => g.rune))) continue;
+    const slot = BASE[it.base].slot;
+    if (it.runeword) {
+      for (const g of it.gems) if (g.rune && RUNE[g.rune]) { const e = E.socketEffect(g, slot); it.props[e.prop] = typeof e.value === "boolean" ? e.value : (it.props[e.prop] || 0) + e.value; }
+      it.gems = []; it.sockets = 0; words++;
+    } else {
+      for (const g of it.gems) if (g.rune) { gold += RUNE[g.rune] ? price(g.rune) : 0; n++; }
+      it.gems = it.gems.filter((g) => !g.rune);
+    }
+    delete it.runeword; delete it.rwProps;
+  }
+  ch.gold += gold;
+  save();
+  const parts = [n ? `${n} ${n === 1 ? "runa vendida" : "runas vendidas"} por ${gold} de oro` : "", words === 1 ? "tu palabra rúnica se queda con todo lo que daba" : words ? `tus ${words} palabras rúnicas se quedan con todo lo que daban` : ""].filter(Boolean);
+  setTimeout(() => toast(`Las runas ya no existen: ${parts.join("; ")}.`, "levelup", 6000), 400);
+}
+// Set necklaces became magic undershirts, worn in a slot of their own: an older save's necklaces
+// (the collection, and the one on the neck) turn into the set's undershirt, the worn one onto the new slot.
+function necklacesToShirts() {
+  if (!ch) return;
+  const conv = (it) => {
+    if (!it?.setNeck) return it;
+    const set = SETS.find((s) => s.id === it.setNeck);
+    const out = { ...it, base: "camiseta", setShirt: it.setNeck, name: `Camiseta de «${set?.name || it.setNeck}»` };
+    delete out.setNeck;
+    return out;
+  };
+  let n = 0;
+  if (ch.necklaces) { for (const [sid, it] of Object.entries(ch.necklaces)) { (ch.shirts ||= {})[sid] = conv(it); n++; } delete ch.necklaces; }
+  if (ch.equip?.neck?.setNeck) {
+    const it = conv(ch.equip.neck); delete ch.equip.neck; n++;
+    if (ch.equip.shirt) (ch.shirts ||= {})[it.setShirt] = it; else ch.equip.shirt = it;
+  }
+  for (const list of [ch.inv, ch.stash || []]) list.forEach((it, i) => { if (it?.setNeck) { list[i] = conv(it); n++; } });
+  if (!n) return;
+  save();
+  setTimeout(() => toast(`Tus collares de conjunto son ahora camisetas encantadas (${n}): se llevan debajo de todo, en un sitio propio, y el cuello queda libre para un collar.`, "levelup", 7000), 900);
 }
 function migrateModes() {
   for (const z of ZONES) {
@@ -382,10 +432,11 @@ function playCard(card, rate = 1) {
   hush();
   cardAudio.play().catch(() => {});
 }
-(function watch() {
-  if (stopAt != null && !audio.paused && audio.currentTime >= stopAt) { audio.pause(); stopAt = null; }
-  requestAnimationFrame(watch);
-})();
+// checked every frame, and on the audio's own progress events: frames stop in a background tab,
+// where without them a line would play on into the rest of the episode
+function checkStop() { if (stopAt != null && !audio.paused && audio.currentTime >= stopAt) { audio.pause(); stopAt = null; } }
+(function watch() { checkStop(); requestAnimationFrame(watch); })();
+audio.addEventListener("timeupdate", checkStop);
 
 // ---------- HUD ----------
 function renderHud() {
@@ -471,23 +522,9 @@ function swapWeapons() {
 $("#swapBtn").onclick = swapWeapons;
 
 // ---------- tooltips & item menu ----------
-// Runes in a socketed item that isn't a runeword: which words they could still become, or why they can't.
-function runeHint(it, base) {
-  const runes = it.gems.filter((g) => g.rune).map((g) => g.rune);
-  const kind = base.slot === "weapon" ? base.kind : base.slot;
-  const fits = RUNEWORDS.filter((w) => w.kinds.includes(kind) && w.runes.length === it.sockets);
-  const line = (t) => `<div class="tline dim">${t}</div>`;
-  if (!runes.length) return !it.gems.length ? line(`Con ${it.sockets} runas en el orden correcto, despierta una palabra.`) : "";
-  if (it.gems.some((g) => g.gem)) return line("Con una gema engastada ya no puede despertar una palabra: cada runa da solo su efecto suelto.");
-  const open = fits.filter((w) => runes.every((r, i) => w.runes[i] === r));
-  if (open.length && runes.length < it.sockets) return line(`Puede despertar: ${open.map((w) => `<b>${esc(w.name || w.id)}</b> (falta ${w.runes.slice(runes.length).join(" + ")})`).join("; ")}.`);
-  const other = RUNEWORDS.filter((w) => runes.length === w.runes.length && [...w.runes].sort().join() === [...runes].sort().join());
-  if (runes.length === it.sockets) return line(`Estas runas no forman ninguna palabra en ${it.sockets === 1 ? "este objeto" : "este orden y este objeto"}: cada una da solo su efecto suelto.${other.length ? ` (${other.map((w) => `${esc(w.name || w.id)} es ${w.runes.join(" + ")}, en ${w.kinds.map((k) => ({ melee: "arma cuerpo a cuerpo", ranged: "arma a distancia", head: "casco", body: "torso", off: "escudo" })[k]).join(" o ")}`).join("; ")})` : ""}`);
-  return line("Ninguna palabra empieza con estas runas en este objeto: cada una da solo su efecto suelto.");
-}
 function tooltipHtml(it, compare = true) {
   const color = E.itemColor(it);
-  let out = `<div class="tname" style="color:${color}">${esc(E.itemName(it))}</div>`;
+  let out = `<div class="tname${it.rarity === "tunjo" ? " rainbow" : ""}" style="color:${color}">${esc(E.itemName(it))}</div>`;
   if (it.kind === "gem") {
     const g = GEMS[it.gem];
     out += `<div class="tsub">Gema</div>`;
@@ -498,28 +535,16 @@ function tooltipHtml(it, compare = true) {
     return out + `<div class="tsub">Valor: ${E.itemValue(it)} de oro</div>`;
   }
   if (it.kind === "relic") return out + `<div class="tsub" style="color:${color}">Reliquia · muy rara</div><div class="tline">En la aldea, en el Montón: por cada ${MOUND_STEP} gemas perfectas del montón, un objeto mítico, una mascota o una montura. Se gasta al usarlo; las gemas que sobren se quedan.</div><div class="tsub">No se vende</div>`;
-  if (it.kind === "rune") {
-    const r = RUNE[it.rune];
-    out += r.grammar ? `<div class="tsub">Runa de haber · ${esc(r.tense)} · nivel ${r.lvl}</div><div class="tline dim">Cae cuando escribes bien, de oído, ${esc(r.core.slice(0, 3).join(", "))}…${r.family.length ? " (y a veces otro verbo en el mismo tiempo)" : ""}</div>` : `<div class="tsub">Runa · nivel ${r.lvl}</div>`;
-    for (const [where, label] of [["weapon", "En un arma"], ["armor", "En armadura"], ["off", "En un escudo"]]) {
-      const e = E.socketEffect({ rune: it.rune }, where === "armor" ? "head" : where);
-      out += `<div class="tline"><span class="dim">${label}:</span> ${esc(E.propText(e.prop, e.value))}</div>`;
-    }
-    const words = RUNEWORDS.filter((w) => w.runes.includes(it.rune)).map((w) => w.name || w.id);
-    if (words.length) out += `<div class="tline dim">Aparece en: ${words.join(", ")}</div>`;
-    return out + `<div class="tsub">Valor: ${E.itemValue(it)} de oro</div>`;
-  }
   if (it.kind === "potion") {
     const P = POTIONS[it.potion];
     const txt = it.potion === "life" ? `Recupera ${P.heal[it.tier]} de vida` : it.potion === "mana" ? `Recupera ${P.mana[it.tier]} de maná` : "Recupera el 40% de vida y maná";
     return out + `<div class="tline">${txt}</div>`;
   }
   const base = BASE[it.base];
-  if (["rare", "unique", "set", "crafted", "runeword", "ancestral", "legendario", "mitico"].includes(it.rarity)) out += `<div class="tsub" style="color:${color}">${esc(base.name)}</div>`;
+  if (["rare", "unique", "set", "crafted", "runeword", "ancestral", "legendario", "mitico", "tunjo"].includes(it.rarity)) out += `<div class="tsub" style="color:${color}">${esc(base.name)}</div>`;
   const kindName = it.rarity === "crafted" && it.craft ? `Artesanal ${CRAFT[it.craft].name}` : RARITY[it.rarity].name;
   out += `<div class="tsub">${kindName}${base.tier ? ` · ${TIERS[base.tier].name}` : ""}${base.band ? ` · <span class="band" title="${esc(BANDS.find((b) => b.id === base.band).desc)}">${esc(BANDS.find((b) => b.id === base.band).name)}</span>` : ""} · ${SLOTS[base.slot]}${base.twoHanded ? " · a dos manos" : base.slot === "weapon" ? " · a una mano" : ""}</div>`;
   if (it.unid) return out + `<div class="tline unid">Sin identificar</div><div class="tline dim">Clic → Identificar: oyes una frase corta y la escribes. Don Eusebio te ayuda, por oro.</div><div class="tsub">Valor: ${E.itemValue(it)} de oro</div>`;
-  if (it.runeword) out += `<div class="tline runes">Palabra rúnica${it.rarity === "runeword" ? "" : ` ${esc((w0 => w0.name || w0.id)(RUNEWORDS.find((w) => w.id === it.runeword)))}`}: ${RUNEWORDS.find((w) => w.id === it.runeword).runes.join(" + ")}</div>`;
   if (base.dmg) {
     const d = E.itemDamage(it), w = weaponTotals(it);
     out += `<div class="tline">Daño: <b>${d[0]}–${d[1]}</b>${w.ownPct ? ` <span class="dim">(base ${base.dmg[0]}–${base.dmg[1]}, ${w.ownPct > 0 ? "+" : ""}${w.ownPct}%)</span>` : ""}</div>`;
@@ -544,34 +569,20 @@ function tooltipHtml(it, compare = true) {
   if (reqs.length) out += `<div class="tline dim">Requiere: ${reqs.join(", ")}</div>`;
   const sortP = (o) => Object.entries(o).sort((a, b) => (E.PROP_ORDER(a[0]) - E.PROP_ORDER(b[0])));
   const plist = (o) => sortP(o).map(([k, v]) => `<div>${esc(E.propText(k, v))}</div>`).join("");
-  if (it.runeword) {
-    // a runeword: what the word gives, what each rune adds on top, and the two together
-    const w = RUNEWORDS.find((x) => x.id === it.runeword);
-    const word = it.rwProps || Object.fromEntries(Object.keys(w.props).filter((k) => k in it.props).map((k) => [k, it.props[k]]));
-    const own = {};
-    for (const [k, v] of Object.entries(it.props)) { const r = typeof v === "number" && typeof word[k] === "number" ? v - word[k] : k in word ? 0 : v; if (r) own[k] = r; }
-    const runeLines = it.gems.map((g) => socketLine(g, base.slot)).join("");
-    out += `<div class="tpart"><div class="tphead">Lo que da la palabra <span class="dim">(${esc(w.name || w.id)})</span></div><div class="tprops">${plist(word)}</div></div>`;
-    if (Object.keys(own).length) out += `<div class="tpart"><div class="tphead">Del objeto</div><div class="tprops">${plist(own)}</div></div>`;
-    out += `<div class="tpart"><div class="tphead">Y cada runa suma su efecto suelto</div>${runeLines}</div>`;
-    out += `<div class="tpart total"><div class="tphead">En total</div><div class="tprops">${plist(E.itemProps(it))}</div></div>`;
-    if (w.kinds.includes("melee") && w.kinds.includes("ranged") && (word.dmgDictation || word.dmgCloze) && base.slot === "weapon")
-      out += `<div class="tline dim">${base.kind === "ranged" ? "Con esta arma atacas rellenando huecos: cuenta el daño en huecos, no el de dictado." : "Con esta arma atacas dictando: cuenta el daño en dictado, no el de huecos."}</div>`;
-  } else {
+  {
     const props = sortP(it.props);
     if (props.length) out += `<div class="tprops">` + props.map(([k, v]) => `<div>${esc(E.propText(k, v))}</div>`).join("") + `</div>`;
   }
-  if (it.sockets && !it.runeword) {
+  if (it.sockets) {
     out += `<div class="tline dim">Engastes: ${it.gems.length}/${it.sockets}</div>`;
     for (const g of it.gems) out += socketLine(g, base.slot);
-    out += runeHint(it, base);
   }
-  if (it.setNeck) {
-    const set = SETS.find((s) => s.id === it.setNeck), c = RARITY[set.tier || "set"].color;
+  if (it.setShirt) {
+    const set = SETS.find((s) => s.id === it.setShirt), c = RARITY[set.tier || "set"].color;
     out += `<div class="tset"><div style="color:${c}">Todas las bonificaciones de ${esc(set.name)}</div>` +
       Object.entries(set.bonus).map(([n, b]) => `<div>(${n} piezas) ${Object.entries(b).map(([k, v]) => esc(E.propText(k, v))).join(", ")}</div>`).join("") +
       `<div class="dim">Más arriba, la mitad de las propiedades de sus piezas: ${set.pieces.map((p) => esc(p.name)).join(", ")}.</div>` +
-      `<div class="dim">Con él puesto se te ve con el conjunto entero. Solo se guarda en tus collares: no se vende ni va al alijo.</div></div>`;
+      `<div class="dim">Se lleva debajo de todo, en su propio sitio. Con ella puesta se te ve con el conjunto entero, lleves lo que lleves encima (lo de encima sigue dando lo suyo); ${touch() ? "tócala" : "haz clic en ella"} puesta para elegir qué piezas se ven. Solo se guarda en tus camisetas: no se vende ni va al alijo.</div></div>`;
   }
   if (it.set) {
     const set = SETS.find((s) => s.id === it.set), have = E.setCounts(ch)[it.set] || 0;
@@ -667,18 +678,19 @@ function itemActions(id) {
   const inTown = S.view === "town";
   const A = [];
   if (where === "equip") {
-    A.push([it.setNeck ? "Quitar (vuelve a tus collares)" : "Quitar", () => unequip(f.slot)]);
+    if (it.setShirt) A.push(["Qué piezas se ven…", () => shirtDisplay()]);
+    A.push([it.setShirt ? "Quitártela (vuelve a tus camisetas)" : "Quitar", () => unequip(f.slot)]);
     return A;
   }
-  if (where === "necks") {
+  if (where === "shirts") {
     const ok = E.canEquip(ch, it);
-    A.push([ok ? "Ponértelo" : `Ponértelo (nivel ${E.itemLevelReq(it)})`, () => wearNecklace(f.sid), !ok]);
+    A.push([ok ? "Ponértela" : `Ponértela (nivel ${E.itemLevelReq(it)})`, () => wearShirt(f.sid), !ok]);
     return A;
   }
   if (it.kind === "potion") {
     if (where !== "belt") A.push(["Al cinturón", () => toBelt(it.id), ch.belt.length >= stats().beltSlots]);
     if (where === "belt") A.push(["Beber", () => drink(it.id)]);
-  } else if (it.kind === "gem" || it.kind === "rune") {
+  } else if (it.kind === "gem") {
     const hosts = [...Object.values(ch.equip).filter(Boolean), ...ch.inv].filter((x) => !x.kind && !x.unid && x.sockets > x.gems.length);
     for (const host of hosts.slice(0, 8)) A.push([`Engastar en ${E.itemName(host)}`, () => socket(it.id, host.id)]);
     if (!hosts.length) A.push(["No tienes objetos con engastes libres", () => {}, true]);
@@ -700,7 +712,7 @@ function itemActions(id) {
   if (where === "inv" && inTown) A.push(["Guardar en el alijo", () => move(it.id, ch.stash, STASH_SIZE, "El alijo está lleno")]);
   if (where === "stash") A.push(["Sacar al inventario", () => move(it.id, ch.inv, INV_SIZE, "El inventario está lleno")]);
   if (where === "belt") A.push(["Al inventario", () => move(it.id, ch.inv, INV_SIZE, "El inventario está lleno")]);
-  if (inTown && where !== "belt" && it.kind !== "relic") A.push([`Vender (${E.itemValue(it)} de oro)`, () => sell(it.id)]);
+  if (inTown && where !== "belt" && it.kind !== "relic" && it.rarity !== "tunjo") A.push([`Vender (${E.itemValue(it)} de oro)`, () => sell(it.id)]);
   // throwing away is for good, so it asks once more
   if (!inTown && where === "inv") A.push(["Tirar…", () => setTimeout(() => openMenu(document.querySelector(`[data-id="${it.id}"]`) || $("#invPanel"), [
     [`Sí, tirar ${E.itemName(it)} para siempre`, () => { remove(it.id); save(); renderPanels(); toast(`Tiraste ${E.itemName(it)}`); }],
@@ -728,6 +740,8 @@ document.addEventListener("click", (e) => {
   // a potion in the bag goes straight onto the belt (the menu, to drop it etc., is on right-click)
   const pot = findItem(el.dataset.id);
   if (pot?.where === "inv" && pot.it.kind === "potion") { tip.hidden = true; return toBelt(pot.it.id); }
+  // the worn undershirt: straight to choosing which pieces show (its menu is on right-click)
+  if (pot?.where === "equip" && pot.it.setShirt) { tip.hidden = true; return shirtDisplay(); }
   openMenu(el, itemActions(el.dataset.id));
 });
 document.addEventListener("contextmenu", (e) => {
@@ -762,37 +776,77 @@ function equip(id, slot) {
   const freed = [];
   // whatever comes off must fit in the bag
   const off = [ch.equip[slot], base.twoHanded && ch.equip[`off${set}`], base.slot === "off" && ch.equip[`weapon${set}`] && BASE[ch.equip[`weapon${set}`].base].twoHanded && ch.equip[`weapon${set}`]].filter(Boolean);
-  if (ch.inv.length - (f.list === ch.inv ? 1 : 0) + off.filter((x) => !x.setNeck).length > INV_SIZE) return toast("No cabe en el inventario lo que te quitarías: haz sitio primero");
+  if (ch.inv.length - (f.list === ch.inv ? 1 : 0) + off.filter((x) => !x.setShirt).length > INV_SIZE) return toast("No cabe en el inventario lo que te quitarías: haz sitio primero");
   f.list.splice(f.i, 1);
   if (ch.equip[slot]) freed.push(ch.equip[slot]);
   ch.equip[slot] = f.it;
   // two-handed weapons need the off hand free, and vice versa
   if (base.twoHanded && ch.equip[`off${set}`]) { freed.push(ch.equip[`off${set}`]); delete ch.equip[`off${set}`]; }
   if (base.slot === "off" && ch.equip[`weapon${set}`] && BASE[ch.equip[`weapon${set}`].base].twoHanded) { freed.push(ch.equip[`weapon${set}`]); delete ch.equip[`weapon${set}`]; }
-  for (const x of freed) if (x.setNeck) (ch.necklaces ||= {})[x.setNeck] = x; else ch.inv.push(x);
+  for (const x of freed) if (x.setShirt) (ch.shirts ||= {})[x.setShirt] = x; else ch.inv.push(x);
   afterGearChange();
   // the other weapon set isn't shown on the doll: say where it went
   if (/^(weapon|off)\d$/.test(slot) && +set !== ch.swap) toast(`${E.itemName(f.it)} va a las armas ${set === "1" ? "I" : "II"}, en reserva. Cámbialas con Alt+S o el botón «Armas».`, "", 4000);
 }
 function unequip(slot) {
   const it = ch.equip[slot];
-  if (it?.setNeck) { (ch.necklaces ||= {})[it.setNeck] = it; delete ch.equip[slot]; return afterGearChange(); }
+  if (it?.setShirt) { (ch.shirts ||= {})[it.setShirt] = it; delete ch.equip[slot]; return afterGearChange(); }
   if (ch.inv.length >= INV_SIZE) return toast("El inventario está lleno");
   ch.inv.push(ch.equip[slot]);
   delete ch.equip[slot];
   afterGearChange();
 }
-// A set necklace from the collection onto the neck; whatever was there goes back where it came from
-function wearNecklace(sid) {
-  const it = ch.necklaces?.[sid];
+// A set's magic undershirt from the collection onto its own slot; the one you had on goes back
+function wearShirt(sid) {
+  const it = ch.shirts?.[sid];
   if (!it || !E.canEquip(ch, it)) return toast("No cumples los requisitos");
-  const old = ch.equip.neck;
-  if (old && !old.setNeck && ch.inv.length >= INV_SIZE) return toast("No cabe en el inventario lo que te quitarías: haz sitio primero");
-  delete ch.necklaces[sid];
-  ch.equip.neck = it;
-  if (old) { if (old.setNeck) ch.necklaces[old.setNeck] = old; else ch.inv.push(old); }
+  const old = ch.equip.shirt;
+  delete ch.shirts[sid];
+  ch.equip.shirt = it;
+  if (old) ch.shirts[old.setShirt] = old;
   afterGearChange();
-  toast(`Te pones el ${E.itemName(it)}`, "r-set");
+  toast(`Te pones la ${E.itemName(it)}`, "r-set");
+}
+// The worn undershirt: which of its set's pieces show over what you really wear (all, unless unticked).
+// it.hide: the names of the pieces not shown; in their place the figure shows what's on that slot.
+// The undershirt's picker: per slot, the set's piece, what you really wear there, or nothing. Where
+// both exist, a choice between them ("o"); where only one, show it or not. Looks only: stats don't change.
+function shirtDisplay() {
+  const it = ch.equip.shirt, set = it && SETS.find((s) => s.id === it.setShirt);
+  if (!set) return;
+  const color = RARITY[set.tier || "set"].color;
+  const realOf = (sl) => (sl === "weapon" ? ch.equip[`weapon${ch.swap}`] : sl === "off" ? ch.equip[`off${ch.swap}`] : ch.equip[sl]);
+  const opt = (sl, v, item, label) => `<button type="button" class="shopt" data-sl="${sl}" data-v="${v}" title="${esc(label)}">${item ? itemIco(item) : ""}<span style="${item ? `color:${E.itemColor(item)}` : ""}">${esc(label)}</span></button>`;
+  const row = (sl) => {
+    const piece = setPieceFor(set, sl), real = realOf(sl);
+    if (!piece && !real) return "";
+    const opts = [piece && opt(sl, "set", piece, piece.name), real && opt(sl, "real", real, E.itemName(real)), opt(sl, "none", null, "Nada")].filter(Boolean);
+    return `<div class="shirtpick" data-row="${sl}"><span class="dim small shslot">${esc(SLOTS[sl])}</span><div class="shopts">${opts.join(`<i class="or">o</i>`)}</div></div>`;
+  };
+  const d = dialog(`<h3 style="color:${color}">${esc(E.itemName(it))}</h3>
+    <p class="dim">Elige qué se ve en cada sitio: la pieza del conjunto, lo que llevas puesto o nada. Lo que da cada cosa no cambia: solo cómo te ves.</p>
+    <div class="shirtfig">${figureSvg(ch)}</div>
+    <div class="shirtpicks">${SHOW_SLOTS.map(row).join("")}</div>
+    <div class="row"><button id="shirtAll" class="ghost">Todo el conjunto</button><button id="shirtReal" class="ghost">Lo que llevo</button><span style="flex:1"></span><button id="shirtOff">Quitártela</button><button id="shirtDone" class="primary">Listo</button></div>`, { cls: "shirtdlg" });
+  const mark = () => d.querySelectorAll(".shopt").forEach((b) => b.classList.toggle("on", shirtChoice(it, set, b.dataset.sl) === b.dataset.v));
+  const apply = () => {
+    delete it.hide;
+    // keep only what differs from the default
+    for (const sl of Object.keys(it.show || {})) if (it.show[sl] === (setPieceFor(set, sl) ? "set" : "real")) delete it.show[sl];
+    if (it.show && !Object.keys(it.show).length) delete it.show;
+    save(); renderMe(); renderPanels();
+    d.querySelector(".shirtfig").innerHTML = figureSvg(ch);
+    mark();
+  };
+  const choose = (sl, v) => { it.show = { ...(it.show || {}), [sl]: v }; };
+  // carry an older choice (pieces unticked by name) over before anything changes
+  if (it.hide) { for (const sl of SHOW_SLOTS) { const c = shirtChoice(it, set, sl); if (c !== "set" && setPieceFor(set, sl)) choose(sl, c); } }
+  d.querySelectorAll(".shopt").forEach((b) => (b.onclick = () => { choose(b.dataset.sl, b.dataset.v); apply(); }));
+  d.querySelector("#shirtAll").onclick = () => { for (const sl of SHOW_SLOTS) if (setPieceFor(set, sl)) choose(sl, "set"); apply(); };
+  d.querySelector("#shirtReal").onclick = () => { for (const sl of SHOW_SLOTS) choose(sl, "real"); apply(); };
+  d.querySelector("#shirtOff").onclick = () => { closeDialog(); unequip("shirt"); };
+  d.querySelector("#shirtDone").onclick = closeDialog;
+  mark();
 }
 function afterGearChange() {
   renderMe();
@@ -808,20 +862,17 @@ function socket(gemId, hostId) {
   const host = findItem(hostId)?.it;
   if (!host || host.gems.length >= host.sockets) return;
   const gem = remove(gemId);
-  host.gems.push(gem.kind === "rune" ? { rune: gem.rune } : { gem: gem.gem, grade: gem.grade });
-  const word = E.applyRuneword(host);
-  if (word) toast(`¡${word.runes.join("·")}! La palabra ${word.name || word.id} despierta en ${host.rarity === "runeword" ? BASE[host.base].name.toLowerCase() : E.itemName(host)}.`, "levelup", 4000);
-  else toast(`Engastaste ${E.itemName(gem)}`);
+  host.gems.push({ gem: gem.gem, grade: gem.grade });
+  toast(`Engastaste ${E.itemName(gem)}`);
   afterGearChange();
 }
-// The stash in order: gear (best rarity first, then by slot, higher level first), runes, gems
+// The stash in order: gear (best rarity first, then by slot, higher level first), gems
 // (by type, best grade first), potions.
-const RARITY_RANK = ["mitico", "legendario", "ancestral", "unique", "set", "runeword", "crafted", "rare", "magic", "normal", "low"];
+const RARITY_RANK = ["tunjo", "mitico", "legendario", "ancestral", "unique", "set", "runeword", "crafted", "rare", "magic", "normal", "low"];
 const SLOT_RANK = ["weapon", "off", "head", "body", "hands", "feet", "belt", "neck", "ring"];
 const GEM_RANK = Object.keys(GEMS);
 // [numbers..., name]: compared number by number, then by name (sortCompare)
 function sortKey(it) {
-  if (it.kind === "rune") return [1, RUNE[it.rune]?.grammar ? 1 : 0, RUNES.findIndex((r) => r.id === it.rune), 0, 0, ""];
   if (it.kind === "gem") return [2, GEM_RANK.indexOf(it.gem), -it.grade, 0, 0, ""];
   if (it.kind === "potion") return [3, ["life", "mana", "rejuv"].indexOf(it.potion), -(it.tier || 0), 0, 0, ""];
   if (it.kind) return [4, 0, 0, 0, 0, E.itemName(it)];
@@ -849,6 +900,7 @@ function sortList(list) {
 }
 function sell(id) {
   if (findItem(id)?.it.kind === "relic") return toast("El transformador no se vende");
+  if (findItem(id)?.it.rarity === "tunjo") return toast("Los objetos del arcoíris no se venden");
   const it = remove(id);
   ch.gold += E.itemValue(it);
   // the last few sales can be bought back at the same price, in case of a slip
@@ -868,13 +920,12 @@ function listRows(tab) {
 function listKind(it) {
   if (it.kind === "gem") return "Gema";
   if (it.kind === "relic") return "Reliquia";
-  if (it.kind === "rune") return RUNE[it.rune]?.grammar ? "Runa de haber" : "Runa";
   if (it.kind === "potion") return "Poción";
   const base = BASE[it.base];
   const rar = it.rarity === "crafted" && it.craft ? `Artesanal ${CRAFT[it.craft].name}` : RARITY[it.rarity].name;
-  return `${rar} · ${SLOTS[base.slot]}${base.twoHanded ? " a dos manos" : base.slot === "weapon" ? " a una mano" : ""}${["rare", "unique", "set", "crafted", "runeword", "ancestral", "legendario", "mitico"].includes(it.rarity) && base.name !== SLOTS[base.slot] ? ` · ${base.name}` : ""}`;
+  return `${rar} · ${SLOTS[base.slot]}${base.twoHanded ? " a dos manos" : base.slot === "weapon" ? " a una mano" : ""}${["rare", "unique", "set", "crafted", "runeword", "ancestral", "legendario", "mitico", "tunjo"].includes(it.rarity) && base.name !== SLOTS[base.slot] ? ` · ${base.name}` : ""}`;
 }
-// A weapon's own elemental damage (props, gems and runes), and what one hit would do with it in your hand:
+// A weapon's own elemental damage (props and gems), and what one hit would do with it in your hand:
 // your other gear, strength or dexterity and every elemental bonus included.
 function weaponTotals(it) {
   const P = E.itemProps(it), els = ["fire", "cold", "light", "poison"].filter((k) => P[k]);
@@ -910,8 +961,8 @@ function listMain(it) {
   return "";
 }
 function listProps(it) {
-  if (it.kind === "gem" || it.kind === "rune") {
-    const eff = (where) => it.kind === "gem" ? E.gemEffect(it.gem, it.grade, where) : E.socketEffect({ rune: it.rune }, where);
+  if (it.kind === "gem") {
+    const eff = (where) => E.gemEffect(it.gem, it.grade, where);
     return [["weapon", "Arma"], ["head", "Armadura"], ["off", "Escudo"]].map(([w, l]) => { const e = eff(w); return `<div><span class="dim">${l}:</span> ${esc(E.propText(e.prop, e.value))}</div>`; }).join("");
   }
   if (it.kind === "potion") {
@@ -920,8 +971,7 @@ function listProps(it) {
   }
   if (it.kind === "relic") return `En el Montón: cada ${MOUND_STEP} gemas perfectas, un mítico, una mascota o una montura`;
   if (it.unid) return `<span class="unid">Sin identificar</span>`;
-  let out = it.runeword ? `<div class="runes">${RUNEWORDS.find((w) => w.id === it.runeword).runes.join(" · ")}</div>` : "";
-  out += Object.entries(it.props).sort((a, b) => E.PROP_ORDER(a[0]) - E.PROP_ORDER(b[0])).map(([k, v]) => `<div>${esc(E.propText(k, v))}</div>`).join("");
+  let out = Object.entries(it.props).sort((a, b) => E.PROP_ORDER(a[0]) - E.PROP_ORDER(b[0])).map(([k, v]) => `<div>${esc(E.propText(k, v))}</div>`).join("");
   if (it.set) { const st = SETS.find((x) => x.id === it.set); out += `<div style="color:${RARITY[st.tier || "set"].color}">${esc(st.name)}</div>`; }
   return out || `<span class="dim">—</span>`;
 }
@@ -935,7 +985,7 @@ function listReq(it) {
 }
 function listSockets(it) {
   if (!it.sockets) return `<span class="dim">—</span>`;
-  const used = it.gems.map((g) => g.rune ? `<span class="runes">${esc(g.rune)}</span>` : `<span style="color:${GEMS[g.gem].shades?.[g.grade] || GEMS[g.gem].color}">◆</span>`).join(" ");
+  const used = it.gems.map((g) => `<span style="color:${GEMS[g.gem].shades?.[g.grade] || GEMS[g.gem].color}">◆</span>`).join(" ");
   return `${it.gems.length}/${it.sockets}${used ? `<div>${used}</div>` : ""}`;
 }
 function listActions(it, tab, slot) {
@@ -949,7 +999,9 @@ function listActions(it, tab, slot) {
   if (it.unid && tab !== "equip") A.push(`<button data-la="identify">Identificar</button>`);
   if (town && tab === "inv") A.push(`<button data-la="tostash">Al alijo</button>`);
   if (town && tab === "stash") A.push(`<button data-la="toinv">A la bolsa</button>`);
-  if (town && tab !== "equip" && it.kind !== "relic") A.push(`<button data-la="sell" class="sellbtn">Vender <b>${E.itemValue(it)}</b></button>`);
+  if (town && tab !== "equip" && it.kind !== "relic" && it.rarity !== "tunjo") A.push(`<button data-la="sell" class="sellbtn">Vender <b>${E.itemValue(it)}</b></button>`);
+  // only from the bag; it's for good, so the first click asks
+  if (tab === "inv") A.push(`<button data-la="toss" class="tossbtn">Tirar</button>`);
   return A.join("");
 }
 const LIST_SORTS = {
@@ -993,7 +1045,13 @@ function renderItemList(box = $(".dialog.itemlist")) {
   box.querySelectorAll("[data-lsort]").forEach((b) => (b.onclick = () => { S.listSort = S.listSort === b.dataset.lsort ? "" : b.dataset.lsort; renderItemList(box); }));
   box.querySelectorAll("[data-la]").forEach((b) => (b.onclick = () => {
     const id = b.closest("tr").dataset.lid, a = b.dataset.la;
-    if (a === "sell") sell(id);
+    if (a === "toss" && !b.classList.contains("sure")) {
+      box.querySelectorAll(".tossbtn.sure").forEach((x) => { x.classList.remove("sure"); x.textContent = "Tirar"; });
+      b.classList.add("sure"); b.textContent = "¿Seguro? Tirar";
+      return;
+    }
+    if (a === "toss") { const it = findItem(id)?.it; if (!it) return; remove(id); save(); renderPanels(); toast(`Tiraste ${E.itemName(it)}`); }
+    else if (a === "sell") sell(id);
     else if (a === "equip") equip(id, b.dataset.slot);
     else if (a === "unequip") unequip(b.dataset.slot);
     else if (a === "tostash") move(id, ch.stash, STASH_SIZE, "El alijo está lleno");
@@ -1130,9 +1188,13 @@ function renderChar() {
 function dropTally() {
   const d = ch.stats.drops || {}, n = Object.values(d).reduce((a, b) => a + b, 0);
   if (!n) return `<p class="dim small">Desde ahora se cuenta el equipo que te cae, por rareza.</p>`;
+  // every rarity, even the ones that haven't dropped yet (a mítico you've never seen still shows, at 0),
+  // and the chance of each per piece of gear from an ordinary monster right now (simulated, with your magic find)
   const order = ["low", "normal", "magic", "rare", "set", "unique", "ancestral", "legendario", "mitico"];
-  return `<h3>Equipo que te ha caído <span class="dim">(${n})</span></h3>` + order.filter((r) => d[r]).map((r) =>
-    `<div class="srow"><span style="color:${RARITY[r].color}">${RARITY[r].name}</span><b>${d[r]} <span class="dim">· ${((d[r] / n) * 100).toFixed(1)}%</span></b></div>`).join("");
+  const st = stats(), D = E.diffOf(ch), odds = { ...lootOdds(st, D, 6000).normal, ...E.topOdds(Math.max(0, st.mf + D.mf), D.loot, D) };
+  const per = (r) => { const p = odds[r] || 0; return p >= 1 ? `${p.toFixed(1)}%` : p > 0 ? `1 de cada ${Math.round(100 / p).toLocaleString("es")}` : "muy raro"; };
+  return `<h3>Equipo que te ha caído <span class="dim">(${n})</span></h3><p class="dim small">Cuántas piezas de cada rareza te han caído, y la probabilidad de cada una ahora por pieza de un monstruo normal.</p>` + order.map((r) =>
+    `<div class="srow${d[r] ? "" : " none"}" title="Ahora, por pieza de un monstruo normal: ${per(r)}"><span style="color:${RARITY[r].color}">${RARITY[r].name}</span><b>${d[r] || 0} <span class="dim">· ${(((d[r] || 0) / n) * 100).toFixed(1)}% · ahora ${per(r)}</span></b></div>`).join("");
 }
 // ---------- debug export ----------
 // One JSON file to look at what's going on: the character and its computed stats, what the loot odds
@@ -1140,11 +1202,11 @@ function dropTally() {
 const recentErrors = [];
 addEventListener("error", (e) => { recentErrors.push({ t: Date.now(), msg: String(e.message), at: `${e.filename}:${e.lineno}:${e.colno}`, stack: e.error?.stack?.slice(0, 1500) }); if (recentErrors.length > 30) recentErrors.shift(); });
 addEventListener("unhandledrejection", (e) => { recentErrors.push({ t: Date.now(), msg: String(e.reason?.message || e.reason), stack: e.reason?.stack?.slice(0, 1500) }); if (recentErrors.length > 30) recentErrors.shift(); });
-function lootOdds(st, D) {
+function lootOdds(st, D, N0 = 20000) {
   // per piece of gear from an ordinary monster / a champion / a boss, with your magic find and difficulty
   const out = {};
   for (const [tier, bonus] of [["normal", 1], ["champion", 1.8], ["boss", 5]]) {
-    const c = {}, N = 20000, mf = Math.max(0, st.mf + D.mf);
+    const c = {}, N = N0, mf = Math.max(0, st.mf + D.mf);
     for (let i = 0; i < N; i++) { const r = E.rollRarity(mf, bonus * D.loot, D, 1); c[r] = (c[r] || 0) + 1; }
     out[tier] = Object.fromEntries(Object.entries(c).sort((a, b) => b[1] - a[1]).map(([k, v]) => [k, +((v / N) * 100).toFixed(2)]));
   }
@@ -1152,7 +1214,7 @@ function lootOdds(st, D) {
 }
 function exportDebug() {
   const st = stats(), D = E.diffOf(ch);
-  const brief = (it) => it && { name: E.itemName(it), rarity: it.rarity, base: it.base, ilvl: it.ilvl, unid: !!it.unid, sockets: it.sockets, gems: (it.gems || []).map((g) => g.rune || `${g.gem}:${g.grade}`), set: it.set, runeword: it.runeword, props: it.props };
+  const brief = (it) => it && { name: E.itemName(it), rarity: it.rarity, base: it.base, ilvl: it.ilvl, unid: !!it.unid, sockets: it.sockets, gems: (it.gems || []).map((g) => `${g.gem}:${g.grade}`), set: it.set, props: it.props };
   const data = {
     exported: new Date().toISOString(),
     page: { url: location.pathname + location.search, ua: navigator.userAgent, viewport: [innerWidth, innerHeight], dpr: devicePixelRatio, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches },
@@ -1226,31 +1288,31 @@ function dollFigure(box) {
   if (doll.fig) box.prepend(withCompanions(doll.fig, "doll"));
   else box.insertAdjacentHTML("afterbegin", doll.svg);
 }
-// One place per set for its necklace (made at the alembic from the whole set); the one you wear shows here too
-// you, as you'd look with this set's necklace on (the shelf: in colour if you have it, a shadow if not)
-const dressedIn = (set) => ({ ...ch, equip: { ...ch.equip, neck: { base: "collar", rarity: set.tier || "set", setNeck: set.id } } });
-// the shelf in tiers: plain sets, then ancestral, legendary and mythic, each by level (as the necklaces hang)
-const TIER_RANK = { ancestral: 1, legendario: 2, mitico: 3 };
+// One place per set for its magic undershirt (made at the alembic from the whole set); the one you wear shows here too
+// you, as you'd look with this set's undershirt on, every piece shown (the shelf: in colour if you have it, a shadow if not)
+const dressedIn = (set) => ({ ...ch, equip: { ...ch.equip, shirt: { base: "camiseta", rarity: set.tier || "set", setShirt: set.id } } });
+// the shelf in tiers: plain sets, then ancestral, legendary and mythic, each by level (as the shirts hang)
+const TIER_RANK = { ancestral: 1, legendario: 2, mitico: 3, tunjo: 4 };
 const SETS_BY_TIER = SETS.map((s, i) => [s, i]).sort(([a, i], [b, j]) => (TIER_RANK[a.tier] || 0) - (TIER_RANK[b.tier] || 0) || a.lvl - b.lvl || i - j).map(([s]) => s);
-function necklaceShelf() {
-  const worn = ch.equip.neck?.setNeck, have = Object.keys(ch.necklaces || {}).length + (worn ? 1 : 0);
-  return `<p class="dim">Funde un conjunto entero en el alambique (una pieza de cada, nada más) y se convierte en su collar: todas sus bonificaciones y la mitad de las propiedades de sus piezas. Con él puesto se te ve con el conjunto entero. Uno por conjunto. Tienes ${have} de ${SETS.length}.</p>
+function shirtShelf() {
+  const worn = ch.equip.shirt?.setShirt, have = Object.keys(ch.shirts || {}).length + (worn ? 1 : 0);
+  return `<p class="dim">Funde un conjunto entero en el alambique (una pieza de cada, nada más) y se convierte en su camiseta encantada: todas sus bonificaciones y la mitad de las propiedades de sus piezas. Se lleva debajo de todo, en un sitio propio, así que el cuello queda libre para un collar. Con ella puesta se te ve con el conjunto entero, lleves lo que lleves encima, y lo de encima sigue dando lo suyo; puesta, un clic en ella para elegir qué piezas se ven. Una por conjunto. Tienes ${have} de ${SETS.length}.</p>
   <div class="necks">${SETS_BY_TIER.map((set) => {
-    const it = ch.necklaces?.[set.id] || (worn === set.id ? ch.equip.neck : null), color = RARITY[set.tier || "set"].color;
+    const it = ch.shirts?.[set.id] || (worn === set.id ? ch.equip.shirt : null), color = RARITY[set.tier || "set"].color;
     const sub = set.tier ? `Conjunto ${RARITY[set.tier].name.toLowerCase()} · ` : "";
     return `<div class="neckcard${it ? "" : " missing"}${worn === set.id ? " worn" : ""}" style="--nc:${color}">
       <div class="neckfig" ${it ? `title="Así te ves con ${esc(set.name)}"` : `aria-hidden="true"`}>${figureSvg(dressedIn(set))}</div>
       <b style="color:${color}">${esc(set.name)}</b>
       <span class="dim small">${sub}nivel ${set.lvl} · ${set.pieces.length} piezas</span>
-      <div class="neckfoot">${it ? `<button class="cell item r-${it.rarity}" data-id="${it.id}" title="${esc(E.itemName(it))}">${itemIco(it)}</button>` : `<span class="cell neckempty">${icon("necklace", color)}</span>`}
-        <span class="small">${worn === set.id ? "Lo llevas puesto" : it ? `${touch() ? "Toca" : "Haz clic en"} el collar para ponértelo` : "Aún no lo tienes"}</span></div>
+      <div class="neckfoot">${it ? `<button class="cell item r-${it.rarity}" data-id="${it.id}" title="${esc(E.itemName(it))}">${itemIco(it)}</button>` : `<span class="cell neckempty">${icon("leather-vest", color)}</span>`}
+        <span class="small">${worn === set.id ? "La llevas puesta" : it ? `${touch() ? "Toca" : "Haz clic en"} la camiseta para ponértela` : "Aún no la tienes"}</span></div>
     </div>`;
   }).join("")}</div>`;
 }
 function renderInv() {
   const s = ch.swap;
   $("#invPanel").innerHTML = `
-    <div class="ptitle"><div>Inventario</div><span class="goldamt" title="Oro">${icon("coins-pile", "#e2b84a")}${ch.gold} de oro</span><button id="invSort" class="ghost small" ${ch.inv.length > 1 ? "" : "disabled"} title="Ordena la bolsa: equipo (de mejor a peor rareza, por tipo, de más nivel a menos), runas, gemas, pociones">Ordenar</button><button id="invList" class="ghost small" title="Todo en una tabla, sin pasar el ratón por encima">Ver como lista</button><button class="x" data-close="#invPanel" aria-label="Cerrar">×</button></div>
+    <div class="ptitle"><div>Inventario</div><span class="goldamt" title="Oro">${icon("coins-pile", "#e2b84a")}${ch.gold} de oro</span><button id="invSort" class="ghost small" ${ch.inv.length > 1 ? "" : "disabled"} title="Ordena la bolsa: equipo (de mejor a peor rareza, por tipo, de más nivel a menos), gemas, pociones">Ordenar</button><button id="invList" class="ghost small" title="Todo en una tabla, sin pasar el ratón por encima">Ver como lista</button><button class="x" data-close="#invPanel" aria-label="Cerrar">×</button></div>
     <div class="doll">
       <div class="doll-portrait" id="dollFig"><span class="dolllvl" title="Nivel ${ch.level}">${ch.level}</span></div>
       ${slotCell(`weapon${s}`, "Arma", "w")}
@@ -1263,11 +1325,12 @@ function renderInv() {
       ${slotCell("belt", "Cintura", "belt")}
       ${slotCell("ring2", "Anillo", "r2")}
       ${slotCell("feet", "Pies", "feet")}
+      ${slotCell("shirt", "Camiseta", "shirt")}
     </div>
     <div class="swaprow"><button id="invSwap">Armas ${s === 1 ? "I" : "II"} <span class="dim">(cambiar: Alt+S)</span></button>
       <span class="dim">En reserva: ${[ch.equip[`weapon${3 - s}`], ch.equip[`off${3 - s}`]].filter(Boolean).map((x) => esc(E.itemName(x))).join(", ") || "nada"}</span></div>
     <div class="grid">${grid(ch.inv, INV_SIZE)}</div>
-    <p class="dim small">Haz clic en un objeto para equiparlo, venderlo o engastar gemas.${Object.keys(ch.necklaces || {}).length ? " Tus collares de conjunto están en la aldea, pestaña Collares." : ""}</p>`;
+    <p class="dim small">Haz clic en un objeto para equiparlo, venderlo o engastar gemas.${Object.keys(ch.shirts || {}).length ? " Tus camisetas de conjunto están en la aldea, pestaña Camisetas." : ""}</p>`;
   dollFigure($("#dollFig"));
   $("#invSwap").onclick = swapWeapons;
   $("#invList").onclick = () => openItemList("inv");
@@ -1472,19 +1535,27 @@ const TOWN_FX = {
   stash: [["flame", 32.6, 40, 1], ["flame", 68, 40, 1], ["glow", 32.6, 30, 110, "255,160,70"], ["glow", 68, 30, 110, "255,160,70"], ["dust", 50, 50, 12, 40]],
   alembic: [["bubble", 55.8, 56, 4, 1], ["bubble", 59.2, 56, 4, 1], ["bubble", 62.5, 56, 4, 1], ["steam", 35.4, 34, 4, 1.5], ["steam", 86, 30, 3, 1], ["flame", 35.4, 66, 1], ["glow", 35.4, 66, 60, "255,140,50"], ["glow", 86.7, 86, 50, "255,120,40"]],
 };
-// Collares: the room is drawn with empty pegs; the necklaces you have hang on them
+// Camisetas: the room is drawn with empty pegs; the undershirts you have hang on them
 // (scripts/build_scenes.py writes their strip and where each one goes)
 let NECKS = null;
-fetch("rpg/scenes/v-collares-necks.json").then((r) => r.json()).then((j) => { NECKS = j; if (S.view === "town" && S.townTab === "collares") renderTown(); }).catch(() => {});
-function hungNecklaces() {
+fetch("rpg/scenes/v-camisetas-shirts.json").then((r) => r.json()).then((j) => { NECKS = j; if (S.view === "town" && S.townTab === "camisetas") renderTown(); }).catch(() => {});
+function hungShirts() {
   if (!NECKS) return "";
   const [cw, ch_] = NECKS.cell, [W, H] = NECKS.scene, n = NECKS.n;
-  const have = new Set([...Object.keys(ch.necklaces || {}), ch.equip.neck?.setNeck].filter(Boolean));
-  const url = new URL("rpg/scenes/v-collares-necks.png", location.href).href;
+  const have = new Set([...Object.keys(ch.shirts || {}), ch.equip.shirt?.setShirt].filter(Boolean));
+  const url = new URL("rpg/scenes/v-camisetas-shirts.png", location.href).href;
   return Object.entries(NECKS.at).filter(([sid]) => have.has(sid)).map(([sid, [x, y, i]]) => {
     const set = SETS.find((s) => s.id === sid);
-    return `<b class="hungneck${ch.equip.neck?.setNeck === sid ? " worn" : ""}" title="${esc(set?.name || sid)}" style="left:${x}%;top:${y}%;width:${(cw / W) * 100}%;height:${(ch_ / H) * 100}%;background-image:url('${url}');background-size:${n * 100}% 100%;background-position:${(i / (n - 1)) * 100}% 0"></b>`;
+    return `<b class="hungneck${ch.equip.shirt?.setShirt === sid ? " worn" : ""}" title="${esc(set?.name || sid)}" style="left:${x}%;top:${y}%;width:${(cw / W) * 100}%;height:${(ch_ / H) * 100}%;background-image:url('${url}');background-size:${n * 100}% 100%;background-position:${(i / (n - 1)) * 100}% 0"></b>`;
   }).join("");
+}
+// Colección's scene: the rainbow items you've won, set out along Doña Remedios' counter, the rest as shadows
+function collectionShelf() {
+  const book = tunjoBook(), n = TUNJO_ITEMS.length;
+  return `<div class="tshelf">${TUNJO_ITEMS.map((d, i) => {
+    const it = book[d.id] || { base: d.look, rarity: "tunjo", tunjo: d.id, look: d.look };
+    return `<span class="${book[d.id] ? "on" : "off"}" style="--i:${i};--n:${n}" title="${book[d.id] ? esc(it.name) : "¿?"}">${itemIco(it)}</span>`;
+  }).join("")}</div>`;
 }
 // ---------- the Montón: perfect gems thrown on a pile, for nothing but the pile ----------
 // Where the k-th gem lies: the pile is always a pyramid (rows b, b-1 … 1) being finished. Going from
@@ -1614,14 +1685,16 @@ function townScene(tab) {
     return Array.from({ length: n }, () => `<i class="tfx-${k}" style="left:${(x + (Math.random() * 2 - 1) * spread).toFixed(2)}%;top:${y}%;--d:${r(0.7, 1.4)};--t:${r(-1, 0)};--k:${Math.random() < 0.5 ? -1 : 1}"></i>`);
   }).join("");
   if (tab === "monton") return moundScene();
-  return `<div class="townscene" style="background-image:url('${new URL(`rpg/scenes/v-${tab}.png`, location.href).href}')" aria-hidden="true">${fx}${tab === "collares" ? hungNecklaces() : ""}</div>`;
+  if (tab === "coleccion") return `<div class="townscene" style="background-image:url('${new URL("rpg/scenes/v-casetes.png", location.href).href}')" aria-hidden="true">${collectionShelf()}</div>`;
+  return `<div class="townscene" style="background-image:url('${new URL(`rpg/scenes/v-${tab}.png`, location.href).href}')" aria-hidden="true">${fx}${tab === "camisetas" ? hungShirts() : ""}</div>`;
 }
 function renderTown() {
+  dropRunes(); necklacesToShirts();
   const st = stats();
   ch.life = st.maxLife; ch.mana = st.maxMana; // rest in town
-  S.townTab = S.townTab || "merchant";
+  S.townTab = S.townTab === "collares" ? "camisetas" : S.townTab || "merchant";
   const tierNow = ch.level >= 24 ? 2 : ch.level >= 10 ? 1 : 0;
-  const tabs = [["merchant", "Mercader"], ["gamble", "Apuestas"], ["casetes", "Tunjos"], ["sell", "Vender"], ["stash", "Alijo"], ["alembic", "Alambique"], ["collares", "Collares"], ["monton", "Montón"]];
+  const tabs = [["merchant", "Mercader"], ["gamble", "Apuestas"], ["casetes", "Tunjos"], ["sell", "Vender"], ["stash", "Alijo"], ["alembic", "Alambique"], ["camisetas", "Camisetas"], ["coleccion", "Colección"], ["monton", "Montón"]];
   let body = "";
   if (S.townTab === "merchant") {
     body = `<p class="dim">Pociones para el camino. Para vender, la pestaña Vender.</p><div class="shop">` +
@@ -1635,35 +1708,39 @@ function renderTown() {
     body = `<p class="dim">Pagas por un objeto sin ver qué es. Casi siempre mágico; a veces raro; muy de vez en cuando, algo legendario.</p><div class="shop">` +
       slots.map(([s, l]) => { const p = E.gamblePrice(ch, s); return `<div class="ware"><b>${l}</b><span class="dim">${p} de oro</span><button data-gamble="${s}" ${ch.gold < p ? "disabled" : ""}>Apostar</button></div>`; }).join("") + `</div>`;
   } else if (S.townTab === "casetes") {
-    const p = casetePrice(), G = ch.grimoire || [];
+    const p = tunjoPrice(), wait = tunjoWait(), G = ch.grimoire || [];
     const unid = [...ch.inv, ...ch.stash].filter((x) => x.unid);
-    body = `<p class="dim">Doña Remedios guarda tunjos que hablan: figuritas de oro que alguien ofrendó a la laguna y que todavía repiten lo que les dijeron al oído. Pagas sin saber qué voz guarda el tuyo: casi siempre una frase tranquila, a veces habla rápida que esconde un buen objeto y, muy de vez en cuando, el tramo del episodio que más te ha costado.</p>
-      <div class="shop"><div class="ware">${icon("tunjo", "#d8b84a")}<div><b>Tunjo dormido</b><span class="dim">${p} de oro</span></div><button id="buyCasete" ${ch.gold < p ? "disabled" : ""}>Comprar y oír</button></div></div>
-      ${hardestStretch() ? "" : `<p class="dim small">Todavía no hay tunjos únicos para ti en este episodio: salen de las frases que más fallas.</p>`}
-      ${unid.length ? `<p>Tienes ${unid.length} ${unid.length === 1 ? "objeto" : "objetos"} sin identificar. Clic en ${unid.length === 1 ? "él" : "uno"} → Identificar. Don Eusebio, sentado al lado, ayuda por oro.</p>` : ""}
+    const short = Math.max(0, p - ch.gold);
+    body = `<p class="dim">Doña Remedios guarda tunjos que hablan: figuritas de oro que alguien ofrendó a la laguna y que todavía repiten lo que les dijeron al oído. Le queda uno al día, y no lo regala. Dice una frase entera del episodio y tú tienes una sola respuesta: si la entiendes palabra por palabra, a sus pies cae un objeto del arcoíris, de los que no salen en ningún otro sitio.</p>
+      <div class="shop"><div class="ware tunjoware">${icon("tunjo", "#d8b84a")}<div><b class="rainbow">Tunjo que habla</b><span class="dim">${p.toLocaleString("es")} de oro</span></div>
+        <button id="buyTunjo" ${wait || short ? "disabled" : ""}>Comprar y oír</button></div></div>
+      <p class="dim small">${wait ? `El próximo tunjo, en ${hoursLeft(wait)}.` : short ? `Te faltan ${short.toLocaleString("es")} de oro.` : "Hoy tienes uno."} Si la frase no coincide con su audio (No coincide), te devuelve el oro y puedes comprar otro.</p>
+      ${tunjoPrizes()}
+      ${unid.length ? `<h3 class="rwtitle">Sin identificar</h3><p class="dim">Esto no es del tunjo: es botín de tus combates que todavía no sabes qué es. ${unid.length === 1 ? "Tienes 1 objeto." : `Tienes ${unid.length} objetos.`} Cada uno guarda una frase corta: escríbela y sabrás qué es. Don Eusebio, sentado al lado, da pistas por oro.</p>
+        <div class="unidrow">${unid.map((x) => `<span class="cell item r-${x.rarity}" title="${esc(E.itemName(x))}">${itemIco(x)}</span>`).join("")}</div>
+        <button id="idAll" class="primary">Identificar uno tras otro</button>` : ""}
       ${CFG.online ? "" : `<h3 class="rwtitle">Grimorio</h3>`}
       ${CFG.online ? "" : G.length ? `<ol class="grimoire">${G.map((g, i) => `<li><b>${esc(g.name)}</b><p class="gtext">${esc(g.text)}</p>${g.ep === S.ep ? `<button data-gplay="${i}">▶ Oír</button>` : ""}</li>`).join("")}</ol>
         <p class="dim">En combate, después de una frase: Grimorio (G), y lees el pasaje en voz alta.</p>`
-      : `<p class="dim">Vacío. Un tunjo único que entiendas te enseña su pasaje como conjuro.</p>`}`;
+      : `<p class="dim">Vacío. La frase de un tunjo que entiendas queda aquí como conjuro.</p>`}`;
+  } else if (S.townTab === "coleccion") {
+    body = collectionPanel();
   } else if (S.townTab === "sell") {
     const back = S.sold || [];
     body = `<p class="dim">${touch() ? "Toca" : "Clic en"} un objeto del inventario y se vende al momento. Lo equipado y el cinturón no se venden así.</p>${invInline()}
       ${back.length ? `<h3 class="rwtitle">Vendido hace poco</h3><div class="shop">${back.map((it, i) => `<div class="ware">${itemIco(it)}<div><b style="color:${E.itemColor(it)}">${esc(E.itemName(it))}</b><span class="dim">${E.itemValue(it)} de oro</span></div><button data-buyback="${i}" ${ch.gold < E.itemValue(it) ? "disabled" : ""}>Recomprar</button></div>`).join("")}</div>` : ""}`;
-  } else if (S.townTab === "collares") {
-    body = necklaceShelf();
+  } else if (S.townTab === "camisetas") {
+    body = shirtShelf();
   } else if (S.townTab === "monton") {
     body = moundPanel();
   } else if (S.townTab === "stash") {
-    body = `<p class="dim">Lo que guardes aquí no ocupa el inventario. ${touch() ? "Toca un objeto del inventario para guardarlo, y uno del alijo para sacarlo." : "Clic en un objeto del inventario para guardarlo, y en uno del alijo para sacarlo. Clic derecho para más opciones."}</p>${invInline()}<h3 class="rwtitle">El alijo <span class="dim">${ch.stash.length}/${STASH_SIZE}</span></h3><div class="grid stash">${grid(ch.stash, stashShown())}</div><div class="row"><button id="sortStash" ${ch.stash.length > 1 ? "" : "disabled"} title="Equipo (de mejor a peor, cada conjunto junto), runas, gemas, pociones">Ordenar el alijo</button><button id="stashList" title="El alijo en una tabla, sin pasar el ratón por encima">Ver como lista</button></div>`;
+    body = `<p class="dim">Lo que guardes aquí no ocupa el inventario. ${touch() ? "Toca un objeto del inventario para guardarlo, y uno del alijo para sacarlo." : "Clic en un objeto del inventario para guardarlo, y en uno del alijo para sacarlo. Clic derecho para más opciones."}</p>${invInline()}<h3 class="rwtitle">El alijo <span class="dim">${ch.stash.length}/${STASH_SIZE}</span></h3><div class="grid stash">${grid(ch.stash, stashShown())}</div><div class="row"><button id="sortStash" ${ch.stash.length > 1 ? "" : "disabled"} title="Equipo (de mejor a peor, cada conjunto junto), gemas, pociones">Ordenar el alijo</button><button id="stashList" title="El alijo en una tabla, sin pasar el ratón por encima">Ver como lista</button></div>`;
   } else {
     body = `<p class="dim">Pon objetos del inventario en el alambique y transmuta. ${touch() ? "Toca" : "Clic en"} un objeto del inventario para meterlo, y en el alambique para sacarlo.${touch() ? "" : " Clic derecho para más opciones."}</p>
       <div class="alembic">${[...Array(ALEM_SIZE).keys()].map((i) => { const it = S.alembic[i]; return it ? `<button class="cell item r-${it.rarity}" data-alem="${i}" title="${esc(E.itemName(it))}">${itemIco(it)}</button>` : `<span class="cell"></span>`; }).join("")}</div>
       <div class="row"><button id="transmute" class="primary" ${S.alembic.length ? "" : "disabled"}>Transmutar</button><button id="emptyAlem" ${S.alembic.length ? "" : "disabled"}>Vaciar</button>${massGemButton()}</div>
       ${invInline()}
-      <ul class="recipes">${E.RECIPES.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>
-      <h3 class="rwtitle">Palabras rúnicas</h3>
-      <p class="dim">Engasta las runas, en este orden, en un objeto de cualquier rareza con exactamente ese número de engastes. Uno blanco se convierte en la palabra; uno de color conserva su nombre y sus propiedades y suma las de la palabra. Cada palabra solo despierta en el tipo de objeto que dice; en cualquier otro, cada runa da solo su efecto suelto (el de arma, armadura o escudo).</p>
-      <ul class="runewords">${RUNEWORDS.map((w) => `<li class="${w.runes.some((r) => RUNE[r].grammar) ? "grw" : ""}"><b>${esc(w.name || w.id)}</b> <span class="runes">${w.runes.join(" · ")}</span> <span class="dim">en ${w.kinds.map((k) => ({ melee: "arma cuerpo a cuerpo", ranged: "arma a distancia", head: "casco", body: "torso", off: "escudo" })[k]).join(" o ")} con ${w.runes.length} engastes</span></li>`).join("")}</ul>`;
+      <ul class="recipes">${E.RECIPES.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>`;
   }
   screen.innerHTML = `
     <section class="town">
@@ -1682,7 +1759,9 @@ function renderTown() {
   $("#toMap").onclick = () => show("map");
   $("#moundGo")?.addEventListener("click", transformMound);
   screen.querySelectorAll("[data-throw]").forEach((b) => (b.onclick = () => throwGems(b.dataset.throw, b.dataset.all ? Infinity : 1)));
-  $("#buyCasete")?.addEventListener("click", buyCasete);
+  $("#buyTunjo")?.addEventListener("click", buyTunjo);
+  $("#idAll")?.addEventListener("click", () => { const n = nextUnid(); if (n) identify(n.id); });
+  screen.querySelectorAll("[data-tback]").forEach((b) => (b.onclick = () => tunjoBack(b.dataset.tback)));
   $("#sortStash")?.addEventListener("click", sortStash);
   $("#stashList")?.addEventListener("click", () => openItemList("stash"));
   screen.querySelectorAll("[data-gplay]").forEach((b) => (b.onclick = () => { const g = ch.grimoire[+b.dataset.gplay]; playRange(g.start, g.end); }));
@@ -1714,12 +1793,12 @@ function renderTown() {
     const r = E.alembic(S.alembic);
     if (!r) return toast("Esa combinación no hace nada");
     if (!r.result) return toast(r.text); // a recipe that can't apply to these: nothing is used up
-    if (r.necklace && (ch.necklaces?.[r.setId] || ch.equip.neck?.setNeck === r.setId)) return toast(`Ya tienes el collar de ${r.set}: solo hay uno por conjunto.`, "", 4000);
+    if (r.shirt && (ch.shirts?.[r.setId] || ch.equip.shirt?.setShirt === r.setId)) return toast(`Ya tienes la camiseta de ${r.set}: solo hay una por conjunto.`, "", 4000);
     S.alembic = [];
-    if (r.necklace) {
-      (ch.necklaces ||= {})[r.setId] = r.necklace;
+    if (r.shirt) {
+      (ch.shirts ||= {})[r.setId] = r.shirt;
       save(); renderTown(); renderPanels();
-      return celebrate({ it: r.necklace, melt: r.set, neck: true, where: "a tus collares (en el inventario)" });
+      return celebrate({ it: r.shirt, melt: r.set, neck: true, where: "a tus camisetas (pestaña Camisetas)" });
     }
     if (r.results) { // a whole set melted: its own celebration, the prizes into the bag (or the stash)
       // the pieces came out of the bag, so there's room for what comes back; the stash or the bag over its size otherwise
@@ -1797,7 +1876,7 @@ function descentList(z, zp) {
   return `<p class="dim small">${n} descensos hasta el final del episodio; cada uno es el tramo siguiente. Más hondo, el episodio vuelve a empezar, más duro.</p><ol class="descents">${rows.join("")}</ol>`;
 }
 function renderMap() {
-  useEpisodeZones(); migrateModes(); identifyOld();
+  useEpisodeZones(); migrateModes(); identifyOld(); dropRunes(); necklacesToShirts();
   // prizes for zones finished before there were prizes (or when the bag was full)
   if (S.T) for (const z of ZONES) zoneRewards(z);
   const unlocked = (i) => i === 0 || ch.zones[ZONES[i - 1].id]?.cleared;
@@ -2236,7 +2315,7 @@ function startEncounter() {
   const zp = ch.zones[S.zone.id];
   const enc = E.makeEncounter(atLevel(S.zone), zp.pack, zp.depth || 0, E.diffOf(ch));
   const queue = S.zone.review ? [] : buildQueue();
-  S.F = { enc, monsters: enc.monsters, target: 0, combo: Math.max(stats().comboStart, ch.streak || 0), log: [], si: null, ground: { gold: 0, items: [] }, queue, qi: 0, review: !!S.zone.review };
+  S.F = { enc, monsters: enc.monsters, target: 0, combo: Math.max(stats().comboStart, ch.streak || 0), ear: ch.earStreak || 0, log: [], si: null, ground: { gold: 0, items: [] }, queue, qi: 0, review: !!S.zone.review };
   if (enc.boss) S.F.boss = { charge: 0, armed: false, p2: false, stolen: [], deal: null, burn: 0, tangle: 0 };
   S.loot = null;
   const foe = S.zone.review ? leechFoe(enc) : weakFoe(enc, queue);
@@ -2379,6 +2458,23 @@ const isWeak = (e) => e.miss >= 2 && weakScore(e) >= 1.5;
 const isLeech = (e) => e.miss >= 5 && weakScore(e) >= 3;
 const capWord = (w) => w.charAt(0).toUpperCase() + w.slice(1);
 const bare = (w) => w.replace(/[^\p{L}'’-]/gu, "");
+// Filling gaps: how fresh the right answers were. A word you've got right in a gap before counts as
+// known a fifth more each time (fully from the 5th), across episodes; a miss counts as fresh.
+// Returns the multiplier on the odds of rare and better loot from this attack's kills: 1 down to
+// 0.15 when every gap was a word you know cold. Then counts this answer's right words.
+function gapFreshness(r) {
+  const K = (ch.gapKnown ||= {}), per = (r.words || []).filter((x) => !isSound(x.w));
+  if (!per.length) { S.F.gapStale = null; return 1; }
+  let stale = 0; const known = [];
+  for (const x of per) {
+    const k = norm(x.w), n = K[k] || 0;
+    if (x.ok && n) { stale += Math.min(1, n / 5); if (n >= 2) known.push(bare(x.w).toLowerCase()); }
+  }
+  for (const x of per) if (x.ok) { const k = norm(x.w); K[k] = (K[k] || 0) + 1; }
+  const mult = Math.max(0.15, 1 - 0.85 * (stale / per.length));
+  S.F.gapStale = mult < 0.95 ? { mult, words: known } : null;
+  return mult;
+}
 function trackWords(r) {
   const F = S.F;
   if (F.review || !r.words) return;
@@ -2527,11 +2623,15 @@ const REGAIN_FROM = 10; // only a streak at least this long can be got back
 // ---------- the streak dice (E.streakRoll) ----------
 // Rolled when the line is answered; the prize goes straight to you (gold to your purse, the thing to your
 // bag, or the stash, or the ground); the dice play out over the stage a moment later.
-function streakDice(F) {
-  const r = E.streakRoll(F.combo, F.enc?.lvl || ch.level, stats(), E.diffOf(ch), isEasy());
+// Two streaks roll their own dice: the streak (perfect lines) and the ear streak (perfect lines heard only once).
+const DICE_KIND = { racha: { name: "Dados de la racha", n: (F) => F.combo }, oido: { name: "Dados de oído", n: (F) => F.ear } };
+function streakDice(F, kind = "racha") {
+  const K = DICE_KIND[kind];
+  const r = E.streakRoll(K.n(F), F.enc?.lvl || ch.level, stats(), E.diffOf(ch), isEasy());
   if (!r) return null;
+  r.kind2 = kind;
   ch.stats.diceRolls = (ch.stats.diceRolls || 0) + 1;
-  if (!r.win) return addLog(`${dieIco()} Dados de la racha: sale <b>${r.roll}</b>; ganabas con ${r.need === 1 ? "un 1" : `1 a ${r.need}`} (${r.need}% de probabilidad). Sin premio.`, "dice"), r;
+  if (!r.win) return addLog(`${dieIco(kind)} ${K.name}: sale <b>${r.roll}</b>; ganabas con ${r.need === 1 ? "un 1" : `1 a ${r.need}`} (${r.need}% de probabilidad). Sin premio.`, "dice"), r;
   ch.stats.diceWins = (ch.stats.diceWins || 0) + 1;
   let where = "";
   if (r.gold) ch.gold += r.gold;
@@ -2542,22 +2642,26 @@ function streakDice(F) {
   }
   r.where = where;
   const what = r.gold ? `<b>${r.gold} de oro</b>` : `<b style="color:${E.itemColor(r.item)}">${esc(r.item.unid ? `${RARITY[r.item.rarity]?.name || ""} sin identificar` : E.itemName(r.item))}</b>`;
-  addLog(`${dieIco()} <b>¡Dados de la racha!</b> Sale ${r.roll}, y ganabas con ${r.need === 1 ? "un 1" : `1 a ${r.need}`}. Dado de premio: ${r.face}${r.bonus ? ` + ${r.bonus}` : ""} = <b>${r.total}</b>: ${what}${where ? ` <span class="dim">(va ${where})</span>` : ""}.`, "good");
+  addLog(`${dieIco(kind)} <b>¡${K.name}!</b> Sale ${r.roll}, y ganabas con ${r.need === 1 ? "un 1" : `1 a ${r.need}`}. Dado de premio: ${r.face}${r.bonus ? ` + ${r.bonus}` : ""} = <b>${r.total}</b>: ${what}${where ? ` <span class="dim">(va ${where})</span>` : ""}.`, "good");
   save();
   return r;
 }
-const dieIco = () => `<i class="die-ico" aria-hidden="true"></i>`;
+const dieIco = (kind = "racha") => `<i class="die-ico${kind === "oido" ? " ear" : ""}" aria-hidden="true"></i>`;
 // Two percentile dice tumble and land; on a win, the gold prize die (a d20) rolls too, and the prize shows.
 function showDice(r) {
   const stage = $(".stage");
   if (!stage) return;
-  stage.querySelectorAll(".dicebox").forEach((n) => n.remove());
+  // both streaks can roll on the same line: their boxes stack in the corner, the ear's dice in blue
+  const kind = r.kind2 || "racha";
+  let stack = stage.querySelector(".dicestack");
+  if (!stack) stage.append((stack = h(`<div class="dicestack"></div>`)));
+  stack.querySelectorAll(`.dicebox[data-kind="${kind}"]`).forEach((n) => n.remove());
   const tens = (v) => String(Math.floor((v % 100) / 10)) + "0", ones = (v) => String(v % 10);
-  const box = h(`<div class="dicebox${r.win ? " win" : ""}" aria-live="polite">
+  const box = h(`<div class="dicebox${r.win ? " win" : ""}${kind === "oido" ? " ear" : ""}" data-kind="${kind}" aria-live="polite">${kind === "oido" ? `<div class="dice-kind">Oído</div>` : ""}
       <div class="dice-row"><span class="die d10" data-v="${tens(r.roll)}">${tens(r.roll)}</span><span class="die d10" data-v="${ones(r.roll)}">${ones(r.roll)}</span>
         <span class="dice-need">gana con ${r.need === 1 ? "un 1" : `1 a ${r.need}`}</span></div>
       <div class="dice-res"></div></div>`);
-  stage.append(box);
+  kind === "oido" ? stack.append(box) : stack.prepend(box);
   const tumble = (el, faces, ms) => new Promise((ok) => {
     if (FX.reduced()) return ok();
     const final = el.textContent, t0 = performance.now();
@@ -2573,7 +2677,7 @@ function showDice(r) {
   sfx.dice();
   const [a, b] = box.querySelectorAll(".d10");
   Promise.all([tumble(a, ["00", "10", "20", "30", "40", "50", "60", "70", "80", "90"], 650), tumble(b, "0123456789".split(""), 800)]).then(async () => {
-    if (!stage.isConnected) return;
+    if (!box.isConnected) return;
     if (!r.win) {
       res.innerHTML = `Sacas <b>${r.roll}</b>`;
       setTimeout(() => box.classList.add("out"), 1100);
@@ -2586,16 +2690,16 @@ function showDice(r) {
     box.querySelector(".dice-row").after(h(`<div class="dice-row prize"></div>`));
     const row = box.querySelector(".dice-row.prize");
     row.append(d20);
-    if (r.bonus) row.append(h(`<span class="dice-bonus">+${r.bonus} <small>racha</small></span>`));
+    if (r.bonus) row.append(h(`<span class="dice-bonus">+${r.bonus} <small>${kind === "oido" ? "oído" : "racha"}</small></span>`));
     sfx.dice();
     await tumble(d20, Array.from({ length: 20 }, (_, i) => String(i + 1)), 900);
-    if (!stage.isConnected) return;
+    if (!box.isConnected) return;
     const top = r.kind === "mitico" || r.kind === "legendario" || r.kind === "ancestral";
     const color = r.gold ? "#f0d25c" : E.itemColor(r.item);
     res.innerHTML = `<b class="dice-total">${r.total}</b> <span style="color:${color}">${r.gold ? `${r.gold} de oro` : esc(r.label.replace(/^un[a]? /, "").replace(/^./, (c) => c.toUpperCase()))}</span>`;
     box.classList.add(top ? "jackpot" : "prized");
     box.style.setProperty("--pc", color);
-    if (r.gold) sfx.coin(); else sfx.drop(r.item.kind === "rune" ? "rune" : r.item.rarity);
+    if (r.gold) sfx.coin(); else sfx.drop(r.item.rarity);
     const me = $("#me");
     if (me && (top || r.kind === "item")) FX.beam(stage, FX.pointOn(me, stage, 0.5, 0.9), color, top ? 2600 : 1600);
     if (top) FX.shake(stage);
@@ -2614,10 +2718,18 @@ function renderCombo() {
   const el = $("#combo");
   // just got it back: a burst over the counter
   el.classList.toggle("regained", !!S.F.regainedAt && Date.now() - S.F.regainedAt < 2500);
-  if (L) return void (el.innerHTML = (c ? `Racha <b>×${(1 + 0.1 * Math.min(c, 10)).toFixed(1)}</b> <span class="dim">(${c})</span>` : "") + back);
+  if (L) return void (el.innerHTML = (c ? `Racha <b>×${(1 + 0.1 * Math.min(c, 10)).toFixed(1)}</b> <span class="dim">(${c})</span>` : "") + back + earBadge());
   el.innerHTML = S.F.regainedAt && Date.now() - S.F.regainedAt < 2500 ? `<span class="rback">¡Racha recuperada!</span> ` : "";
   const next = E.diceChance(c + 1);
   el.innerHTML += c ? `Racha <b>×${(1 + 0.1 * Math.min(c, 10)).toFixed(1)}</b> <span class="dim">(${c})</span>${next ? ` <span class="luck" title="Los dados de la racha: la próxima frase perfecta tira un número del 1 al 100 y gana un premio con ${next === 1 ? "un 1" : `1 a ${next}`}, un ${next}% de probabilidad (dado de premio +${E.prizeBonus(c + 1)}).">${dieIco()} ${next}%</span>` : ""}` : "";
+  el.innerHTML += earBadge();
+}
+// the ear streak: perfect lines in a row heard only once (no replay, no slow play, no hint)
+function earBadge() {
+  const e = S.F.ear || 0;
+  if (!e) return "";
+  const next = E.diceChance(e + 1);
+  return ` <span class="earstreak" title="Racha de oído: frases perfectas seguidas escuchándolas una sola vez (sin repetir, sin cámara lenta, sin pistas). Desde ${E.DICE_FROM} tira sus propios dados${next ? `: la próxima gana con ${next === 1 ? "un 1" : `1 a ${next}`}, un ${next}% (dado de premio +${E.prizeBonus(e + 1)})` : ""}.">Oído <b>${e}</b>${next ? ` ${dieIco("oido")} ${next}%` : ""}</span>`;
 }
 // Element badges on monsters: what half of their hits are made of, and which resistance helps.
 const ELEMENTS = {
@@ -2877,7 +2989,7 @@ function nextExercise() {
   if (F.boss?.tangle > 0) F.boss.tangle--;
   F.plays = 0; F.slows = 0; F.paid = 0; F.paidCount = 0; F.freeListening = false; F.hinted = false; F.checked = false; F.explanation = "";
   // how things stood before this line, in case it gets flagged as not matching the audio
-  F.before = { life: ch.life, mana: ch.mana, combo: F.combo, streakLost: ch.streakLost || 0, lines: ch.stats.lines, perfect: ch.stats.perfect, boss: F.boss ? JSON.parse(JSON.stringify(F.boss)) : null };
+  F.before = { life: ch.life, mana: ch.mana, combo: F.combo, ear: F.ear || 0, streakLost: ch.streakLost || 0, lines: ch.stats.lines, perfect: ch.stats.perfect, boss: F.boss ? JSON.parse(JSON.stringify(F.boss)) : null };
   save();
   setupExercise(false);
   renderBossWarn();
@@ -2916,14 +3028,14 @@ function setupExercise(keep) {
     </div>`;
   if (F.mode === "cloze") {
     F.blanks = F.lesson ? F.lesson.at.slice() : F.ex.card ? chooseBlanks({ 0: { words } }, 0, E.diffOf(ch).cloze) : clozeBlanks(F.ex, words);
-    // forms of haber, and the word of a weak spot you're fighting, are always among the gaps
-    const must = F.ex.card || F.lesson ? [] : words.map((w, i) => i).filter((i) => !isSound(words[i].w) && (runeOf(words[i].w) || alive(F).some((m) => m.weak && m.weak === norm(words[i].w))));
+    // the word of a weak spot you're fighting is always among the gaps
+    const must = F.ex.card || F.lesson ? [] : words.map((w, i) => i).filter((i) => !isSound(words[i].w) && alive(F).some((m) => m.weak && m.weak === norm(words[i].w)));
     // (a second pass keeps its own gaps as well, so it doesn't come out the same as the first)
     if (must.length) F.blanks = [...new Set([...must, ...F.blanks])].slice(0, F.ex.v ? Infinity : Math.max(F.blanks.length, must.length)).sort((a, b) => a - b);
     const box = $("#cloze");
     words.forEach((w, i) => {
       if (F.blanks.includes(i)) {
-        const inp = h(`<input data-i="${i}" size="${Math.max(3, w.w.length)}" autocomplete="off" spellcheck="false" autocapitalize="off">`);
+        const inp = h(`<input data-i="${i}" size="${Math.max(10, w.w.length)}" autocomplete="off" spellcheck="false" autocapitalize="off">`);
         box.append(inp);
         // a course's gap: after the verb, what it is in Spanish
         if (F.lesson && i === F.lesson.at[F.lesson.at.length - 1]) box.append(" ", h(`<span class="gaphint" title="En español">(${esc(F.lesson.hint)})</span>`));
@@ -2934,7 +3046,7 @@ function setupExercise(keep) {
   $("#playBtn").onclick = () => { doPlay(false); focusInput(); };
   $("#slowBtn").onclick = () => { doPlay(true); focusInput(); };
   if (earOnlyAfter()) for (const b of ["#playBtn", "#slowBtn"]) { $(b).disabled = true; $(b).title = "La frase suena después de responder"; }
-  $("#hintBtn").onclick = hint;
+  $("#hintBtn").onclick = () => hint(); // not `= hint`: the click event would arrive as `free`
   $("#attackBtn").onclick = attack;
   bindFlag();
   if (F.hinted) { F.hinted = false; hint(true); }
@@ -3014,7 +3126,7 @@ function focusInput() {
   (S.F.mode === "cloze" ? $("#cloze input") : S.F.mode === "recall" ? $("#revealBtn") : $("#answer"))?.focus();
 }
 function spend(n) {
-  if (ch.mana < n) { toast("No tienes suficiente maná. Bebe una poción (Alt+2)."); flashOrb("#manaOrb", "hit"); return false; }
+  if (ch.mana < n) { toast(n > stats().maxMana ? `Cuesta ${n} de maná y tu barra solo llega a ${stats().maxMana}: necesitas más maná máximo (equipo, energía).` : "No tienes suficiente maná. Bebe una poción (Alt+2)."); flashOrb("#manaOrb", "hit"); return false; }
   ch.mana -= n; renderHud(); return true;
 }
 const unlimitedNow = () => { const D = E.diffOf(ch); return D.paidListens != null && S.F.paidCount >= D.paidListens; };
@@ -3112,14 +3224,16 @@ function resolveAttack(r, acc, perfectFirst) {
   F.checked = true;
   // every word right with every accent: kills from this attack roll good loot at double the odds
   F.goodLoot = r.accentsPerfect ? 2 : 1;
+  // gaps filled with words you've already got right in a gap again and again: less rare loot
+  F.freshLoot = F.mode === "cloze" && !F.review && !F.lesson ? gapFreshness(r) : ((F.gapStale = null), 1);
   // the streak counting this answer (kills land before the streak is updated below): its loot luck
   F.luckCombo = acc >= 1 ? F.combo + 1 : st.comboKeep && acc >= 0.85 ? F.combo : 0;
   ch.stats.lines++;
   if (acc >= 1) ch.stats.perfect++;
   if (F.review) F.masteredNow = 0;
   else { masteryUpdate(acc, words, D); trackWords(r); if (F.masteredNow) zoneRewards(S.zone); }
-  const caught = F.review ? [] : catchRunes(r);
-  if (acc >= 1) sfx.correct(F.combo, perfectFirst); else if (acc >= 0.8) sfx.partial();
+  const caught = []; // (runes caught by ear used to rise over you here)
+  if (acc >= 1 && ch.streakLost) sfx.regain(F.combo + 1); else if (acc >= 1) sfx.correct(F.combo, perfectFirst); else if (acc >= 0.8) sfx.partial();
   const said = new Set((r.words || []).map((x) => norm(x.w))), right = new Set((r.words || []).filter((x) => x.ok).map((x) => norm(x.w)));
   // masked weak spots show their name once their line has been answered
   for (const m of F.monsters) if (m.mask && ((m.weak && said.has(m.weak)) || (m.leechCard && F.ex.card?.note === m.leechCard))) {
@@ -3230,7 +3344,6 @@ function resolveAttack(r, acc, perfectFirst) {
       F.combo = L + F.combo; ch.streakLost = 0; F.regainedAt = Date.now();
       setTimeout(() => { if (S.F === F) renderCombo(); }, 2600);
       addLog(`<b>¡Recuperas tu racha!</b> ${REGAIN} seguidas: vuelves a <b>${F.combo}</b>.`, "good");
-      sfx.levelup?.();
     } else if (L) addLog(`Recuperando tu racha de ${L}: <b>${F.combo}/${REGAIN}</b>.`, "good");
   } else if (!(st.comboKeep && acc >= 0.85)) {
     if (ch.streakLost) addLog(`Se pierde tu racha de ${ch.streakLost}.`, "bad");
@@ -3243,6 +3356,20 @@ function resolveAttack(r, acc, perfectFirst) {
   ch.streak = F.combo; // the streak goes on into the next group, until you miss or fall
   // the streak dice: from a streak of 5, every perfect line rolls for a prize
   const dice = acc >= 1 && !F.review ? streakDice(F) : null;
+  // the ear streak: only lines you listen to count; heard once and perfect, it grows; anything else ends it
+  let earDice = null;
+  if (!(F.mode === "recall" || F.mode === "subj")) {
+    if (acc >= 1 && perfectFirst) {
+      F.ear = (F.ear || 0) + 1;
+      ch.stats.bestEar = Math.max(ch.stats.bestEar || 0, F.ear);
+      if (!F.review) earDice = streakDice(F, "oido");
+      if (F.ear === E.DICE_FROM && !F.review) addLog(`<b>¡Racha de oído de ${E.DICE_FROM}!</b> ${E.DICE_FROM} frases perfectas seguidas escuchándolas una sola vez. Desde ahora esta racha tira sus propios dados, los azules, igual que la otra.`, "good");
+    } else {
+      if (F.ear >= 3) addLog(`Se acaba tu racha de oído de ${F.ear}.`, "bad");
+      F.ear = 0;
+    }
+    ch.earStreak = F.ear;
+  }
   if (F.combo === E.DICE_FROM && acc >= 1 && !F.review) addLog(`<b>¡Racha de ${E.DICE_FROM}!</b> Desde ahora cada frase perfecta tira los dados: sale un número del 1 al 100, y si es igual o menor que tu probabilidad de premio, ganas algo. Ahora es un ${E.diceChance(E.DICE_FROM)}% (solo gana un 1); sube 1 punto cada 2 frases perfectas, hasta un 15%, y con la racha mejora también el premio.`, "good");
 
   // their turn
@@ -3327,8 +3454,9 @@ function resolveAttack(r, acc, perfectFirst) {
     if ($("#portal")) $("#portal").disabled = true;
     return round.then(() => { if (S.F === F) die(r, acc); });
   }
-  F.goodLoot = 1;
+  F.goodLoot = 1; F.freshLoot = 1;
   if (dice) setTimeout(() => { if (S.F === F) showDice(dice); }, FX.reduced() ? 0 : 700);
+  if (earDice) setTimeout(() => { if (S.F === F) showDice(earDice); }, FX.reduced() ? 0 : dice ? 1000 : 700);
   if (F.boss?.dealPending) round.then(() => setTimeout(() => offerDeal(F), 300));
   showResult(r, acc, hit);
 }
@@ -3442,8 +3570,8 @@ function showCheer() {
   const d = dialog(`<div class="cheer" style="--c:${color}">
       <div class="sparks" aria-hidden="true">${sparks}</div>
       ${c.melt ? `<p class="cheer-kicker">${esc(c.melt)}</p>
-      <h3>${c.neck ? "¡Collar del conjunto!" : "¡Conjunto transmutado!"}</h3>
-      <p class="cheer-what">${c.neck ? "Fundiste el conjunto entero en un collar: todas sus bonificaciones y la mitad de las propiedades de sus piezas. Con él puesto, se te ve con el conjunto entero." : `Fundiste el conjunto entero en el alambique.${c.n > 1 ? ` Premio ${c.i + 1} de ${c.n}.` : ""}`}</p>
+      <h3>${c.neck ? "¡Camiseta del conjunto!" : "¡Conjunto transmutado!"}</h3>
+      <p class="cheer-what">${c.neck ? "Fundiste el conjunto entero en una camiseta encantada: todas sus bonificaciones y la mitad de las propiedades de sus piezas. Se lleva debajo de todo, en su propio sitio; con ella puesta se te ve con el conjunto entero, lleves lo que lleves encima." : `Fundiste el conjunto entero en el alambique.${c.n > 1 ? ` Premio ${c.i + 1} de ${c.n}.` : ""}`}</p>
       <div class="cheer-prize">${itemIco(c.it)}<div><b style="color:${color}">${esc(E.itemName(c.it))}</b><span class="dim">${R} · va ${esc(c.where)}</span></div></div>`
       : `<p class="cheer-kicker">${esc(c.z.name)}</p>
       <h3>¡Zona dominada!</h3>
@@ -3496,28 +3624,6 @@ function showCompanionCheer(c) {
   setTimeout(() => d.querySelector("#cheerOk")?.focus(), 50);
   sfx.fanfare();
 }
-// Grammar runes: every form of haber you wrote right (and, sometimes, another verb in the same tense)
-// drops its rune straight into your bag: one per rune per line.
-function catchRunes(r) {
-  const got = new Map();
-  for (const x of r.words || []) {
-    if (!x.ok) continue;
-    const g = runeOf(x.w);
-    if (!g || got.has(g.rune.id)) continue;
-    if (g.core || Math.random() < g.rune.chance * rewardMul()) got.set(g.rune.id, bare(x.w).toLowerCase());
-  }
-  const out = [];
-  for (const [id, word] of got) {
-    const it = E.makeRune(id);
-    const bag = ch.inv.length < INV_SIZE ? ch.inv : ch.stash.length < STASH_SIZE ? ch.stash : null;
-    if (bag) bag.push(it); else S.F.ground.items.push(it);
-    ch.stats.runesCaught = (ch.stats.runesCaught || 0) + 1;
-    addLog(`Captas «<b>${esc(word)}</b>»: la <span class="grune">runa ${esc(id)}</span> ${bag === ch.stash ? "va al alijo" : bag ? "va a tu bolsa" : "cae al suelo"}.`, "rune");
-    out.push({ id, word });
-  }
-  return out;
-}
-
 // "You wrote X, it was Y": the words you got wrong, one by one. Grammar forms say their tense.
 function nearMissHtml(r, max = 5) {
   const wrong = (r?.words || []).filter((x) => !x.ok);
@@ -3525,7 +3631,7 @@ function nearMissHtml(r, max = 5) {
   const items = wrong.slice(0, max).map((x) => {
     const want = esc(bare(x.w)), got = x.typed ? esc(bare(x.typed) || x.typed) : "";
     const g = runeOf(x.w);
-    const tag = g ? ` <span class="gtag" title="Forma de la runa ${esc(g.rune.id)}">${esc(g.rune.tense)}</span>` : "";
+    const tag = g ? ` <span class="gtag" title="Tiempo verbal">${esc(g.rune.tense)}</span>` : "";
     if (x.accent) return `<li>Tilde: era <b>${want}</b>, no <s>${got}</s>${tag}</li>`;
     if (got) return `<li>Escribiste <s>${got}</s>; era <b>${want}</b>${tag}</li>`;
     return `<li>Se te pasó <b>${want}</b>${tag}</li>`;
@@ -3573,13 +3679,6 @@ async function playRound(F, { hits, target, attackers, taken, incoming, hit, saf
     if (h.killed) { el.classList.add("dying"); setTimeout(() => (h.m?.tier === "boss" ? sfx.bossDeath() : sfx.kill()), 120); lootBeam(F, stage, h); }
     else FX.pulse(el, "flinch", 360);
   }
-  // a caught rune rises over you
-  caught.forEach((c, k) => setTimeout(() => {
-    if (!live()) return;
-    FX.beam(stage, FX.pointOn(me, stage, 0.5, 0.9), RARITY.grune.color, 1400);
-    floatNum(-1, `Runa ${esc(c.id)}`, "runefloat");
-    sfx.drop("grune");
-  }, 250 + k * 500));
   const tNow = foeEl(target);
   if (tNow) {
     const p = FX.pointOn(tNow.querySelector(".foeart") || tNow, stage);
@@ -3643,9 +3742,9 @@ async function playRound(F, { hits, target, attackers, taken, incoming, hit, saf
 }
 
 // The best thing a fallen monster dropped, if it's worth a column of light.
-const BEAM_RANK = { relic: 9, mitico: 7, legendario: 6, ancestral: 5, unique: 4, set: 4, rare: 3, runeword: 3, rune: 2 };
+const BEAM_RANK = { relic: 9, tunjo: 8, mitico: 7, legendario: 6, ancestral: 5, unique: 4, set: 4, rare: 3 };
 function lootBeam(F, stage, h) {
-  const best = (h.m?.drops || []).map((it) => ({ it, r: it.kind === "rune" ? "rune" : it.rarity })).filter((x) => BEAM_RANK[x.r]).sort((a, b) => BEAM_RANK[b.r] - BEAM_RANK[a.r])[0];
+  const best = (h.m?.drops || []).map((it) => ({ it, r: it.kind === "relic" ? "relic" : it.rarity })).filter((x) => BEAM_RANK[x.r]).sort((a, b) => BEAM_RANK[b.r] - BEAM_RANK[a.r])[0];
   if (!best) return;
   const el = foeEl(h.i);
   if (!el) return;
@@ -3679,9 +3778,9 @@ function kill(m) {
   const mul = rewardMul();
   gainXp(Math.round(m.xp * pen * D.xp * mul * (1 + st.xp / 100)));
   if (st.killHeal) ch.life = Math.min(st.maxLife, ch.life + st.killHeal);
-  const loot = E.lootFor(m, ch, st, D, F.goodLoot || 1, E.streakLuck(F.luckCombo || 0));
+  const loot = E.lootFor(m, ch, st, D, F.goodLoot || 1, E.streakLuck(F.luckCombo || 0) * (F.freshLoot ?? 1));
   // the Mandingas pays what he promised
-  if (m.tier === "boss" && F.boss?.deal === "signed") { const more = E.lootFor(m, ch, st, D, F.goodLoot || 1, E.streakLuck(F.luckCombo || 0)); loot.gold += more.gold; loot.items.push(...more.items); }
+  if (m.tier === "boss" && F.boss?.deal === "signed") { const more = E.lootFor(m, ch, st, D, F.goodLoot || 1, E.streakLuck(F.luckCombo || 0) * (F.freshLoot ?? 1)); loot.gold += more.gold; loot.items.push(...more.items); }
   F.ground.gold += Math.round(loot.gold * mul);
   const items = mul < 1 ? loot.items.filter(() => Math.random() < mul) : loot.items;
   // good things fall unidentified: you find out what they are by ear (Identificar)
@@ -3743,7 +3842,8 @@ function showResult(r, acc, hit) {
     <div class="verdict"><b>${pct}%</b> ${acc >= 1 ? "Perfecto." : r.accentMiss && acc >= 0.9 ? `Casi: ${r.accentMiss === 1 ? "falta una tilde" : `fallan ${r.accentMiss} tildes`} (palabras subrayadas).` : acc >= 0.8 ? "Casi." : acc >= 0.5 ? "A medias." : "Se te escapó."}
       <span class="dim">${F.prevBest == null ? "Primera vez que la oyes." : `Tu mejor antes: ${Math.round(F.prevBest * 100)}%.`}</span>
       ${F.masteredNow ? `<span class="mastered">¡Frase dominada! +${F.masteredNow} exp</span>` : ""}
-      ${F.lesson ? "" : r.accentsPerfect ? `<span class="accents" title="Todas las palabras bien escritas, con tildes y eñes: el botín de este golpe tiene el doble de probabilidad de ser raro, de conjunto o único.">Tildes perfectas: botín ×2</span>` : ""}</div>
+      ${F.lesson ? "" : r.accentsPerfect ? `<span class="accents" title="Todas las palabras bien escritas, con tildes y eñes: el botín de este golpe tiene el doble de probabilidad de ser raro, de conjunto o único.">Tildes perfectas: botín ×2</span>` : ""}
+      ${F.mode === "cloze" && F.gapStale ? `<span class="stale" title="Los huecos eran palabras que ya has acertado en huecos muchas veces (${esc(F.gapStale.words.join(", "))}): el botín de este golpe tiene menos probabilidad de ser raro o mejor. Cuanto más repetidas, menos.">Huecos ya sabidos: botín raro ×${F.gapStale.mult.toFixed(2).replace(".", ",")}</span>` : ""}</div>
     ${F.lesson ? `<div class="cardback lback">${lessonBack(F.lesson, S.T.segments[F.si])}</div>` : ""}
     <div class="row">
       <button id="againBtn">Volver a oír</button>
@@ -3792,6 +3892,7 @@ async function flagCurrent() {
   ch.life = Math.min(st.maxLife, Math.max(ch.life, b.life));
   ch.mana = Math.min(st.maxMana, Math.max(ch.mana, b.mana));
   F.combo = Math.max(F.combo, b.combo); ch.streak = F.combo;
+  F.ear = Math.max(F.ear || 0, b.ear || 0); ch.earStreak = F.ear;
   if (b.combo >= F.combo) ch.streakLost = b.streakLost; // a flagged line didn't break anything
   ch.stats.lines = b.lines; ch.stats.perfect = b.perfect;
   if (b.boss && F.boss) {
@@ -3900,16 +4001,14 @@ function victory() {
 // Each item belongs to exactly one box (pickKey); anything without a box is always picked up, so a new
 // kind of loot is never left behind by accident. Unticked boxes are kept in ch.pickup as false.
 const PICKUP = [
-  { title: "Equipo", hint: "por rareza (sin identificar también: su color ya dice cuál es)", keys: ["low", "normal", "magic", "rare", "set", "unique", "ancestral", "legendario", "mitico", "crafted", "runeword"].map((k) => [k, RARITY[k].name, RARITY[k].color]) },
+  { title: "Equipo", hint: "por rareza (sin identificar también: su color ya dice cuál es)", keys: ["low", "normal", "magic", "rare", "set", "unique", "ancestral", "legendario", "mitico", "crafted"].map((k) => [k, RARITY[k].name, RARITY[k].color]) },
   { title: "Pociones", keys: Object.entries(POTIONS).map(([k, p]) => [`p:${k}`, p.name, p.color]) },
   { title: "Gemas", keys: [["g:0", "Fragmentos de gema"], ["g:1", "Gemas"], ["g:2", "Gemas perfectas"]].map(([k, n]) => [k, n, "#e4dfd2"]) },
-  { title: "Runas", keys: [["rune", "Runas de palabra", RARITY.rune.color], ["grune", "Runas de haber (las de gramática)", RARITY.grune.color]] },
 ];
 const PICKUP_KEYS = new Set(PICKUP.flatMap((g) => g.keys.map(([k]) => k)));
 function pickKey(it) {
   if (it.kind === "potion") return `p:${it.potion}`;
   if (it.kind === "gem") return `g:${it.grade}`;
-  if (it.kind === "rune") return RUNE[it.rune]?.grammar ? "grune" : "rune";
   return it.rarity;
 }
 // Extra rules for equipment (off unless ticked): picked up if they match, whatever the rarity box says.
@@ -3985,7 +4084,7 @@ function openOptions() {
     <p class="langpick" translate="no">${Object.entries(LANGS).map(([k, n]) => `<button data-lang="${k}" class="${lang() === k ? "primary" : "ghost"}">${n}</button>`).join("")}</p>
     <p class="dim">Los menús, los textos y los objetos cambian de idioma; las frases del episodio y lo que escribes, no.</p>
     <h4>Qué recoge el botón de recoger</h4>
-    <p class="dim">Al acabar un combate, el botón principal recoge solo lo que marques aquí; lo demás se queda en el suelo, y siempre puedes recogerlo a mano con un clic. Lo que capturas al oído (las runas de una frase) va directo a la bolsa, como siempre.</p>
+    <p class="dim">Al acabar un combate, el botón principal recoge solo lo que marques aquí; lo demás se queda en el suelo, y siempre puedes recogerlo a mano con un clic.</p>
     ${PICKUP.map((g) => `<fieldset class="pickgroup"><legend>${g.title}${g.hint ? ` <span class="dim">· ${g.hint}</span>` : ""}</legend>${g.keys.map(box).join("")}</fieldset>`).join("")}
     <fieldset class="pickgroup rules"><legend>Además, equipo de cualquier rareza que… <span class="dim">· se recoge aunque su rareza no esté marcada</span></legend>
       <div class="pickrule"><span>tenga al menos estos huecos:</span>${[0, ...SOCKET_RULES].map((n) => `<label class="pickopt"><input type="radio" name="sockmin" data-sock="${n}" ${sockMin() === n ? "checked" : ""}><span>${n || "da igual"}</span></label>`).join("")}</div>
@@ -4036,7 +4135,7 @@ function renderGround() {
   const g = $("#ground");
   if (!g) return;
   g.innerHTML = S.loot.items.length
-    ? S.loot.items.map((it) => `<button class="drop r-${it.rarity}${BEAM_RANK[it.kind === "rune" ? "rune" : it.rarity] ? " beam" : ""}${wanted(it) ? "" : " unwanted"}" data-id="${it.id}" ${wanted(it) ? "" : `title="No lo recoge el botón (Opciones). Clic para recogerlo."`} style="color:${E.itemColor(it)};--c:${E.itemColor(it)}">${itemIco(it)} ${esc(E.itemName(it))}${it.unid ? ` <span class="unidtag">sin identificar</span>` : ""}</button>`).join("")
+    ? S.loot.items.map((it) => `<button class="drop r-${it.rarity}${BEAM_RANK[it.rarity] ? " beam" : ""}${wanted(it) ? "" : " unwanted"}" data-id="${it.id}" ${wanted(it) ? "" : `title="No lo recoge el botón (Opciones). Clic para recogerlo."`} style="color:${E.itemColor(it)};--c:${E.itemColor(it)}">${itemIco(it)} ${esc(E.itemName(it))}${it.unid ? ` <span class="unidtag">sin identificar</span>` : ""}${wanted(it) ? "" : ` <span class="skiptag">no se recoge</span>`}</button>`).join("")
     : `<span class="dim">${S.loot.gold ? "No hay nada más en el suelo." : "Nada en el suelo."}</span>`;
   g.querySelectorAll(".drop").forEach((b) => (b.onclick = () => { pickUp(b.dataset.id); renderGround(); }));
   // the main button says whether it picks things up; the skip button only matters while there's loot
@@ -4057,12 +4156,12 @@ function pickUp(id, quiet) {
   else { if (!quiet) toast("El inventario está lleno"); return; }
   S.loot.items.splice(i, 1);
   tip.hidden = true;
-  if (["unique", "set", "ancestral", "legendario", "mitico"].includes(it.rarity) && !it.unid) toast(`¡${E.itemName(it)}!`, `r-${it.rarity}`, 3000);
+  if (["unique", "set", "ancestral", "legendario", "mitico", "tunjo"].includes(it.rarity) && !it.unid) toast(`¡${E.itemName(it)}!`, `r-${it.rarity}`, 3000);
   save(); renderHud(); renderPanels();
 }
 
 function die(r, acc) {
-  ch.streak = 0; ch.streakLost = 0;
+  ch.streak = 0; ch.streakLost = 0; ch.earStreak = 0;
   stopAll();
   // keep the phrase that finished you off, to look at on the death screen
   const F = S.F;
@@ -4202,12 +4301,13 @@ function pickLine(minW, maxW, list = S.lines) {
   return E.pick(ok.length ? ok : list);
 }
 // onFlag(): the line was marked as not matching its audio (single-line clips only)
-function trial({ title, sub = "", clip, buttons = [], onResult, onFlag }) {
+// maxPlays: how many times the clip may be heard before answering (the first, automatic, counts); after, freely
+function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays = 0 }) {
   const box = dialog(`
     <h3>${title}</h3>${sub ? `<p class="dim">${sub}</p>` : ""}
     <div class="excontrols">
       <button class="playbtn" id="tPlay" title="Escuchar (Tab)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-      <button id="tSlow" title="Escuchar despacio (Mayús+Tab)">Despacio</button>
+      <button id="tSlow" title="Escuchar despacio (Mayús+Tab)">Despacio</button>${maxPlays ? `<span class="dim" id="tLeft">Puedes escucharla ${maxPlays} veces</span>` : ""}
       ${buttons.map((b, i) => `<button data-tb="${i}" title="${esc(b.title || "")}">${b.label}${b.cost != null ? ` <span class="cost">${b.cost} de oro</span>` : ""}</button>`).join("")}
     </div>
     <div class="skeleton" id="tSkel" hidden></div>
@@ -4215,7 +4315,18 @@ function trial({ title, sub = "", clip, buttons = [], onResult, onFlag }) {
     <div class="row" id="tRow"><button id="tCheck" class="primary">Comprobar <kbd>Enter</kbd></button><button id="tClose" class="ghost">Cerrar</button></div>
     <div class="result" id="tRes" hidden></div>`, { cls: "trial" });
   const T = { done: false, hinted: false };
-  const play = (slow) => playRange(clip.start, clip.end, (clip.rate || 1) * (slow ? 0.75 : 1));
+  let plays = 0;
+  const left = () => box.querySelector("#tLeft");
+  const play = (slow) => {
+    if (maxPlays && !T.done) {
+      if (plays >= maxPlays) return toast("Ya no quedan escuchas: escribe lo que oíste");
+      plays++;
+      const n = maxPlays - plays;
+      if (left()) left().textContent = n === 1 ? "Te queda 1 escucha" : n ? `Te quedan ${n} escuchas` : "No quedan escuchas";
+      if (!n) box.querySelectorAll("#tPlay, #tSlow").forEach((x) => (x.disabled = true));
+    }
+    playRange(clip.start, clip.end, (clip.rate || 1) * (slow ? 0.75 : 1));
+  };
   const ans = box.querySelector("#tAnswer");
   T.skeleton = () => {
     T.hinted = true;
@@ -4233,6 +4344,8 @@ function trial({ title, sub = "", clip, buttons = [], onResult, onFlag }) {
     const res = box.querySelector("#tRes");
     res.innerHTML = html;
     res.hidden = false;
+    box.querySelectorAll("#tPlay, #tSlow").forEach((x) => (x.disabled = false));
+    if (left()) left().textContent = "";
     box.querySelector("#tClose").textContent = "Cerrar";
     box.querySelector("#tClose").className = "primary";
     box.querySelector("#tClose").focus();
@@ -4307,6 +4420,9 @@ function revealItem(it) {
   setTimeout(() => sfx.drop(it.rarity), 350);
   return `<div class="idreveal" style="--c:${E.itemColor(it)}">${tooltipHtml(it, false)}</div>`;
 }
+const unidList = () => [...ch.inv, ...ch.stash].filter((x) => x.unid);
+const unidCount = () => unidList().length;
+const nextUnid = () => unidList()[0] || null;
 function identify(id) {
   const f = findItem(id);
   if (!f?.it.unid) return;
@@ -4324,92 +4440,110 @@ function identify(id) {
     ],
     onFlag: (r) => { it.idLine = null; save(); if (r.acc < 0.9) identify(id); },
     onResult: (r) => {
-      if (r.acc >= 0.9) return `<p class="good">Lo entendiste: ya sabes qué es.</p>${revealItem(it)}`;
+      if (r.acc >= 0.9) {
+        const html = `<p class="good">Lo entendiste: ya sabes qué es.</p>${revealItem(it)}`, next = nextUnid();
+        if (S.view === "town") setTimeout(renderTown, 0);
+        // with more waiting, Enter goes straight to the next one
+        return next ? { html: html + `<p class="dim">Te quedan ${unidCount()} sin identificar.</p>`, again: () => identify(next.id), againLabel: "Siguiente" } : html;
+      }
       it.idLine = null; save(); // the next try is a different line
       return { html: `<p>No basta para saber qué es (hace falta un 90%). La próxima vez, otra frase.</p>`, again: () => identify(id) };
     },
   });
 }
 
-// ---------- casetes: Doña Remedios sells unlabelled tapes ----------
-// You pay without knowing what's on it. Gastado: a slow, easy line, a little experience.
-// Raro: fast talk, a good item if you get it. Único: the stretch of this episode you've struggled
-// with most, a few lines in a row; get it and you take a unique item and the passage as a spell.
-const CASETE = {
-  junk:   { name: "Tunjo gastado", color: RARITY.normal.color, sub: "Una frase tranquila. Poca cosa, pero algo es." },
-  rare:   { name: "Tunjo raro", color: RARITY.rare.color, sub: "Habla rápida. Si la entiendes (85%), un objeto raro; si casi, uno mágico." },
-  unique: { name: "Tunjo único", color: RARITY.unique.color, sub: "El tramo de este episodio que más te ha costado, varias frases seguidas. Con un 60% aprendes el pasaje como conjuro para tu grimorio; con un 85%, además, un objeto único." },
-};
-const casetePrice = () => 40 + ch.level * 18;
-const rateOf = (si) => { const c = segClip(si); return c.words.length / Math.max(0.5, c.end - c.start); };
-// The run of 2-4 consecutive lines (40 words at most) where you've lost the most.
-function hardestStretch() {
-  const L = ch.struggle?.[S.ep] || {};
-  const weak = new Set(weakList().map((x) => x.k));
-  const cost = (si) => (L[si] || 0) + 0.3 * S.T.segments[si].words.filter((w) => weak.has(norm(w.w))).length;
-  const ok = new Set(S.lines);
-  let best = null;
-  for (const k of Object.keys(L)) {
-    const si0 = +k;
-    for (let a = si0 - 3; a <= si0; a++) {
-      for (let n = 2; n <= 4; n++) {
-        const run = Array.from({ length: n }, (_, i) => a + i);
-        if (!run.every((si) => ok.has(si))) continue;
-        const words = run.reduce((t, si) => t + S.T.segments[si].words.length, 0);
-        if (words > 40) continue;
-        const score = run.reduce((t, si) => t + cost(si), 0);
-        if (!best || score > best.score + 1e-9 || (Math.abs(score - best.score) < 1e-9 && n < best.run.length)) best = { run, score };
-      }
-    }
-  }
-  return best && best.score >= 1.5 ? best.run : null;
+// ---------- the tunjo: Doña Remedios' one sentence a day ----------
+// A tunjo que habla costs about eight hours of play (its price follows your level, as your gold does)
+// and there's one a day: after you buy one, the next is 24 hours away. It says one whole sentence from
+// anywhere in the episode, and you get one answer. Every word right (a slip of spelling or an accent
+// is forgiven) and a rainbow item falls that comes from nowhere else, one you don't have yet
+// (data.js TUNJO_ITEMS; kept in Colección). Wrong, and the gold and the day are gone.
+const TUNJO_WAIT = 24 * 3600 * 1000;
+const tunjoPrice = () => Math.round(((10 + 6 * ch.level) * 4000) / 1000) * 1000;
+const tunjoWait = () => Math.max(0, (ch.tunjoNext || 0) - Date.now());
+const hoursLeft = (ms) => { const m = Math.ceil(ms / 60000), h = Math.floor(m / 60); return h ? `${h} h ${m % 60} min` : `${m} min`; };
+// a whole sentence: starts like one, ends like one, and is long enough to be worth a day
+function tunjoLine() {
+  const seg = (si) => S.T.segments[si];
+  const whole = (si) => { const t = seg(si).text.trim(), n = seg(si).words.length; return n >= 6 && n <= 24 && /^[¿¡"«]?[A-ZÁÉÍÓÚÑ]/.test(t) && /[.?!…]["»]?$/.test(t); };
+  const ok = S.lines.filter(whole);
+  const long = S.lines.filter((si) => seg(si).words.length >= 6);
+  return E.pick(ok.length ? ok : long.length ? long : S.lines);
 }
-function buyCasete() {
-  const price = casetePrice();
+// what you've won so far, by item id: a copy of each (to give it back if it's lost or tossed)
+const tunjoBook = () => (ch.tunjoBook ||= {});
+const ownsNow = (id) => [...ch.inv, ...ch.stash, ...Object.values(ch.equip)].some((x) => x?.tunjo === id);
+function tunjoPrize() {
+  const book = tunjoBook(), left = TUNJO_ITEMS.filter((d) => !book[d.id]);
+  // all twelve already: one of them again, made for your level now (and the collection keeps the stronger)
+  const def = E.pick(left.length ? left : TUNJO_ITEMS), it = E.makeTunjoItem(def, ch.level + 2);
+  const old = book[def.id];
+  if (!old || it.ilvl >= old.ilvl) book[def.id] = JSON.parse(JSON.stringify(it));
+  return { it, again: !!old };
+}
+function buyTunjo() {
+  const price = tunjoPrice();
+  if (tunjoWait()) return toast(`El próximo tunjo, en ${hoursLeft(tunjoWait())}`);
   if (ch.inv.length >= INV_SIZE && ch.stash.length >= STASH_SIZE) return toast("No te cabe nada más");
+  if (!S.lines.length) return toast("Este episodio no tiene frases para el tunjo");
   if (!pay(price)) return;
-  const stretch = hardestStretch(), roll = Math.random();
-  const q = roll < 0.08 && stretch ? "unique" : roll < 0.4 ? "rare" : "junk";
-  const C = CASETE[q], ilvl = Math.max(1, ch.level + E.rnd(-1, 3));
-  let clip;
-  if (q === "unique") {
-    const a = segClip(stretch[0]), b = segClip(stretch.at(-1));
-    clip = { si: stretch[0], start: a.start, end: b.end, words: stretch.flatMap((si) => S.T.segments[si].words) };
-  } else {
-    const pool = S.lines.filter((si) => { const n = S.T.segments[si].words.length; return q === "rare" ? n >= 7 && n <= 18 : n >= 4 && n <= 10; })
-      .sort((x, y) => rateOf(x) - rateOf(y));
-    const part = q === "rare" ? pool.slice(Math.floor(pool.length * 0.85)) : pool.slice(0, Math.ceil(pool.length * 0.25));
-    clip = { ...segClip(E.pick(part.length ? part : S.lines)), rate: q === "junk" ? 0.92 : 1 };
-  }
+  ch.tunjoNext = Date.now() + TUNJO_WAIT;
   ch.stats.casetes = (ch.stats.casetes || 0) + 1;
-  save();
-  sfx.drop(q === "junk" ? "normal" : q);
+  save(); renderHud();
+  const clip = segClip(tunjoLine());
+  sfx.drop("mitico");
   let gave = false;
-  const prize = (it) => { const where = stow(it); setTimeout(() => sfx.drop(it.rarity), 300); return `<div class="idreveal" style="--c:${E.itemColor(it)}">${tooltipHtml(it, false)}</div><p class="dim">Va ${where || "al suelo… no: no cabía, y se perdió"}.</p>`; };
   trial({
-    title: `<span style="color:${C.color}">${C.name}</span>`, sub: C.sub, clip,
-    // a tunjo whose line didn't match its audio and gave you nothing: your money back
-    onFlag: () => { if (!gave) { ch.gold += price; save(); renderHud(); renderPanels(); toast(`Doña Remedios te devuelve ${price} de oro.`, "", 3500); } },
+    title: `<span class="rainbow">Tunjo que habla</span>`,
+    sub: "Una frase entera: la oyes tres veces como mucho (despacio también cuenta) y tienes una sola respuesta. Cada palabra bien (una letra o una tilde se perdonan) y cae un objeto del arcoíris.",
+    clip, maxPlays: 3,
+    // the line didn't match its audio: the gold back, and the tunjo can be bought again now
+    onFlag: () => { if (!gave) { ch.gold += price; ch.tunjoNext = 0; save(); renderHud(); renderPanels(); if (S.view === "town") renderTown(); toast(`Doña Remedios te devuelve ${price.toLocaleString("es")} de oro, y puedes probar otro tunjo.`, "", 4000); } },
     onResult: (r) => {
-      const D = E.diffOf(ch);
-      gave = q === "junk" ? r.acc >= 0.8 : r.acc >= 0.6;
-      if (q === "junk") {
-        if (r.acc < 0.8) return `<p>Se te escapó: el tunjo se queda callado.</p>`;
-        const xp = Math.max(1, Math.round(E.xpFor(ch.level) * 0.6 * D.xp));
-        gainXp(xp); save(); renderHud();
-        return `<p class="good">+${xp} de experiencia.</p>`;
-      }
-      if (q === "rare") {
-        if (r.acc >= 0.85) return `<p class="good">¡Lo entendiste! A los pies del tunjo aparece esto:</p>${prize(E.rewardItem(ilvl, "rare"))}`;
-        if (r.acc >= 0.6) return `<p>Casi. Doña Remedios te da algo de consolación:</p>${prize(E.rewardItem(ilvl, "magic"))}`;
-        return `<p>Demasiado rápido esta vez. El tunjo se calla.</p>`;
-      }
-      if (r.acc < 0.6) return `<p>Este tramo todavía te gana. Vuelve a por él: está en tu episodio.</p>`;
-      const spell = learnSpell(clip);
-      return `<p class="good">Aprendes el pasaje: <b>${esc(spell.name)}</b> está en tu grimorio.</p>`
-        + (r.acc >= 0.85 ? `<p class="good">Y a sus pies:</p>${prize(E.rewardItem(ilvl + 2, "unique"))}` : `<p class="dim">Con un 85% habría habido además un objeto único.</p>`);
+      const right = r.missed === 0 && !/class="extra"/.test(r.html);
+      if (S.view === "town") setTimeout(renderTown, 0);
+      if (!right) return `<p>El tunjo se calla. Mañana Doña Remedios tendrá otro.</p>`;
+      gave = true;
+      const { it, again } = tunjoPrize(), where = stow(it), spell = CFG.online ? null : learnSpell(clip);
+      setTimeout(() => sfx.drop("mitico"), 300);
+      return `<p class="good">¡Lo entendiste entero! Al tunjo le salen colores, y a sus pies:</p>
+        <div class="idreveal tunjo" style="--c:${RARITY.tunjo.color}">${tooltipHtml(it, false)}</div>
+        <p class="dim">${again ? "Ya lo tenías: este está hecho para tu nivel de ahora, y en la Colección queda el más fuerte. " : "Nuevo en tu Colección. "}Va ${where || "a la Colección (no te cabía)"}.${spell ? ` Y la frase queda en tu grimorio: <b>${esc(spell.name)}</b>.` : ""}</p>`;
     },
   });
+}
+// Under the tunjo's buy button: what it can give. One of the twelve you don't have yet (all twelve once you
+// have them all, made again for your level).
+function tunjoPrizes() {
+  const book = tunjoBook(), left = TUNJO_ITEMS.filter((d) => !book[d.id]);
+  const all = !left.length;
+  return `<h3 class="rwtitle">El premio: uno de estos</h3>
+    <p class="dim">${all ? "Ya los tienes todos: el tunjo te da uno de los doce otra vez, hecho para tu nivel de ahora." : left.length === 1 ? "Solo te falta uno: si aciertas, es ese." : `Si aciertas, te toca uno de los ${left.length} que aún no tienes, al azar. Los que ya tienes no vuelven a salir hasta que tengas los doce.`}</p>
+    <div class="tprizes">${TUNJO_ITEMS.map((d) => {
+      const it = book[d.id], can = all || !it, show = it || { base: d.look, rarity: "tunjo", tunjo: d.id, look: d.look, name: d.name };
+      return `<div class="tprize${can ? " can" : " have"}" title="${esc(d.name)}${can ? " · puede tocarte" : " · ya lo tienes"}">${itemIco(show)}<b class="${can ? "rainbow" : ""}">${esc(d.name)}</b><span class="dim small">${esc(SLOTS[BASE[d.look].slot])} · ${can ? "puede tocarte" : "ya lo tienes"}</span></div>`;
+    }).join("")}</div>`;
+}
+// Colección: the twelve rainbow items, the ones you have and the shapes of the rest
+function collectionPanel() {
+  const book = tunjoBook(), n = TUNJO_ITEMS.filter((d) => book[d.id]).length;
+  return `<p class="dim">Los objetos del arcoíris solo los da el tunjo de Doña Remedios, uno por frase entendida. No se venden. Si pierdes o tiras uno, aquí te lo devuelve. Tienes ${n} de ${TUNJO_ITEMS.length}.</p>
+    <div class="tcoll">${TUNJO_ITEMS.map((d) => {
+      const it = book[d.id];
+      if (!it) return `<div class="tcard unknown"><div class="tpic">${itemIco({ base: d.look, rarity: "tunjo", tunjo: d.id, look: d.look })}</div><b>¿?</b><span class="dim">${SLOTS[BASE[d.look].slot]} · aún no</span></div>`;
+      const has = ownsNow(d.id);
+      return `<div class="tcard" data-tcoll="${d.id}"><div class="tpic">${itemIco(it)}</div><b class="rainbow">${esc(it.name)}</b><span class="dim">${SLOTS[BASE[it.base].slot]} · nivel ${E.itemLevelReq(it)}</span>
+        ${has ? `<span class="dim small">Lo llevas contigo</span>` : `<button data-tback="${d.id}">Recuperar</button>`}</div>`;
+    }).join("")}</div>`;
+}
+function tunjoBack(id) {
+  const it = tunjoBook()[id];
+  if (!it || ownsNow(id)) return;
+  const copy = JSON.parse(JSON.stringify(it));
+  copy.id = Math.random().toString(36).slice(2, 10);
+  if (!stow(copy)) return toast("No te cabe: haz sitio en la bolsa o el alijo");
+  toast(`${it.name}, de vuelta contigo`, "r-tunjo", 2500);
+  renderTown();
 }
 
 // ---------- shadowing as spellcasting ----------

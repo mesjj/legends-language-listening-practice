@@ -516,6 +516,67 @@ LAGUNA_BOW = {"o": LAGUNA["o"], "w": LAGUNA["g"], "W": LAGUNA["G"], "c": LAGUNA[
               "k": LAGUNA["k"], "K": LAGUNA["K"], "h": LAGUNA["h"]}
 
 
+# ---------- El Tejido de la Sierra (legendario) ----------
+# Mochila del Pensamiento: an Arhuaco mochila, natural wool woven in bands of zigzags and rhombuses,
+# a long strap looping over the top. The figure wears it across the body (MOCHILA_WORN).
+ARHUACO = {
+    "o": "#1a0e08",  # outline
+    "k": "#2e2016", "b": "#4a3020", "m": "#7a5636",  # dark wool / brown / mid brown
+    "l": "#b8986c", "w": "#e8dcc2", "W": "#fbf5e8",  # beige / cream / highlight
+}
+MOCHILA = mirror("""
+.....oooo
+....ommmm
+...om....
+...om....
+..om.....
+..om.....
+.oooooooo
+okkkkkkkk
+owWwwwwww
+okwwwwwwk
+owwwwwwkl
+owkwwwklk
+owwwwwwkl
+okwwwwwwk
+ommmmmmmm
+omlmlmlml
+ommmmmmmm
+owwkwwwkw
+owkwkwkwk
+okwwwkwww
+owwwwwwww
+okkkkkkkk
+obbbbbbbb
+.obbbbbbb
+..ooooooo
+""")
+# worn: the strap from the left shoulder down across the chest, the bag at the right hip
+MOCHILA_WORN = """
+.........................ob
+........................ob.
+.......................ob..
+......................ob...
+.....................ob....
+....................ob.....
+...................ob......
+..................ob.......
+.................ob........
+................ob.........
+...............ob..........
+..............ob...........
+.............ob............
+............ob.............
+...........oooooooo........
+...........okkkkkko........
+...........owkwwkwo........
+...........okwbbwko........
+...........owkwwkwo........
+...........ommmmmmo........
+...........owlwlwlo........
+...........okkkkkko........
+............oooooo.........
+"""
 def custom_icons():
     out = {}
     for sid, pieces in ICONS.items():
@@ -542,6 +603,8 @@ def custom_icons():
     im = paint(DIADEM, {"o": "#140a08", "w": "#efe8d6", "W": "#b8ad94", "k": "#2a1a14", "m": "#7a1e22", "M": "#4a1014",
                         "i": "#5a5a66", "I": "#8a8a98", "f": "#ff8a1a", "F": "#ffd86a"})
     out["item:cascobarbaro:guardian"] = im.crop(im.getbbox())
+    im = paint(MOCHILA, ARHUACO)
+    out["item:cintocatatumbo:arhuaco"] = im.crop(im.getbbox())
     return out
 
 
@@ -575,7 +638,8 @@ def ornament(sid, full, phase):
      "bachue": bachue_serpent, "nevado": nevado_frost, "vientos": vientos_whirl, "montana": montana_quake,
      "kalachakra": kalachakra_wheel, "luzclara": luzclara_rainbow,
      "osario": osario_dance, "tairona": tairona_terraces, "dorado": dorado_discs, "relampago": relampago_crown,
-     "vigilia": vigilia_moon, "pacto": pacto_shadow, "firmamento": firmamento_stars, "madreagua": madreagua_river, "caiman": caiman_swamp, "andes": andes_peaks}[sid](back, front, full, phase)
+     "vigilia": vigilia_moon, "pacto": pacto_shadow, "firmamento": firmamento_stars, "madreagua": madreagua_river, "caiman": caiman_swamp, "andes": andes_peaks, "arhuaco": arhuaco_weave,
+     "galeon": galeon_wreck, "frailejon": frailejon_mist, "bochica": bochica_falls, "bufeo": bufeo_river, "llanero": llanero_plains, "madremonte": madremonte_leaves, "silbon": silbon_whistle, "tunda": tunda_mangrove, "mahamudra": mahamudra_sky, "candileja": candileja_fire, "sombreron": sombreron_hat, "marimba": marimba_waves, "huitaca": huitaca_dance, "canocristales": canocristales_river, "dzogchen": dzogchen_thigle}[sid](back, front, full, phase)
     return [(4, back), (150, front)]
 
 
@@ -1356,6 +1420,373 @@ def andes_peaks(back, front, full, phase):
         x = 32 + math.sin(i * 2.7) * 20 + math.sin(t * 2 * math.pi + i) * 1.5
         put(front if i % 2 else back, x, 4 + t * 56, hexrgb("#ffffff", int(240 * (1 - t * 0.5))))
 
+def arhuaco_weave(back, front, full, phase):
+    """A mochila's base at the feet: woven in a spiral from the centre out, natural wool, the spiral
+    turning slowly; with the whole set, a thread of white cotton winds up round the figure as if
+    the weaving went on, and a few snowflakes of the Sierra's peaks drift past."""
+    d = ImageDraw.Draw(back)
+    rx = 20 if full else 16
+    d.ellipse([32 - rx, 56, 32 + rx, 63], fill=hexrgb("#4a3020"), outline=hexrgb("#1a0e08"))
+    cols = ("#7a5636", "#b8986c", "#e8dcc2", "#2e2016")
+    # the spiral: a line of stitches going round and outwards
+    n = 70 if full else 52
+    for i in range(n):
+        u = i / n
+        a = 2 * math.pi * (u * 3.2 - phase)
+        r = 1.5 + u * (rx - 2)
+        put(back, 32 + math.cos(a) * r, 59.5 + math.sin(a) * r * 0.17, hexrgb(cols[(i // 6) % 4]))
+    if full:
+        for i in range(36):  # the thread: a helix climbing the figure, behind on one side, in front on the other
+            u = i / 36
+            a = 2 * math.pi * (u * 2.5 + phase)
+            x, y = 32 + math.cos(a) * 19, 58 - u * 46
+            put(front if math.sin(a) > 0 else back, x, y, hexrgb("#fbf5e8", int(255 * (0.35 + 0.65 * (1 - u)))))
+        for i in range(5):
+            t = (phase + i / 5) % 1
+            put(front if i % 2 else back, 32 + math.sin(i * 2.3) * 22, 4 + t * 50, hexrgb("#ffffff", int(230 * (1 - t * 0.6))))
+
+
+# ---------- the sets from 138 to 200 ----------
+TAU = 2 * math.pi
+
+
+def galeon_wreck(back, front, full, phase):
+    """Bubbles rising round the figure and gold doubloons glinting as they sink; with the whole set,
+    the ghost of the galleon behind: a hull, two masts and torn sails, swaying with the sea."""
+    if full:
+        d = ImageDraw.Draw(back)
+        sw = math.sin(phase * TAU) * 1.5
+        d.polygon([(4, 44 + sw), (60, 44 - sw), (54, 54 - sw), (10, 54 + sw)], fill=hexrgb("#1e4a52", 150), outline=hexrgb("#4a7a70", 170))
+        for mx, top in ((22, 4), (42, 8)):
+            d.line([(mx, 44), (mx + sw, top)], fill=hexrgb("#4a7a70", 170))
+            d.polygon([(mx - 9 + sw, top + 6), (mx + 9 + sw, top + 6), (mx + 7, top + 22), (mx - 7, top + 22)], fill=hexrgb("#a8c8b0", 70))
+    for i in range(10 if full else 6):
+        t = (phase + i / 10) % 1
+        x = 32 + math.sin(i * 2.9) * 21 + math.sin(t * TAU * 2 + i) * 1.5
+        put(front if i % 3 == 0 else back, x, 62 - t * 56, hexrgb("#c8f0ff", int(220 * (1 - t))))
+        if t > 0.6:
+            put(back, x + 1, 62 - t * 56, hexrgb("#c8f0ff", 120))
+    for i in range(4 if full else 2):  # coins, sinking and turning
+        t = (phase * 0.7 + i / 4) % 1
+        x, y = 32 + math.sin(i * 1.7 + 1) * 18, 10 + t * 50
+        edge = abs(math.cos((t * 3 + i) * TAU))
+        col = hexrgb("#ffe07a") if edge > 0.5 else hexrgb("#a8701a")
+        put(front if i % 2 else back, x, y, col)
+        if edge > 0.5:
+            put(front if i % 2 else back, x + 1, y, hexrgb("#d8a830"))
+
+
+def frailejon_mist(back, front, full, phase):
+    """Páramo mist drifting across at knee height; with the whole set, two frailejones stand either
+    side, grey-green rosettes on furry trunks, their yellow flowers nodding, and drops of water fall."""
+    if full:
+        d = ImageDraw.Draw(back)
+        for fx, h in ((7, 30), (56, 24)):
+            d.rectangle([fx - 2, 62 - h, fx + 2, 62], fill=hexrgb("#6a6a50"), outline=hexrgb("#3a3a2a"))
+            top = 62 - h
+            for k in range(10):
+                a = k / 10 * TAU
+                d.line([(fx, top), (fx + math.cos(a) * 6, top + math.sin(a) * 3 - 1)], fill=hexrgb("#93a594"))
+            nod = round(math.sin(phase * TAU + fx))
+            for k in (-4, 0, 4):
+                blob(back, fx + k + nod, top - 5 - abs(k) // 2, 1, hexrgb("#f8ea7a"))
+        for i in range(4):
+            t = (phase + i / 4) % 1
+            put(back, 10 + i * 14, 6 + t * 54, hexrgb("#bfe8ff", int(200 * (1 - t))))
+    for band, y in ((0, 52), (1, 57)):
+        for i in range(8 if full else 5):
+            x = ((i * 13 + band * 6 + phase * 64 * (1 if band else -1)) % 76) - 6
+            for dx in range(-5, 6):
+                a = int((90 if full else 70) * (1 - abs(dx) / 6))
+                put(front if band else back, x + dx, y + (dx % 3 == 0), hexrgb("#e4ece8", a))
+
+
+def bochica_falls(back, front, full, phase):
+    """A thin fall of water behind, pouring and foaming at the feet (Tequendama, opened by his staff);
+    with the whole set, the fall is wide and a rainbow (Chuchaviva) arches over it."""
+    d = ImageDraw.Draw(back)
+    w = 16 if full else 8
+    for x in range(32 - w, 32 + w + 1):
+        for y in range(4 if full else 20, 60):
+            if (y * 3 + x * 5 - int(phase * 24)) % 7 == 0:
+                put(back, x, y, hexrgb("#d0f4ff", 170))
+            elif (x + y) % 3 == 0:
+                put(back, x, y, hexrgb("#2a8ad0", 70))
+    for i in range(10 if full else 6):  # foam
+        t = (phase + i / 10) % 1
+        put(front if i % 2 else back, 32 + math.sin(i * 2.1) * (w + 2), 61 - t * 5, hexrgb("#ffffff", int(230 * (1 - t))))
+    if full:
+        for k, col in enumerate(("#e04040", "#f0a030", "#f0e040", "#40c060", "#4080e0", "#8a4ad8")):
+            r = 28 - k
+            for j in range(60):
+                a = math.pi + j / 59 * math.pi
+                put(back, 32 + math.cos(a) * r, 34 + math.sin(a) * r * 0.9, hexrgb(col, 150))
+
+
+def bufeo_river(back, front, full, phase):
+    """Dark river water rippling round the feet; with the whole set, a pink river dolphin leaps over the
+    figure in an arc and dives back in, splashing."""
+    d = ImageDraw.Draw(back)
+    d.ellipse([6, 55, 58, 63], fill=hexrgb("#3a2a12", 160))
+    for i in range(3):
+        t = (phase + i / 3) % 1
+        rx = 6 + t * 22
+        d.ellipse([32 - rx, 59 - rx * 0.15, 32 + rx, 59 + rx * 0.15], outline=hexrgb("#d8c090", int(170 * (1 - t))))
+    if full:
+        t = phase
+        a = math.pi * (1 - t)  # from the right, over the top, into the water on the left
+        x, y = 32 + math.cos(a) * 26, 50 - math.sin(a) * 46
+        ang = a - math.pi / 2
+        layer = front if t > 0.5 else back
+        for k in range(-5, 6):  # the body, along the arc
+            bx, by = x + math.cos(ang) * k, y - math.sin(ang) * k
+            blob(layer, bx, by, 1 if abs(k) < 4 else 0, hexrgb("#f6c0d2" if k < 3 else "#d07a98"))
+        put(layer, x + math.cos(ang) * 6, y - math.sin(ang) * 6, hexrgb("#8e3a5a"))  # the long beak
+        put(layer, x + math.cos(ang) * 7, y - math.sin(ang) * 7, hexrgb("#8e3a5a"))
+        for sx in (6, 58):
+            if (sx == 58 and t < 0.15) or (sx == 6 and t > 0.85):
+                for k in range(5):
+                    put(front, sx + (k - 2) * 2, 54 - (k % 2) * 3, hexrgb("#ffffff", 220))
+
+
+def llanero_plains(back, front, full, phase):
+    """Plains grass swaying at the feet; with the whole set, the sun going down huge and orange behind
+    on a flat horizon, and a line of white herons crossing it."""
+    if full:
+        d = ImageDraw.Draw(back)
+        d.ellipse([14, 20, 50, 56], fill=hexrgb("#f06a1a", 200))
+        d.ellipse([18, 24, 46, 52], fill=hexrgb("#ffb060", 140))
+        d.line([(0, 46), (63, 46)], fill=hexrgb("#a8300e", 220))
+        for i in range(4):
+            x = ((phase * 70 + i * 9) % 84) - 10
+            y = 14 + i * 2 + math.sin(phase * TAU * 2 + i) * 1
+            wing = (int(phase * 8) + i) % 2
+            put(back, x, y, hexrgb("#ffffff"))
+            put(back, x - 1, y - wing, hexrgb("#ffffff"))
+            put(back, x + 1, y - wing, hexrgb("#ffffff"))
+    for i in range(22 if full else 14):
+        x = 4 + i * (56 / (21 if full else 13))
+        h = 4 + (i * 7) % 4
+        lean = math.sin(phase * TAU + i * 0.5) * 2
+        col = hexrgb("#b88040") if i % 3 else hexrgb("#e8c088")
+        for k in range(h):
+            put(front if i % 2 else back, x + lean * k / h, 62 - k, col)
+
+
+def madremonte_leaves(back, front, full, phase):
+    """Leaves whirling round the figure, in front and behind; with the whole set, vines climb up both
+    sides and over the top in a frame, and the leaves come thick as in a storm."""
+    if full:
+        for side in (-1, 1):
+            for k in range(58):
+                y = 62 - k
+                x = 32 + side * (24 - (max(0, k - 44) * 1.6)) + math.sin(k * 0.4 + phase * TAU) * 1.2
+                put(back, x, y, hexrgb("#3e8a2a"))
+                if k % 6 == 0:
+                    blob(back, x + side * 2, y, 1, hexrgb("#8ac85a"))
+    n = 16 if full else 8
+    for i in range(n):
+        a = TAU * (phase + i / n)
+        x, y = 32 + math.cos(a) * 20, 58 - ((i * 37) % 44) + math.sin(a) * 4
+        layer = front if math.sin(a) > 0 else back
+        col = ("#3e8a2a", "#8ac85a", "#6a4422")[i % 3]
+        put(layer, x, y, hexrgb(col))
+        put(layer, x + 1, y - (i % 2), hexrgb(col))
+
+
+def silbon_whistle(back, front, full, phase):
+    """Whistled notes, small and white, rising in a spiral (do re mi fa sol la si, the Silbón's tune);
+    with the whole set, his long thin shadow behind the figure, taller than it, with the sack."""
+    if full:
+        d = ImageDraw.Draw(back)
+        sw = round(math.sin(phase * TAU))
+        d.rectangle([28 + sw, 0, 36 + sw, 60], fill=hexrgb("#0a0a10", 170))
+        d.ellipse([27 + sw, -4, 37 + sw, 6], fill=hexrgb("#0a0a10", 190))
+        d.polygon([(20 + sw, -1), (44 + sw, -1), (40 + sw, 2), (24 + sw, 2)], fill=hexrgb("#0a0a10", 200))  # the hat brim
+        d.ellipse([40 + sw, 30, 54 + sw, 46], fill=hexrgb("#3a342a", 200))  # the sack
+        for k in range(3):
+            put(back, 44 + sw + k * 3, 36 + (k % 2) * 3, hexrgb("#e8e0cc"))
+    n = 7 if full else 4
+    for i in range(n):
+        t = (phase + i / n) % 1
+        a = TAU * (t * 1.5 + i / n)
+        x, y = 32 + math.cos(a) * (10 + t * 12), 58 - t * 52
+        layer = front if math.sin(a) > 0 else back
+        c = hexrgb("#ffffff", int(240 * (1 - t * 0.7)))
+        put(layer, x, y, c); put(layer, x + 1, y, c); put(layer, x + 1, y - 1, c); put(layer, x + 1, y - 2, c); put(layer, x + 2, y - 2, c)
+
+
+def tunda_mangrove(back, front, full, phase):
+    """Mangrove roots arching at the feet, in a grey-green fog; with the whole set, the roots climb
+    high round the figure and pale eyes open and blink among them."""
+    d = ImageDraw.Draw(back)
+    h = 30 if full else 12
+    for k, x0 in enumerate((4, 14, 50, 60)):
+        top = 62 - h + (k % 2) * 4
+        mid = (x0 + 32) / 2 if x0 < 32 else (x0 + 32) / 2
+        d.line([(x0, 62), (x0 + (6 if x0 < 32 else -6), top)], fill=hexrgb("#14504a"), width=2)
+        d.line([(x0 + (6 if x0 < 32 else -6), top), (mid, top - 3), (mid + (4 if x0 < 32 else -4), 62)], fill=hexrgb("#2a7a68"))
+    for i in range(10 if full else 6):
+        x = ((i * 11 + phase * 30) % 72) - 4
+        for dx in range(-4, 5):
+            put(front if i % 2 else back, x + dx, 56 + (i % 3), hexrgb("#c8f0e0", int(70 * (1 - abs(dx) / 5))))
+    if full:
+        blink = int(phase * 10)
+        for k, (ex, ey) in enumerate(((10, 30), (52, 26), (8, 44), (56, 40))):
+            if (blink + k * 3) % 10 not in (0, 1):
+                put(back, ex, ey, hexrgb("#ffe8dc")); put(back, ex + 2, ey, hexrgb("#ffe8dc"))
+
+
+def mahamudra_sky(back, front, full, phase):
+    """A disc of clear blue sky behind the head, small clouds forming in it and dissolving again without
+    trace; with the whole set, the open sky fills the whole background, clouds coming and going."""
+    d = ImageDraw.Draw(back)
+    if full:
+        for k, col in enumerate(("#1a5aa8", "#4a96e0", "#a8d4ff")):
+            d.ellipse([1 + k * 3, -6 + k * 3, 62 - k * 3, 50 - k * 3], fill=hexrgb(col, 60 + k * 25))
+        box = (8, 0, 56, 40)
+    else:
+        d.ellipse([14, 0, 50, 30], fill=hexrgb("#4a96e0", 120), outline=hexrgb("#a8d4ff", 160))
+        box = (17, 3, 47, 27)
+    n = 5 if full else 2
+    for i in range(n):
+        t = (phase + i / n) % 1
+        life = math.sin(t * math.pi)  # comes, stays a little, goes
+        cx = box[0] + 4 + ((i * 17 + t * 6) % max(1, box[2] - box[0] - 8))
+        cy = box[1] + 4 + (i * 11) % max(1, box[3] - box[1] - 8)
+        for k in range(-2, 3):
+            blob(back, cx + k * 2, cy + (abs(k) == 2), 1, hexrgb("#ffffff", int(220 * life)))
+
+
+def candileja_fire(back, front, full, phase):
+    """Three balls of fire circling the figure (the Candileja is three heads aflame); with the whole
+    set, they leave trails of sparks, and the dry grass glows where they pass."""
+    n = 3
+    for i in range(n):
+        a = TAU * (phase + i / n)
+        x, y = 32 + math.cos(a) * 22, 36 + math.sin(a) * 7 - math.cos(a * 2) * 4
+        layer = front if math.sin(a) > 0 else back
+        blob(layer, x, y, 2, hexrgb("#e04a0e"))
+        blob(layer, x, y, 1, hexrgb("#ff9a2a"))
+        put(layer, x, y - 1, hexrgb("#fff0a0"))
+        put(layer, x, y - 3, hexrgb("#ff9a2a", 200))
+        if full:
+            for k in range(1, 7):
+                b = a - k * 0.12
+                put(front if math.sin(b) > 0 else back, 32 + math.cos(b) * 22, 36 + math.sin(b) * 7 - math.cos(b * 2) * 4 - (k % 2), hexrgb("#ffd060", int(200 * (1 - k / 7))))
+    if full:
+        for x in range(6, 59):
+            if (x * 5 + int(phase * 20)) % 9 < 2:
+                put(back, x, 61, hexrgb("#e04a0e", 180))
+
+
+def sombreron_hat(back, front, full, phase):
+    """A ring of black chain links turning round the feet (he rides with dogs on chains); with the whole
+    set, an enormous black hat hangs over the figure and two pairs of red dog eyes glow at its feet."""
+    for i in range(14):
+        a = TAU * (phase + i / 14)
+        x, y = 32 + math.cos(a) * 20, 58 + math.sin(a) * 4
+        layer = front if math.sin(a) > 0 else back
+        c = hexrgb("#6a625a") if i % 2 else hexrgb("#3a3430")
+        put(layer, x, y, c); put(layer, x + 1, y, c)
+    if full:
+        d = ImageDraw.Draw(back)
+        bob = round(math.sin(phase * TAU))
+        d.ellipse([2, 6 + bob, 62, 16 + bob], fill=hexrgb("#0a0808", 230))
+        d.polygon([(20, 11 + bob), (24, -2 + bob), (40, -2 + bob), (44, 11 + bob)], fill=hexrgb("#0a0808", 240))
+        d.line([(22, 8 + bob), (42, 8 + bob)], fill=hexrgb("#8a0a0a"))
+        for ex in (8, 52):
+            if int(phase * 6) % 6 != 2:
+                put(back, ex, 56, hexrgb("#ff2020")); put(back, ex + 2, 56, hexrgb("#ff2020"))
+
+
+def marimba_waves(back, front, full, phase):
+    """A marimba's wooden bars laid at the feet, lighting up one after another as if struck; with the
+    whole set, Pacific waves roll behind and a humpback whale's tail rises out of them."""
+    if full:
+        d = ImageDraw.Draw(back)
+        for x in range(64):
+            y = 44 + math.sin(x / 6 + phase * TAU) * 2
+            d.line([(x, y), (x, 52)], fill=hexrgb("#12407a", 160))
+            put(back, x, y, hexrgb("#7ac0f0", 200))
+        rise = math.sin(phase * math.pi)
+        ty = 44 - rise * 16
+        d.line([(48, 46), (48, ty + 4)], fill=hexrgb("#0a1a3a"), width=3)
+        d.polygon([(48, ty + 4), (38, ty - 2), (42, ty + 3)], fill=hexrgb("#0a1a3a"))
+        d.polygon([(48, ty + 4), (58, ty - 2), (54, ty + 3)], fill=hexrgb("#0a1a3a"))
+    hit = int(phase * 8) % 8
+    for k in range(8):
+        x0 = 6 + k * 7
+        col = "#fff4d0" if k == hit else "#b8862e" if k % 2 else "#7a4a16"
+        for x in range(x0, x0 + 5):
+            for y in range(58 - k // 2, 62):
+                put(front if k in (0, 7) else back, x, y, hexrgb(col))
+
+
+def huitaca_dance(back, front, full, phase):
+    """Petals whirling round the figure in a dancing ring (Huitaca, of feasts and dance); with the whole
+    set, the full moon rises behind and an owl's wings open wide across it."""
+    if full:
+        d = ImageDraw.Draw(back)
+        d.ellipse([20, 0, 44, 24], fill=hexrgb("#fff48a", 160))
+        spread = 0.6 + 0.4 * math.sin(phase * TAU)
+        for side in (-1, 1):
+            for k in range(14):
+                x = 32 + side * (4 + k * 2 * spread)
+                for j in range(5 - k // 4):
+                    put(back, x, 18 + k * 0.6 + j, hexrgb("#6a2a8e" if (k + j) % 3 else "#e8a8f8", 210))
+    n = 14 if full else 8
+    for i in range(n):
+        a = TAU * (phase * 1.5 + i / n)
+        h = 40 - (i % 4) * 8
+        x, y = 32 + math.cos(a) * 21, h + math.sin(a) * 5
+        layer = front if math.sin(a) > 0 else back
+        col = ("#e8a8f8", "#fff48a", "#b05ad0")[i % 3]
+        put(layer, x, y, hexrgb(col)); put(layer, x + 1, y + 1, hexrgb(col))
+
+
+def canocristales_river(back, front, full, phase):
+    """The river of five colours at the feet: red, yellow, green, blue and black water flowing past in
+    stripes; with the whole set, the colours rise round the figure in waves and spray glitters."""
+    cols = ("#e0403a", "#f0e040", "#3ac08a", "#2a7ac0", "#14100c")
+    h = 12 if full else 6
+    for row in range(h):
+        y = 62 - row
+        for x in range(64):
+            k = int((x + phase * 40 + row * 3 + math.sin(x / 5 + row) * 2) / 5) % 5
+            put(front if row < 2 else back, x, y, hexrgb(cols[k], 200 - row * (8 if full else 14)))
+    if full:
+        for i in range(10):
+            t = (phase + i / 10) % 1
+            x = 32 + math.sin(i * 2.4) * 24
+            put(front if i % 2 else back, x, 50 - math.sin(t * math.pi) * 18, hexrgb("#ffffff", int(240 * math.sin(t * math.pi))))
+            put(back, x, 49 - math.sin(t * math.pi) * 18, hexrgb(cols[i % 5], 200))
+
+
+def dzogchen_thigle(back, front, full, phase):
+    """A sphere of five-coloured light behind the figure, rings of blue, white, yellow, red and green
+    breathing out from the centre; with the whole set, small spheres of the same light float all round,
+    and rays spread out from the great one."""
+    d = ImageDraw.Draw(back)
+    cols = ("#2a5ae0", "#ffffff", "#f0d030", "#e03030", "#30c050")
+    R = 24 if full else 16
+    for k, col in enumerate(cols):
+        r = R - k * (R / 5.5) + math.sin(phase * TAU) * 1
+        d.ellipse([32 - r, 30 - r, 32 + r, 30 + r], outline=hexrgb(col, 210), width=2 if full else 1)
+    d.ellipse([30, 28, 34, 32], fill=hexrgb("#0a1840"))
+    if full:
+        for i in range(16):
+            a = TAU * (i / 16 + phase / 8)
+            for rr in range(26, 32, 2):
+                put(back, 32 + math.cos(a) * rr, 30 + math.sin(a) * rr, hexrgb(cols[i % 5], 150))
+        for i in range(8):
+            t = (phase + i / 8) % 1
+            x, y = 32 + math.sin(i * 2.6) * 26, 62 - t * 58
+            layer = front if i % 2 else back
+            blob(layer, x, y, 1, hexrgb(cols[i % 5], int(230 * math.sin(t * math.pi))))
+            put(layer, x, y, hexrgb("#ffffff", int(255 * math.sin(t * math.pi))))
+
+
 ANIMS = {"idle": 1, "side": 1, "slash": 6, "thrust": 8, "shoot": 13, "spellcast": 7, "hurt": 6}
 SOUTH = 2
 
@@ -1365,7 +1796,8 @@ def custom_looks():
     out = []
     for sid in ("laguna", "condor", "origen", "cienaga", "mohan", "yogui", "vajra", "averno", "trueno", "sol", "guardian",
                 "bachue", "nevado", "vientos", "montana", "kalachakra", "luzclara",
-                "osario", "tairona", "dorado", "relampago", "vigilia", "pacto", "firmamento", "madreagua", "caiman", "andes"):
+                "osario", "tairona", "dorado", "relampago", "vigilia", "pacto", "firmamento", "madreagua", "caiman", "andes", "arhuaco",
+                "galeon", "frailejon", "bochica", "bufeo", "llanero", "madremonte", "silbon", "tunda", "mahamudra", "candileja", "sombreron", "marimba", "huitaca", "canocristales", "dzogchen"):
         for variant in ("part", "full"):
             full = variant == "full"
             # the atlas keeps 128px cells with the 64px frame in the middle (see build_lpc.py)
@@ -1385,6 +1817,74 @@ def custom_looks():
             anim_layers = [(z, rows) for z, rows in rows_by_z.items()]
             out.append((f"orn:{sid}:{variant}", atlas_layers, anim_layers))
     return out
+
+
+MOCHILA_Z = 120
+
+# Tutusoma de las Nieves: the white cotton hat of Arhuaco men, rising to a soft point (the snowy peaks).
+TUTUSOMA = mirror("""
+........oo
+......ooWW
+.....owwwW
+....ovwwwW
+....ovwwww
+...ovwwwww
+...ovwwwww
+...ovwwwww
+...ovwwwww
+..ovwwwwww
+..ovwwwwww
+..ovwwwwww
+..ovwwwwww
+..ovssssss
+...ooooooo
+""")
+TUT_PAL = {"o": "#4a443a", "v": "#cfc6b4", "w": "#f4f0e6", "W": "#ffffff", "s": "#b8ae9a"}
+
+
+def reanchor(layers, alayers, pic, at, z, keep=False):
+    """New layers drawing `pic` in every frame, placed by `at(bbox)` from where the template layers are
+    in that frame (so it follows the head or the waist through every animation). keep: keep the template too."""
+    def frame(src):
+        bb = src.getbbox()
+        out = Image.new("RGBA", src.size)
+        if bb:
+            out.alpha_composite(pic, at(bb))
+        return out
+    def union(frames):
+        im = None
+        for f in frames:
+            im = f.copy() if im is None else (im.alpha_composite(f) or im)
+        return im
+    rows = {}
+    for _, fr in layers:
+        for r, im in fr.items():
+            rows.setdefault(r, []).append(im)
+    new = [(z, {r: frame(union(ims)) for r, ims in rows.items()})]
+    strips = {}
+    for _, rs in alayers:
+        for a, (im, fs, n) in rs.items():
+            strips.setdefault(a, []).append((im, fs, n))
+    anew = {}
+    for a, lst in strips.items():
+        im0, fs, n = lst[0]
+        tpl = union([x for x, f2, _ in lst if f2 == fs and x.size == im0.size])
+        strip = Image.new("RGBA", tpl.size)
+        for i in range(n):
+            strip.alpha_composite(frame(tpl.crop((i * fs, 0, (i + 1) * fs, fs))), (i * fs, 0))
+        anew[a] = (strip, fs, n)
+    return (layers if keep else []) + new, (alayers if keep else []) + [(z, anew)]
+
+
+def arhuaco_piece(base, layers, alayers):
+    """build_lpc.py: the set's own shapes over the generator's, frame by frame."""
+    if base == "yelmocatatumbo":  # the tutusoma where the helmet would be: its lower edge on the forehead
+        pic = paint(TUTUSOMA, TUT_PAL)
+        return reanchor(layers, alayers, pic, lambda bb: ((bb[0] + bb[2]) // 2 - pic.width // 2, bb[1] + 11 - pic.height + 1), 130)
+    if base == "cintocatatumbo":  # the mochila hangs from the sash, its strap over the shoulder
+        pic = paint(MOCHILA_WORN, ARHUACO)
+        return reanchor(layers, alayers, pic, lambda bb: (bb[0] + 1 - 11, bb[1] - 14), MOCHILA_Z, keep=True)
+    return layers, alayers
 
 
 if __name__ == "__main__":

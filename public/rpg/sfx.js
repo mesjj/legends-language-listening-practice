@@ -1,5 +1,5 @@
 // Little synthesized sounds (WebAudio, no files): hits, the chime of a right answer that climbs
-// with your streak, loot by rarity, runes. Muted with M; the choice is remembered.
+// with your streak, loot by rarity. Muted with M; the choice is remembered.
 let ctx = null, master = null;
 let muted = localStorage.getItem("rpgMuted") === "1";
 // The Spanish audio always wins: no effect starts while it's playing (busy), a manual play cuts the
@@ -136,6 +136,17 @@ export const sfx = {
     tone("triangle", note(b, k + 2), 0.07, 0.22, 0.38);
     if (perfect) { tone("sine", note(b * 2, k + 4), 0.14, 0.3, 0.22); tone("sine", note(b * 2, k + 6), 0.2, 0.35, 0.16); }
   },
+  // getting a lost streak back: each of the 3 answers has its own sound, climbing like a lock giving way:
+  // 1 a low bell, 2 a higher bell with an echo, 3 the streak comes back (a rising run and a shimmer)
+  regain(k) {
+    if (k <= 1) { tone("sine", 392, 0, 0.7, 0.3); tone("triangle", 784, 0.01, 0.35, 0.14); noise(0, 0.05, 0.12, 3000, 3); }
+    else if (k === 2) { tone("sine", 587.3, 0, 0.7, 0.3); tone("sine", 880, 0.09, 0.8, 0.22); tone("triangle", 1174.7, 0.09, 0.3, 0.1); noise(0, 0.05, 0.14, 3800, 3); }
+    else {
+      [0, 4, 7, 12, 16, 19, 24].forEach((s, i) => tone("triangle", 392 * Math.pow(2, s / 12), i * 0.055, 0.45, 0.26));
+      [0, 7, 12].forEach((s) => tone("sine", 784 * Math.pow(2, s / 12), 0.4, 1.3, 0.12));
+      noise(0.38, 0.8, 0.16, 6500, 2);
+    }
+  },
   partial() { tone("triangle", 392, 0, 0.14, 0.3); tone("triangle", 440, 0.07, 0.16, 0.22); },
   miss() { tone("sine", [220, 140], 0, 0.22, 0.35); },
   hit(crit = false) { noise(0, 0.09, crit ? 0.7 : 0.45, crit ? 2400 : 1600); tone("square", [crit ? 180 : 140, 60], 0, 0.1, crit ? 0.3 : 0.18); },
@@ -152,7 +163,6 @@ export const sfx = {
       if (top === 3) noise(run.length * 0.08, 0.6, 0.15, 5000, 2);
     } else if (rarity === "unique" || rarity === "set") { [0, 4, 7, 12, 16].forEach((s, i) => tone("triangle", 392 * Math.pow(2, s / 12), i * 0.07, 0.5, 0.3)); tone("sine", 1568, 0.36, 0.7, 0.14); }
     else if (rarity === "rare") { [0, 7, 12].forEach((s, i) => tone("triangle", 523 * Math.pow(2, s / 12), i * 0.06, 0.32, 0.28)); }
-    else if (rarity === "rune" || rarity === "grune") { tone("sine", 880, 0, 0.5, 0.25); tone("sine", 1318.5, 0.08, 0.6, 0.2); tone("sine", 1760, 0.16, 0.7, 0.12); }
     else tone("triangle", 660, 0, 0.12, 0.2);
   },
   identify() { [0, 4, 7, 11, 14].forEach((s, i) => tone("sine", 587 * Math.pow(2, s / 12), i * 0.05, 0.4, 0.22)); },

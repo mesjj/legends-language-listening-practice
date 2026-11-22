@@ -30,35 +30,53 @@ export async function loadFigure() {
 // the look for an item: its unique, then its set, then its rarity, then plain
 function styles(it) {
   const s = [];
-  if (it.set) s.push(it.set); // a set piece's own art, where it has some (the top-tier sets' icons are drawn by hand)
+  if (it.set || it.setShirt) s.push(it.set || it.setShirt); // a set piece's own art (and a set undershirt's icon, in the set's colours), where it has some (the top-tier sets' icons are drawn by hand)
+  if (it.tunjo) s.push(`t:${it.tunjo}`, "tunjo", "mitico"); // the tunjo's rainbow items: drawn each (scripts/tunjo_art.py)
   if (TOP_GLOW[it.rarity]) s.push(it.rarity, "unique"); // the three top rarities: their own look, always
   if (it.rarity === "unique") s.push(`u:${it.name}`, "unique");
   // crafted and runeword items borrow the rare look; reinforced/ancestral bases use their root's art
   s.push(["set", "crafted", "runeword"].includes(it.rarity) ? "rare" : it.rarity, "normal");
   return s;
 }
-const root = (it) => BASE[it.base]?.root || it.base;
-// What the figure wears, as [slot, item]: with a set necklace on, each slot the set covers shows the
-// set's own piece over what's really there (rings aren't drawn). A two-handed weapon and a shield
-// that can't go together: the set's piece wins.
+const root = (it) => it.look || BASE[it.base]?.root || it.base; // a rainbow item wears its own shape, whatever base its stats are on
+// The slots the figure draws, and the set's piece for each (rings aren't drawn).
+export const SHOW_SLOTS = ["head", "body", "hands", "feet", "belt", "neck", "weapon", "off"];
+export function setPieceFor(set, sl) {
+  const p = set?.pieces.find((q) => BASE[q.base]?.slot === sl);
+  return p && { base: p.base, rarity: set.tier || "set", set: set.id, name: p.name };
+}
+// With a set's undershirt on, what each slot shows: "set" (the set's piece), "real" (what's really
+// worn there) or "none" (nothing), chosen on the shirt (it.show, by slot). By default the set's piece
+// where the set has one, and what's really worn elsewhere. (it.hide, older: set pieces unticked by name.)
+export function shirtChoice(shirt, set, sl) {
+  const piece = setPieceFor(set, sl);
+  const c = shirt?.show?.[sl] ?? (piece && shirt?.hide?.includes(piece.name) ? "real" : piece ? "set" : "real");
+  return c === "set" && !piece ? "real" : c;
+}
+// What the figure wears, as [slot, item]. A two-handed weapon and a shield that can't go together:
+// the set's piece wins, and between two real ones (which can't happen) the weapon.
 export function shownGear(ch) {
   const w = `weapon${ch.swap}`, o = `off${ch.swap}`;
-  const g = Object.fromEntries([...SLOTS, w, o].map((k) => [k, ch.equip[k]]));
-  const set = ch.equip.neck?.setNeck && SETS.find((x) => x.id === ch.equip.neck.setNeck);
+  const g = Object.fromEntries([...SLOTS.filter((k) => k !== "shirt"), w, o].map((k) => [k, ch.equip[k]]));
+  const shirt = ch.equip.shirt, set = shirt?.setShirt && SETS.find((x) => x.id === shirt.setShirt);
   if (set) {
-    const slotOf = { weapon: w, off: o };
-    for (const p of set.pieces) {
-      const sl = BASE[p.base]?.slot, k = slotOf[sl] || sl;
-      if (!(k in g)) continue;
-      g[k] = { base: p.base, rarity: set.tier || "set", set: set.id, name: p.name };
-      if (k === w && BASE[p.base].twoHanded) g[o] = null;
-      if (k === o && g[w] && BASE[g[w].base]?.twoHanded && !set.pieces.some((q) => BASE[q.base]?.slot === "weapon")) g[w] = null;
+    const keyOf = { weapon: w, off: o }, from = {};
+    for (const sl of SHOW_SLOTS) {
+      const k = keyOf[sl] || sl, c = shirtChoice(shirt, set, sl);
+      from[sl] = c;
+      if (c === "none") g[k] = null;
+      else if (c === "set") g[k] = setPieceFor(set, sl);
+    }
+    const two = g[w] && BASE[g[w].base]?.twoHanded;
+    if (two && g[o]) {
+      if (from.off === "set" && from.weapon !== "set") g[w] = null;
+      else g[o] = null;
     }
   }
   return Object.entries(g);
 }
 // which glow an item gets: set and unique as before; the top rarities brighter, the mythic one pulsing
-const TOP_GLOW = { ancestral: 1, legendario: 1, mitico: 1 };
+const TOP_GLOW = { ancestral: 1, legendario: 1, mitico: 1, tunjo: 1 };
 const glowOf = (it) => (it.rarity === "unique" || it.rarity === "set" || TOP_GLOW[it.rarity] ? `lpc-${it.rarity}` : "");
 function lookOf(it, body) {
   for (const st of styles(it)) {
@@ -69,7 +87,7 @@ function lookOf(it, body) {
 }
 // The ornaments of the three top-tier sets (original art, scripts/custom_art.py): the Laguna's gold dust, the Cóndor's wings,
 // the Origen's rings of sound. Worn with any piece of the set; fuller with the whole set on.
-const ORNAMENTS = { laguna: 1, condor: 1, origen: 1, cienaga: 1, mohan: 1, yogui: 1, vajra: 1, averno: 1, trueno: 1, sol: 1, guardian: 1, bachue: 1, nevado: 1, vientos: 1, montana: 1, kalachakra: 1, luzclara: 1, osario: 1, tairona: 1, dorado: 1, relampago: 1, vigilia: 1, pacto: 1, firmamento: 1, madreagua: 1, caiman: 1, andes: 1 };
+const ORNAMENTS = { laguna: 1, condor: 1, origen: 1, cienaga: 1, mohan: 1, yogui: 1, vajra: 1, averno: 1, trueno: 1, sol: 1, guardian: 1, bachue: 1, nevado: 1, vientos: 1, montana: 1, kalachakra: 1, luzclara: 1, osario: 1, tairona: 1, dorado: 1, relampago: 1, vigilia: 1, pacto: 1, firmamento: 1, madreagua: 1, caiman: 1, andes: 1, arhuaco: 1, galeon: 1, frailejon: 1, bochica: 1, bufeo: 1, llanero: 1, madremonte: 1, silbon: 1, tunda: 1, mahamudra: 1, candileja: 1, sombreron: 1, marimba: 1, huitaca: 1, canocristales: 1, dzogchen: 1 };
 function ornamentKeys(ch) {
   const worn = shownGear(ch).map(([, it]) => it).filter(Boolean);
   const out = [];
@@ -100,7 +118,7 @@ function defs() {
     box.id = "lpc-glows";
     box.setAttribute("aria-hidden", "true");
     box.setAttribute("style", "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none");
-    box.innerHTML = `<defs>${glow("lpc-set", RARITY.set.color)}${glow("lpc-unique", RARITY.unique.color, true)}${glow("lpc-ancestral", RARITY.ancestral.color, true)}${glow("lpc-legendario", RARITY.legendario.color, true)}${glow("lpc-mitico", RARITY.mitico.color, true, true)}</defs>`;
+    box.innerHTML = `<defs>${glow("lpc-set", RARITY.set.color)}${glow("lpc-unique", RARITY.unique.color, true)}${glow("lpc-ancestral", RARITY.ancestral.color, true)}${glow("lpc-legendario", RARITY.legendario.color, true)}${glow("lpc-mitico", RARITY.mitico.color, true, true)}${glow("lpc-tunjo", "#fff2c4", true, true)}</defs>`;
     document.body.prepend(box);
   }
   return "";
@@ -185,7 +203,7 @@ const VX0 = 8, VY0 = -14, VW0 = 104, VH0 = 78;
 const HX = 6, HY = 30, CUT = 45, RDX = 3;
 const RIDE_VIEW = { fight: [4, 2, 104, 90], doll: [2, 6, 72, 86] };
 export const ridingMount = (ch) => (AN?.anims?.ride && ch.mount && ch.mounts?.includes(ch.mount) ? ch.mount : null);
-const GLOW = { unique: RARITY.unique.color, set: RARITY.set.color, ancestral: RARITY.ancestral.color, legendario: RARITY.legendario.color, mitico: RARITY.mitico.color };
+const GLOW = { tunjo: RARITY.tunjo.color, unique: RARITY.unique.color, set: RARITY.set.color, ancestral: RARITY.ancestral.color, legendario: RARITY.legendario.color, mitico: RARITY.mitico.color };
 
 export function fightFigure(ch, { scale = 2.5, centered = false } = {}) {
   if (!AN) return null;

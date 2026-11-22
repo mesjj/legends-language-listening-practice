@@ -29,7 +29,8 @@
    "origen",
    "bachue",
    "luzclara",
-   "dorado"
+   "dorado",
+   "arhuaco"
   ],
   "baston": [
    "cacique",
@@ -225,7 +226,8 @@
    "luzclara"
   ],
   "anillo": [
-   "luzclara"
+   "luzclara",
+   "bochica"
   ],
   "yelmohueso": [
    "osario"
@@ -265,7 +267,8 @@
    "dorado"
   ],
   "baculotumbaga": [
-   "dorado"
+   "dorado",
+   "arhuaco"
   ],
   "grebastumbaga": [
    "dorado"
@@ -275,7 +278,8 @@
   ],
   "corazacatatumbo": [
    "madreagua",
-   "relampago"
+   "relampago",
+   "arhuaco"
   ],
   "lanzatumbaga": [
    "madreagua"
@@ -288,7 +292,8 @@
    "relampago"
   ],
   "yelmocatatumbo": [
-   "relampago"
+   "relampago",
+   "arhuaco"
   ],
   "martillocatatumbo": [
    "relampago"
@@ -297,76 +302,178 @@
    "relampago"
   ],
   "yelmoluna": [
-   "vigilia"
+   "vigilia",
+   "llanero",
+   "madremonte",
+   "tunda"
   ],
   "mantoluna": [
-   "vigilia"
+   "vigilia",
+   "llanero",
+   "madremonte",
+   "tunda"
   ],
   "arcoluna": [
    "vigilia"
   ],
-  "rodelaluna": [
-   "vigilia"
+  "cordonluna": [
+   "vigilia",
+   "llanero",
+   "madremonte",
+   "tunda"
   ],
   "brazalesluna": [
-   "vigilia"
+   "vigilia",
+   "llanero",
+   "madremonte",
+   "tunda"
   ],
   "zapatosluna": [
-   "vigilia"
+   "vigilia",
+   "llanero",
+   "madremonte",
+   "tunda"
+  ],
+  "cintocatatumbo": [
+   "arhuaco"
   ],
   "yelmosombra": [
    "pacto",
-   "caiman"
+   "caiman",
+   "galeon",
+   "silbon",
+   "canocristales"
   ],
   "corazasombra": [
    "pacto",
-   "caiman"
+   "caiman",
+   "galeon",
+   "silbon",
+   "canocristales"
   ],
   "mandoblesombra": [
-   "pacto"
+   "pacto",
+   "sombreron"
   ],
   "guantessombra": [
    "pacto",
-   "caiman"
+   "caiman",
+   "galeon",
+   "silbon"
   ],
   "pezunassombra": [
    "pacto",
-   "caiman"
+   "caiman",
+   "silbon"
   ],
   "cintosombra": [
-   "pacto"
+   "pacto",
+   "galeon",
+   "silbon",
+   "sombreron",
+   "canocristales"
   ],
   "mangualsombra": [
-   "caiman"
+   "caiman",
+   "silbon"
   ],
   "escudoastral": [
    "caiman",
-   "firmamento"
+   "firmamento",
+   "candileja",
+   "huitaca",
+   "dzogchen"
   ],
   "capiroteastral": [
    "firmamento",
-   "andes"
+   "andes",
+   "frailejon",
+   "bochica",
+   "bufeo",
+   "mahamudra",
+   "candileja",
+   "sombreron",
+   "marimba",
+   "huitaca",
+   "dzogchen"
   ],
   "vestiduraastral": [
    "firmamento",
-   "andes"
+   "andes",
+   "frailejon",
+   "bochica",
+   "bufeo",
+   "mahamudra",
+   "candileja",
+   "sombreron",
+   "marimba",
+   "huitaca",
+   "dzogchen"
   ],
   "espadaastral": [
-   "firmamento"
+   "firmamento",
+   "candileja",
+   "huitaca",
+   "dzogchen"
   ],
   "guantesastral": [
    "firmamento",
-   "andes"
+   "andes",
+   "frailejon",
+   "bochica",
+   "bufeo",
+   "mahamudra",
+   "candileja",
+   "sombreron",
+   "marimba",
+   "huitaca",
+   "canocristales",
+   "dzogchen"
   ],
   "zapatillasastral": [
    "firmamento",
-   "andes"
+   "andes",
+   "frailejon",
+   "bochica",
+   "bufeo",
+   "mahamudra",
+   "candileja",
+   "sombreron",
+   "marimba",
+   "huitaca",
+   "canocristales",
+   "dzogchen"
   ],
   "arcoastral": [
-   "andes"
+   "andes",
+   "mahamudra",
+   "marimba"
   ],
   "fajinastral": [
-   "andes"
+   "andes",
+   "frailejon",
+   "bufeo",
+   "mahamudra",
+   "marimba"
+  ],
+  "sableluna": [
+   "galeon"
+  ],
+  "rodelaluna": [
+   "galeon"
+  ],
+  "varasombra": [
+   "frailejon",
+   "bochica",
+   "madremonte"
+  ],
+  "lanzaastral": [
+   "bufeo",
+   "canocristales"
+  ],
+  "tridenteluna": [
+   "llanero",
+   "tunda"
   ]
  },
  "uniques": {
@@ -534,5 +641,55 @@
   "corona": [
    "Corona del Dorado"
   ]
- }
+ },
+ "tunjo": [
+  [
+   "filo",
+   "espada"
+  ],
+  [
+   "arco",
+   "arcolargo"
+  ],
+  [
+   "vara",
+   "bastonruna"
+  ],
+  [
+   "rodela",
+   "escudo"
+  ],
+  [
+   "corona",
+   "corona"
+  ],
+  [
+   "manto",
+   "tunica"
+  ],
+  [
+   "manos",
+   "guantes"
+  ],
+  [
+   "pasos",
+   "botas"
+  ],
+  [
+   "faja",
+   "faja"
+  ],
+  [
+   "oyente",
+   "amuleto"
+  ],
+  [
+   "gota",
+   "anillo"
+  ],
+  [
+   "eco",
+   "sortija"
+  ]
+ ]
 }

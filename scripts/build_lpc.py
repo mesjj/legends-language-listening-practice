@@ -525,6 +525,22 @@ SETS = {  # each set has its own colours
     "madreagua": {"metal": "gold", "cloth": "teal", "wood": "gold"},
     "caiman": {"metal": "bronze", "cloth": "forest", "wood": "dark"},
     "andes": {"metal": "silver", "cloth": "red", "wood": "medium"},
+    "arhuaco": {"metal": "silver", "cloth": "white", "wood": "light"},
+    "galeon": {"metal": "bronze", "cloth": "navy", "wood": "dark"},
+    "frailejon": {"metal": "silver", "cloth": "forest", "wood": "light"},
+    "bochica": {"metal": "gold", "cloth": "tan", "wood": "light"},
+    "bufeo": {"metal": "silver", "cloth": "white", "wood": "light"},
+    "llanero": {"metal": "bronze", "cloth": "tan", "wood": "medium"},
+    "madremonte": {"metal": "bronze", "cloth": "forest", "wood": "dark"},
+    "silbon": {"metal": "iron", "cloth": "black", "wood": "dark"},
+    "tunda": {"metal": "ceramic", "cloth": "teal", "wood": "dark"},
+    "mahamudra": {"metal": "silver", "cloth": "sky", "wood": "light"},
+    "candileja": {"metal": "copper", "cloth": "orange", "wood": "red"},
+    "sombreron": {"metal": "iron", "cloth": "black", "wood": "dark"},
+    "marimba": {"metal": "gold", "cloth": "yellow", "wood": "medium"},
+    "huitaca": {"metal": "gold", "cloth": "purple", "wood": "gold"},
+    "canocristales": {"metal": "gold", "cloth": "red", "wood": "medium"},
+    "dzogchen": {"metal": "gold", "cloth": "blue", "wood": "gold"},
 }
 
 
@@ -637,6 +653,9 @@ SET_LOOKS = {
         "cetro": [("weapon_magic_loop", VAR("gold"))],
         "medallon": [("neck_charm_ring", VAR("gold"))],
         "zapatos": [("feet_slippers", FX("blue"))],
+    },
+    "arhuaco": {  # the Sierra Nevada: a necklace of white beads
+        "amuleto": [("neck_necklace_beaded_large", FX("white"))],
     },
     "luzclara": {  # the clear light: a yogi's topknot, white robes and cloak, a clear crystal, a mirror on the heart
         "panoleta": [("hat_headband_hairtie", FX("white"))],
@@ -911,7 +930,35 @@ SET_BAND_STOPS = {
     "caiman": (["#040a04", "#122a12", "#2a4a1e", "#4e7030", "#9ab45a", "#e8f0b0"], ["#1a1402", "#4a3c08", "#a08a18", "#e8d040", "#fff48a", "#ffffff"]),   # swamp hide, yellow eyes
     "andes": (["#140404", "#4a0e0a", "#8e2216", "#c84a2a", "#f09a5a", "#fff0d8"], ["#0e1014", "#3a4048", "#7a8490", "#c4ccd6", "#eef2f8", "#ffffff"]),    # red wool, snow
     "firmamento": (["#02030c", "#0a1238", "#1a2a74", "#3e58c0", "#a0b8ff", "#ffffff"], ["#170a03", "#4a2308", "#8e5a14", "#e0b040", "#fff0a0", "#ffffff"]), # night, stars
+    "arhuaco": (["#1e1a14", "#5a5246", "#a49a88", "#d8d0c0", "#f4f0e6", "#ffffff"], ["#120a06", "#3a2616", "#6a4a2e", "#9a7650", "#c8a87a", "#efe0c4"]),    # white cotton, natural wool
+    "galeon": (["#020a10", "#0a2430", "#1e4a52", "#4a7a70", "#a8c8b0", "#f0fff4"], ["#1a1002", "#4a3008", "#8e6414", "#d8a830", "#ffe07a", "#fffbe0"]),  # sea-green barnacles, doubloons
+    "frailejon": (["#0a100c", "#28362c", "#56685a", "#93a594", "#d2dccf", "#f8fbf6"], ["#1a1602", "#4a400a", "#8e7c18", "#d8c030", "#f8ea7a", "#fffbe0"]),  # páramo mist and moss, frailejón flowers
+    "bochica": (["#140c04", "#3e2a14", "#7a5a32", "#b89464", "#e8d0a8", "#fff8ea"], ["#0a0a1a", "#1a3a7a", "#2a8ad0", "#7ad0f0", "#d0f4ff", "#ffffff"]),  # undyed cotton, the falls
+    "bufeo": (["#120408", "#4a1424", "#8e3a5a", "#d07a98", "#f6c0d2", "#fff4f8"], ["#0e0a04", "#3a2a12", "#6a4e26", "#a08048", "#d8c090", "#fff4dc"]),  # river-dolphin pink, muddy water
+    "llanero": (["#1e1a14", "#6a6050", "#b4aa96", "#e4dccb", "#f8f4ea", "#ffffff"], ["#140a02", "#40240a", "#7a4a1a", "#b88040", "#e8c088", "#fff4e0"]),  # white liquiliqui, saddle leather
+    "madremonte": (["#020a02", "#0e2a0e", "#1e5218", "#3e8a2a", "#8ac85a", "#e0ffc0"], ["#0e0804", "#3a2410", "#6a4422", "#9a6a3a", "#c89a62", "#f0dcb8"]),  # leaves, bark
+    "silbon": (["#000000", "#0a0a10", "#1a1a26", "#34344a", "#6a6a88", "#b0b0d0"], ["#0e0c08", "#3a342a", "#7a7058", "#b8ac90", "#e8e0cc", "#ffffff"]),  # night, dry bone
+    "tunda": (["#02080a", "#082a2a", "#14504a", "#2a7a68", "#6ab49a", "#c8f0e0"], ["#140402", "#4a1408", "#8e3418", "#e06a3a", "#ffa880", "#ffe8dc"]),  # mangrove water, shrimp
+    "mahamudra": (["#020a1a", "#0a2a5a", "#1a5aa8", "#4a96e0", "#a8d4ff", "#ffffff"], ["#0e1014", "#3a4048", "#7a8490", "#c4ccd6", "#eef2f8", "#ffffff"]),  # open sky, cloud
+    "candileja": (["#140200", "#4a0a02", "#8e1e06", "#e04a0e", "#ff9a2a", "#fff0a0"], ["#0a0806", "#2a2420", "#4a423a", "#7a7068", "#b0a8a0", "#e8e4e0"]),  # fireballs, ash
+    "sombreron": (["#000000", "#0a0808", "#1e1a18", "#3a3430", "#6a625a", "#a89c90"], ["#140000", "#4a0000", "#8a0a0a", "#e01a1a", "#ff6a5a", "#ffd0c8"]),  # black felt, red eyes
+    "marimba": (["#140a02", "#3e2408", "#7a4a16", "#b8862e", "#e8c46a", "#fff4d0"], ["#02060e", "#0a1a3a", "#12407a", "#2a7ac0", "#7ac0f0", "#e0f4ff"]),  # chonta wood, Pacific blue
+    "huitaca": (["#0e0414", "#34104a", "#6a2a8e", "#b05ad0", "#e8a8f8", "#fff0ff"], ["#1a1402", "#4a3c08", "#a08a18", "#e8d040", "#fff48a", "#ffffff"]),  # festival purple, moonlight gold
+    "canocristales": (["#140204", "#4a0a12", "#a01a24", "#e0403a", "#ff9a7a", "#fff0e8"], ["#02100e", "#0a3a30", "#1a7a5a", "#3ac08a", "#f0e040", "#fffbe0"]),  # macarenia red, green and yellow water
+    "dzogchen": (["#02040e", "#0a1840", "#1e3a8e", "#4a7ae0", "#b8d0ff", "#ffffff"], ["#140a02", "#4a1a08", "#a8301a", "#f0b030", "#7ae07a", "#ffffff"]),  # space blue, five lights
 }
+# a set on band pieces that doesn't take the band's shapes: its own layers (None: main colours, A_: accent)
+SET_BAND_LOOKS = {
+    "arhuaco": {  # white cotton: the tutusoma, the manta over white trousers, a sash of wool, a plain walking stick
+        "yelmocatatumbo": [("hat_helmet_sugarloaf", None)],
+        "corazacatatumbo": [("legs_pants", None), ("torso_clothes_tunic", None)],
+        "cintocatatumbo": [("belt_sash_narrow", A_)],
+        "baculotumbaga": [("weapon_polearm_cane", A_)],
+    },
+}
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import set_art as SET_ART  # noqa: E402  the sets from 138 to 200: a look of its own for every piece
+SET_BAND_LOOKS.update({sid: {b: [(n, "light" if c == "light" else A_ if c else None) for n, c in parts] for b, parts in r.items()} for sid, r in SET_ART.RECIPES.items()})
 HEAD_BASES = {"capucha", "sombrero", "casco", "mascara", "yelmo", "corona"}
 BODY_BASES = {"tunica", "jubon", "cota", "coraza"}
 TOP_EXTRA = {
@@ -1279,13 +1326,19 @@ def build():
             main_, acc_ = SET_BAND_STOPS.get(style, (BAND_STOPS[band], BAND_ACCENT[band]))
             for body in ("male", "female"):
                 layers, alayers = [], []
-                for name, acc in parts:
+                for name, acc in SET_BAND_LOOKS.get(style, {}).get(base, parts):
                     lf, af = layer_frames(name, body), anim_layers(name, body)
                     stops = acc_ if acc else main_
                     layers += gmap_layers(lf, stops)
                     alayers += gmap_anim(af, stops)
                 if style in TOP_STYLES:  # the tier's colours over the band's shapes (the accents stay brighter)
                     layers, alayers = gmap_layers(layers, TOP_STYLES[style]), gmap_anim(alayers, TOP_STYLES[style])
+                if style in SET_ART.RECIPES:  # the sets from 138 up: drawn hats and effects (scripts/set_art.py)
+                    layers, alayers = SET_ART.piece(style, base, layers, alayers, main_, acc_)
+                if style == "arhuaco":  # the tutusoma and the mochila, drawn in scripts/custom_art.py
+                    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+                    from custom_art import arhuaco_piece
+                    layers, alayers = arhuaco_piece(base, layers, alayers)
                 store(f"item:{base}:{style}:{body}", layers)
                 anim.add(f"item:{base}:{style}:{body}", alayers)
                 if body == "male":
@@ -1297,6 +1350,26 @@ def build():
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
     from custom_art import custom_icons, custom_looks
     icon_imgs.update(custom_icons())
+    icon_imgs.update(SET_ART.piece_icons(SET_BAND_STOPS))  # gloves, boots, belts and rings of the sets from 138 up
+    import build_scenes  # noqa: E402  the sets' colours for their undershirts (also hung on the Camisetas rack)
+    icon_imgs.update(SET_ART.shirt_icons(build_scenes.NECKLACES))  # each set's magic undershirt
+    # the tunjo's rainbow items: a drawn icon each, and their base's shape worn in rainbow (scripts/tunjo_art.py)
+    import tunjo_art as TUNJO  # noqa: E402
+    for tid, look in from_data.get("tunjo", []):
+        print("tunjo", tid)
+        icon_imgs[f"item:{look}:t:{tid}"] = TUNJO.icon(tid)
+        if look not in BASE_LOOKS:
+            continue  # rings aren't drawn on the figure
+        for body in ("male", "female"):
+            layers, alayers = [], []
+            for name, col in BASE_LOOKS[look]:
+                color, variant = colouring_args(col, "normal", None)
+                layers += layer_frames(name, body, color=color, variant=variant)
+                alayers += anim_layers(name, body, color=color, variant=variant)
+            layers = [(z, {k: TUNJO.rainbow(im) for k, im in fr.items()}) for z, fr in layers]
+            alayers = [(z, {a: (TUNJO.rainbow(im, fs), fs, n) for a, (im, fs, n) in rows.items()}) for z, rows in alayers]
+            store(f"item:{look}:t:{tid}:{body}", layers)
+            anim.add(f"item:{look}:t:{tid}:{body}", alayers)
     for key, layers, alayers in custom_looks():
         print("ornament", key)
         store(key, layers)

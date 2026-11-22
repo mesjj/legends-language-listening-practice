@@ -1,4 +1,4 @@
-import { GRAMMAR_RUNES, GRAMMAR_RUNEWORDS } from "./grammar.js";
+import { GRAMMAR_RUNES } from "./grammar.js";
 
 // Leyendas: static game content. Every name, item and monster here is original to this app.
 // Icons: game-icons.net (CC BY 3.0), see icons/CREDITS.txt.
@@ -12,14 +12,13 @@ export const RARITY = {
   set:    { name: "De conjunto", color: "#4ccf55" },
   unique: { name: "Único",    color: "#cf9f55" },
   crafted: { name: "Artesanal", color: "#e8873a" },
-  runeword: { name: "Palabra rúnica", color: "#d8c08a" },
+  runeword: { name: "Palabra rúnica", color: "#d8c08a" }, // only items from before runes were removed
   // above unique, each about a third as common as the one below it
   ancestral:  { name: "Ancestral",  color: "#e0679e" },
   legendario: { name: "Legendario", color: "#ff5a4a" },
   mitico:     { name: "Mítico",     color: "#6fe6ff" },
-  rune:   { name: "Runa",     color: "#d6a960" },
+  tunjo:      { name: "Del arcoíris", color: "#ffb6f0" }, // only from Doña Remedios' tunjo: one of each, never sold
   relic:  { name: "Reliquia", color: "#ff9cf2" },
-  grune:  { name: "Runa de haber", color: "#8fd8c8" },
   gem:    { name: "Gema",     color: "#e4dfd2" },
   potion: { name: "Poción",   color: "#e4dfd2" },
 };
@@ -32,12 +31,13 @@ export const SLOTS = {
   feet:   "Pies",
   belt:   "Cintura",
   neck:   "Cuello",
+  shirt:  "Camiseta",
   ring:   "Anillo",
   weapon: "Arma",
   off:    "Mano izquierda",
 };
 // Where an item kind can go when equipped (ring -> ring1/ring2, weapon -> weapon1/weapon2).
-export const EQUIP_SLOTS = ["head", "neck", "body", "weapon1", "off1", "weapon2", "off2", "hands", "ring1", "ring2", "belt", "feet"];
+export const EQUIP_SLOTS = ["head", "neck", "shirt", "body", "weapon1", "off1", "weapon2", "off2", "hands", "ring1", "ring2", "belt", "feet"];
 
 // ---------- properties ----------
 // fmt: how a value reads on an item. {v} is replaced by the value.
@@ -304,6 +304,9 @@ export const BANDS = [
   });
 }
 export const BASE = Object.fromEntries(BASES.map((b) => [b.id, b]));
+// A set's magic undershirt (melted from the whole set at the alembic): its own slot, never dropped,
+// sold or made any other way, so it's kept out of BASES.
+BASE.camiseta = { id: "camiseta", name: "Camiseta encantada", g: "f", icon: "leather-vest", lvl: 1, slot: "shirt", req: {}, sockets: 0, jewel: true };
 
 // ---------- affixes ----------
 // pre: adjective after the noun, with "@" for the gendered ending ("Afilad@" -> Afilado/Afilada).
@@ -435,9 +438,9 @@ export const CRAFT = {
   diamante:  { name: "de oído",     props: { replayCost: [[8, 12], [12, 18], [18, 25]], hintCost: [[8, 15], [15, 25], [25, 35]] } },
 };
 
-// ---------- runes and runewords ----------
-// Runes are Spanish syllables. Put them, in order, into a plain (white or worn) item with exactly
-// that many sockets and the word wakes up. Later runes drop deeper in the world.
+// ---------- runes (removed) ----------
+// Runes and runewords are gone from the game. Their table stays only so an old save can be converted
+// (main.js dropRunes: loose and socketed runes sold, a runeword's rune effects kept in its properties).
 export const RUNES = [
   { id: "CA",  lvl: 1,  weapon: ["dmgMax", 2],    armor: ["armor", 6],    off: ["block", 3] },
   { id: "SA",  lvl: 2,  weapon: ["dmgMin", 1],    armor: ["life", 8],     off: ["armor", 8] },
@@ -459,16 +462,6 @@ export const RUNES = [
 RUNES.push(...GRAMMAR_RUNES); // forms of haber: caught by ear, never dropped (see grammar.js)
 export const RUNE = Object.fromEntries(RUNES.map((r) => [r.id, r]));
 // kinds: "melee" / "ranged" weapons, or a slot (head, body, off).
-export const RUNEWORDS = [
-  { id: "CASA",     runes: ["CA", "SA"],             kinds: ["body"],   props: { armorPct: [60, 90], life: 30, resAll: 10, lifeRegen: 2 }, flavor: "Donde uno llega y lo esperan con sopa." },
-  { id: "LUNA",     runes: ["LU", "NA"],             kinds: ["head"],   props: { mana: 30, manaRegen: 2, resCold: 25, slowFree: true }, flavor: "Ilumina sin quemar." },
-  { id: "TIGRE",    runes: ["TI", "GRE"],            kinds: ["melee"],  props: { dmgPct: [80, 120], crit: 8, leech: 5, dmgDictation: 20 }, flavor: "Rayas de sol entre la maleza." },
-  { id: "PALOMA",   runes: ["PA", "LO", "MA"],       kinds: ["ranged"], props: { dmgPct: [90, 130], dmgCloze: 30, freeReplay: 1, resAll: 10 }, flavor: "Lleva el mensaje y vuelve." },
-  { id: "FELINA",   runes: ["FE", "LI", "NA"],       kinds: ["off"],    props: { armorPct: [80, 120], block: 12, dodge: 8, dex: 12 }, flavor: "Cae siempre de pie." },
-  { id: "SOLDADO",  runes: ["SOL", "DA", "DO"],      kinds: ["melee"],  props: { dmgPct: [160, 220], fire: 30, str: 15, comboKeep: true, comboStart: 2 }, flavor: "No retrocede, ni cuando debería." },
-  { id: "MARIPOSA", runes: ["MA", "RI", "PO", "SA"], kinds: ["ranged"], props: { dmgPct: [180, 240], dmgCloze: 45, typoTol: 1, nearExact: true, freeReplay: 1 }, flavor: "Amarilla, como en el libro." },
-];
-RUNEWORDS.push(...GRAMMAR_RUNEWORDS);
 
 // ---------- random uniques ----------
 // Most uniques are written by hand (below). Past those, the game invents one: base + a namesake.
@@ -848,12 +841,26 @@ export const SETS = [
       { name: "Yelmo de la Vigía", base: "yelmoluna", props: { armorPct: 280, life: 170, resCold: 40, dodge: 8 } },
       { name: "Manto de Medianoche", base: "mantoluna", props: { armorPct: 310, life: 260, resAll: 35 } },
       { name: "Arco de la Luna Nueva", base: "arcoluna", props: { dmgPct: 450, cold: 120, dmgCloze: 70, crit: 12 } },
-      { name: "Rodela de Plata", base: "rodelaluna", props: { armorPct: 260, block: 14, resAll: 30 } },
+      { name: "Cordón de Plata", base: "cordonluna", props: { armorPct: 240, life: 150, resAll: 30 } },  // was a buckler, which a two-handed bow can't wear with
       { name: "Brazales de Rocío", base: "brazalesluna", props: { armorPct: 230, dex: 35, manaLeech: 8 } },
       { name: "Zapatos sin Ruido", base: "zapatosluna", props: { armorPct: 230, dodge: 15, replayCost: 40 } },
     ],
     bonus: { 2: { dodge: 10, resCold: 40 }, 3: { dmgCloze: 60, dex: 35 }, 4: { replayCost: 50, slowFree: true }, 5: { freeReplay: 1, comboStart: 5 }, 6: { nearExact: true, comboKeep: true, allStats: 35, xp: 15 } },
     lvl: 108,
+  },
+  {
+    // the Arhuaco of the Sierra Nevada de Santa Marta: white cotton, the tutusoma (its point is the snowy
+    // peaks), the mochila woven slowly, a thought in every turn of its spiral; a walking stick for the paths
+    id: "arhuaco", tier: "legendario", name: "El Tejido de la Sierra",
+    pieces: [
+      { name: "Tutusoma de las Nieves", base: "yelmocatatumbo", props: { armorPct: 280, life: 170, resCold: 45, hintCost: 40 } },
+      { name: "Manta Blanca de Nabusímake", base: "corazacatatumbo", props: { armorPct: 320, life: 260, resAll: 30, lifeRegen: 12 } },
+      { name: "Bastón del Caminante", base: "baculotumbaga", props: { dmgPct: 420, dmgDictation: 55, cold: 110, manaLeech: 7 } },
+      { name: "Mochila del Pensamiento", base: "cintocatatumbo", props: { life: 160, mf: 60, replayCost: 40 } },
+      { name: "Collar de la Madre Tierra", base: "amuleto", props: { allStats: 20, resAll: 25, xp: 12 } },
+    ],
+    bonus: { 2: { resCold: 40, life: 150 }, 3: { replayCost: 40, mana: 120 }, 4: { slowFree: true, dmgDictation: 60 }, 5: { freeReplay: 1, nearExact: true, allStats: 32 } },
+    lvl: 94,
   },
   {
     id: "pacto", tier: "legendario", name: "El Pacto de la Sombra",
@@ -907,6 +914,25 @@ export const SETS = [
     bonus: { 2: { resCold: 45, life: 200 }, 3: { dmgCloze: 70, dex: 40 }, 4: { replayCost: 55, slowFree: true }, 5: { freeReplay: 1, comboStart: 6 }, 6: { nearExact: true, comboKeep: true, allStats: 40, xp: 20 } },
     lvl: 130,
   },
+  // From 138 to 200, at the same spacing as below: a green set about every 12 levels, a pink one about
+  // every 25, a red one about every 22, a blue one about every 25. All on Luna, Sombra and Astral pieces
+  // (there's no band above Astral), so their props carry on the top sets' curve per level and tier
+  // (scratchpad generator: armour ~2.5–2.8 × level, damage 4 × level, × 1.08 / 1.15 / 1.3 for pink / red / blue).
+  {id: "galeon", tier: "legendario", name: "El Galeón Hundido", pieces: [{name: "Yelmo del Capitán Ahogado", base: "yelmosombra", props: {armorPct: 400, life: 270, resCold: 50, mana: 130}}, {name: "Coraza de Coral", base: "corazasombra", props: {armorPct: 440, life: 400, resAll: 40, thorns: 140}}, {name: "Sable del Abordaje", base: "sableluna", props: {dmgPct: 630, cold: 180, crit: 14, leech: 7}}, {name: "Rodela del Cofre", base: "rodelaluna", props: {armorPct: 380, block: 17, resAll: 35, mf: 70}}, {name: "Guanteletes de Doblones", base: "guantessombra", props: {armorPct: 340, dex: 40, mf: 70}}, {name: "Cinto del Ancla", base: "cintosombra", props: {life: 270, potion: 60, vit: 35}}], bonus: {2: {resCold: 45, life: 240}, 3: {dmgDictation: 90, cold: 160}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 6}, 6: {nearExact: true, comboKeep: true, allStats: 48, xp: 23}}, lvl: 138},
+  {id: "frailejon", name: "Niebla del Páramo", pieces: [{name: "Capucha de Niebla", base: "capiroteastral", props: {armorPct: 360, life: 240, resCold: 50, mana: 110}}, {name: "Manto de Frailejón", base: "vestiduraastral", props: {armorPct: 400, life: 360, resAll: 45, lifeRegen: 17}}, {name: "Vara del Nacimiento del Agua", base: "varasombra", props: {dmgPct: 570, cold: 160, crit: 14, dmgCloze: 80}}, {name: "Guantes de Musgo", base: "guantesastral", props: {armorPct: 310, dex: 45, manaLeech: 7}}, {name: "Botas de la Turbera", base: "zapatillasastral", props: {armorPct: 310, dodge: 15, xp: 16}}, {name: "Fajín de Rocío", base: "fajinastral", props: {life: 240, potion: 60, mf: 60}}], bonus: {2: {resCold: 45, life: 210}, 3: {dmgCloze: 80, cold: 140}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 6}, 6: {nearExact: true, comboKeep: true, allStats: 43, xp: 24}}, lvl: 142},
+  {id: "bochica", tier: "ancestral", name: "La Senda de Bochica", pieces: [{name: "Capucha del Anciano", base: "capiroteastral", props: {armorPct: 400, life: 270, resLight: 50, hintCost: 50}}, {name: "Manto del Tejedor", base: "vestiduraastral", props: {armorPct: 440, life: 390, resAll: 45, ene: 35}}, {name: "Báculo del Tequendama", base: "varasombra", props: {dmgPct: 630, light: 180, crit: 14, dmgCloze: 90}}, {name: "Guantes del Telar", base: "guantesastral", props: {armorPct: 340, dex: 45, replayCost: 45}}, {name: "Sandalias del Peregrino", base: "zapatillasastral", props: {armorPct: 340, dodge: 15, xp: 16}}, {name: "Anillo de Chuchaviva", base: "anillo", props: {allStats: 24, resAll: 30, mf: 70}}], bonus: {2: {resLight: 45, life: 240}, 3: {dmgCloze: 90, light: 160}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 7}, 6: {nearExact: true, comboKeep: true, allStats: 47, xp: 24}}, lvl: 146},
+  {id: "bufeo", tier: "mitico", name: "El Bufeo Colorado", pieces: [{name: "Sombrero del Forastero", base: "capiroteastral", props: {armorPct: 500, life: 330, resCold: 50, allStats: 29}}, {name: "Traje Blanco de la Fiesta", base: "vestiduraastral", props: {armorPct: 550, life: 490, resAll: 45, mana: 160}}, {name: "Lanza del Amazonas", base: "lanzaastral", props: {dmgPct: 780, cold: 220, crit: 14, dmgCloze: 110}}, {name: "Fajín de Agua Negra", base: "fajinastral", props: {life: 330, potion: 60, manaLeech: 8}}, {name: "Guantes del Río Abajo", base: "guantesastral", props: {armorPct: 420, dex: 45, mf: 90}}, {name: "Zapatillas de la Orilla", base: "zapatillasastral", props: {armorPct: 420, dodge: 15, xp: 17}}], bonus: {2: {resCold: 45, life: 290}, 3: {dmgCloze: 110, cold: 200}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 7}, 6: {nearExact: true, comboKeep: true, allStats: 58, xp: 25, mf: 90}}, lvl: 150},
+  {id: "llanero", name: "Coplas del Llano", pieces: [{name: "Sombrero de Pelo de Guama", base: "yelmoluna", props: {armorPct: 390, life: 260, resFire: 50, vit: 40}}, {name: "Liquiliqui del Coplero", base: "mantoluna", props: {armorPct: 430, life: 380, resAll: 45, dmgDictation: 80}}, {name: "Lanza del Vaquero", base: "tridenteluna", props: {dmgPct: 620, fire: 180, crit: 14, leech: 8}}, {name: "Brazales del Arreo", base: "brazalesluna", props: {armorPct: 330, dex: 45, str: 45}}, {name: "Cotizas del Joropo", base: "zapatosluna", props: {armorPct: 330, dodge: 15, comboStart: 7}}, {name: "Soga de Enlazar", base: "cordonluna", props: {life: 260, potion: 60, killHeal: 35}}], bonus: {2: {resFire: 45, life: 230}, 3: {dmgDictation: 80, fire: 150}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 7}, 6: {nearExact: true, comboKeep: true, allStats: 46, xp: 26}}, lvl: 154},
+  {id: "madremonte", tier: "legendario", name: "La Madremonte", pieces: [{name: "Tocado de Musgo", base: "yelmoluna", props: {armorPct: 470, life: 310, resPoison: 50, lifeRegen: 22}}, {name: "Manto de Hojas", base: "mantoluna", props: {armorPct: 520, life: 460, resAll: 45, thorns: 170}}, {name: "Vara de la Selva", base: "varasombra", props: {dmgPct: 740, poison: 210, crit: 14, manaLeech: 8}}, {name: "Brazales de Bejuco", base: "brazalesluna", props: {armorPct: 400, dex: 50, thorns: 170}}, {name: "Zapatos de Raíz", base: "zapatosluna", props: {armorPct: 400, dodge: 15, vit: 40}}, {name: "Cordón de Lianas", base: "cordonluna", props: {life: 310, potion: 60, lifeRegen: 22}}], bonus: {2: {resPoison: 45, life: 280}, 3: {dmgDictation: 100, poison: 180}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 7}, 6: {nearExact: true, comboKeep: true, allStats: 55, xp: 27}}, lvl: 160},
+  {id: "silbon", name: "El Silbido del Silbón", pieces: [{name: "Sombrero del Silbón", base: "yelmosombra", props: {armorPct: 420, life: 280, resCold: 50, replayCost: 45}}, {name: "Harapos del Errante", base: "corazasombra", props: {armorPct: 460, life: 420, resAll: 45, dodge: 16}}, {name: "Mangual del Costal", base: "mangualsombra", props: {dmgPct: 660, cold: 190, crit: 15, dmgDictation: 90}}, {name: "Guanteletes de Hueso Seco", base: "guantessombra", props: {armorPct: 360, dex: 50, killHeal: 40}}, {name: "Pezuñas del Camino Largo", base: "pezunassombra", props: {armorPct: 360, dodge: 16, freeReplay: 1}}, {name: "Cinto del Costal", base: "cintosombra", props: {life: 280, potion: 60, mf: 70}}], bonus: {2: {resCold: 45, life: 250}, 3: {dmgDictation: 90, cold: 170}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 8}, 6: {nearExact: true, comboKeep: true, allStats: 50, xp: 28}}, lvl: 166},
+  {id: "tunda", tier: "ancestral", name: "La Tunda", pieces: [{name: "Velo del Manglar", base: "yelmoluna", props: {armorPct: 470, life: 310, resPoison: 50, manaLeech: 9}}, {name: "Manto de Raíces", base: "mantoluna", props: {armorPct: 520, life: 460, resAll: 45, lifeRegen: 22}}, {name: "Tridente del Estero", base: "tridenteluna", props: {dmgPct: 740, poison: 210, crit: 15, dmgCloze: 100}}, {name: "Cordón del Manglar", base: "cordonluna", props: {life: 310, potion: 60, thorns: 170}}, {name: "Brazales del Camarón", base: "brazalesluna", props: {armorPct: 400, dex: 50, leech: 9}}, {name: "Pata de Molinillo", base: "zapatosluna", props: {armorPct: 400, dodge: 32}}], bonus: {2: {resPoison: 45, life: 280}, 3: {dmgCloze: 100, poison: 180}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 8}, 6: {nearExact: true, comboKeep: true, allStats: 55, xp: 28}}, lvl: 171},
+  {id: "mahamudra", tier: "mitico", name: "El Gran Sello", pieces: [{name: "Moño del Cielo Abierto", base: "capiroteastral", props: {armorPct: 580, life: 390, resLight: 50, hintCost: 50}}, {name: "Manto del Espacio", base: "vestiduraastral", props: {armorPct: 640, life: 570, resAll: 45, ene: 45}}, {name: "Arco sin Blanco", base: "arcoastral", props: {dmgPct: 910, light: 260, crit: 15, dmgCloze: 130}}, {name: "Fajín del Silencio", base: "fajinastral", props: {life: 390, potion: 60, replayCost: 45}}, {name: "Guantes del Sello", base: "guantesastral", props: {armorPct: 490, dex: 50, typoTol: 1}}, {name: "Zapatillas del Camino Natural", base: "zapatillasastral", props: {armorPct: 490, dodge: 16, xp: 19}}], bonus: {2: {resLight: 45, life: 340}, 3: {dmgCloze: 130, light: 230}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 8}, 6: {nearExact: true, comboKeep: true, allStats: 68, xp: 29, mf: 100}}, lvl: 175},
+  {id: "candileja", name: "La Candileja", pieces: [{name: "Capirote de Candela", base: "capiroteastral", props: {armorPct: 450, life: 300, resFire: 50, mana: 140}}, {name: "Vestidura Chamuscada", base: "vestiduraastral", props: {armorPct: 500, life: 440, resAll: 45, thorns: 160}}, {name: "Espada de la Bola de Fuego", base: "espadaastral", props: {dmgPct: 710, fire: 200, crit: 15, dmgDictation: 100}}, {name: "Escudo del Fuego Fatuo", base: "escudoastral", props: {armorPct: 430, block: 18, resAll: 40, killHeal: 45}}, {name: "Guantes de Ceniza", base: "guantesastral", props: {armorPct: 380, dex: 55, leech: 9}}, {name: "Zapatillas del Pajonal", base: "zapatillasastral", props: {armorPct: 380, dodge: 16, comboStart: 8}}], bonus: {2: {resFire: 45, life: 270}, 3: {dmgDictation: 100, fire: 180}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 8}, 6: {nearExact: true, comboKeep: true, allStats: 53, xp: 30}}, lvl: 178},
+  {id: "sombreron", tier: "legendario", name: "El Sombrerón", pieces: [{name: "El Gran Sombrero", base: "capiroteastral", props: {armorPct: 530, life: 360, resFire: 50, allStats: 31}}, {name: "Capa de la Noche de Feria", base: "vestiduraastral", props: {armorPct: 590, life: 520, resAll: 50, dodge: 16}}, {name: "Mandoble del Jinete", base: "mandoblesombra", props: {dmgPct: 840, fire: 240, crit: 15, dmgDictation: 120}}, {name: "Guantes de las Cadenas", base: "guantesastral", props: {armorPct: 450, dex: 55, leech: 9}}, {name: "Botas de Estribo", base: "zapatillasastral", props: {armorPct: 450, dodge: 16, comboStart: 8}}, {name: "Cinto de los Perros Negros", base: "cintosombra", props: {life: 360, potion: 60, killHeal: 50}}], bonus: {2: {resFire: 45, life: 310}, 3: {dmgDictation: 120, fire: 210}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 8}, 6: {nearExact: true, comboKeep: true, allStats: 63, xp: 30}}, lvl: 182},
+  {id: "marimba", name: "Marimba del Pacífico", pieces: [{name: "Turbante de la Cantadora", base: "capiroteastral", props: {armorPct: 480, life: 320, resLight: 50, xp: 21}}, {name: "Vestidura del Currulao", base: "vestiduraastral", props: {armorPct: 530, life: 480, resAll: 50, dmgCloze: 100}}, {name: "Arco de Chonta", base: "arcoastral", props: {dmgPct: 760, light: 220, crit: 16, manaLeech: 10}}, {name: "Guantes del Marimbero", base: "guantesastral", props: {armorPct: 410, dex: 55, replayCost: 45}}, {name: "Zapatillas de Arena Negra", base: "zapatillasastral", props: {armorPct: 410, dodge: 32}}, {name: "Fajín del Bombo", base: "fajinastral", props: {life: 320, potion: 60, mana: 150}}], bonus: {2: {resLight: 45, life: 280}, 3: {dmgCloze: 100, light: 190}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 9}, 6: {nearExact: true, comboKeep: true, allStats: 57, xp: 32}}, lvl: 190},
+  {id: "huitaca", tier: "ancestral", name: "La Fiesta de Huitaca", pieces: [{name: "Corona de Flores", base: "capiroteastral", props: {armorPct: 540, life: 360, resLight: 50, xp: 22}}, {name: "Vestidura de la Fiesta", base: "vestiduraastral", props: {armorPct: 590, life: 530, resAll: 50, mf: 100}}, {name: "Espada del Baile", base: "espadaastral", props: {dmgPct: 850, light: 240, crit: 16, comboStart: 9}}, {name: "Escudo de la Luna Llena", base: "escudoastral", props: {armorPct: 510, block: 19, resAll: 45, mana: 170}}, {name: "Guantes de Plumas de Búho", base: "guantesastral", props: {armorPct: 460, dex: 60, allStats: 32}}, {name: "Zapatillas de la Ronda", base: "zapatillasastral", props: {armorPct: 460, dodge: 17, dmgDictation: 120}}], bonus: {2: {resLight: 45, life: 320}, 3: {dmgDictation: 120, light: 210}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 9}, 6: {nearExact: true, comboKeep: true, allStats: 64, xp: 33}}, lvl: 196},
+  {id: "canocristales", name: "El Río de los Cinco Colores", pieces: [{name: "Yelmo de Macarenia", base: "yelmosombra", props: {armorPct: 510, life: 340, resCold: 50, lifeRegen: 24}}, {name: "Coraza del Lecho de Piedra", base: "corazasombra", props: {armorPct: 560, life: 500, resAll: 50, thorns: 180}}, {name: "Lanza de la Corriente Clara", base: "lanzaastral", props: {dmgPct: 800, cold: 230, crit: 16, dmgCloze: 110}}, {name: "Cinto de las Piedras de Colores", base: "cintosombra", props: {life: 340, potion: 60, mana: 160}}, {name: "Guantes del Agua Transparente", base: "guantesastral", props: {armorPct: 430, dex: 60, manaLeech: 10}}, {name: "Botas de los Pozos", base: "zapatillasastral", props: {armorPct: 430, dodge: 17, xp: 22}}], bonus: {2: {resCold: 45, life: 300}, 3: {dmgCloze: 110, cold: 200}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 9}, 6: {nearExact: true, comboKeep: true, allStats: 60, xp: 33}}, lvl: 200},
+  {id: "dzogchen", tier: "mitico", name: "La Gran Perfección", pieces: [{name: "Corona del Espacio Primordial", base: "capiroteastral", props: {armorPct: 660, life: 440, resLight: 50, hintCost: 50}}, {name: "Manto de las Cinco Luces", base: "vestiduraastral", props: {armorPct: 730, life: 650, resAll: 50, allStats: 39}}, {name: "Espada del Instante Presente", base: "espadaastral", props: {dmgPct: 1040, light: 300, crit: 16, dmgCloze: 140}}, {name: "Espejo del Estado Natural", base: "escudoastral", props: {armorPct: 620, block: 19, resAll: 45, replayCost: 45}}, {name: "Guantes de la Presencia", base: "guantesastral", props: {armorPct: 560, dex: 60, typoTol: 1}}, {name: "Zapatillas sin Esfuerzo", base: "zapatillasastral", props: {armorPct: 560, dodge: 17, mf: 120}}], bonus: {2: {resLight: 45, life: 390}, 3: {dmgCloze: 140, light: 260}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 9}, 6: {nearExact: true, comboKeep: true, allStats: 78, xp: 33, mf: 120}}, lvl: 200},
 ];
 
 // ---------- gems ----------
@@ -1193,4 +1219,38 @@ export const ZONES = [
     blurb: "Estatuas antiguas que vigilan, y un llanto junto al río." },
   { id: "abismo", name: "El Abismo", lvl: [35, 99], monsters: Object.keys(MONSTERS), boss: "mandingas", packs: 8, endless: true,
     blurb: "Sin fondo. Cada descenso es más duro, y el botín, mejor." },
+];
+
+// ---------- the rainbow items: only from Doña Remedios' tunjo ----------
+// One sentence, one try, at most once a day and at a price (main.js). Each is one of a kind: a
+// collection of twelve, kept in the village (Colección). `look` is the base whose shape it wears,
+// redrawn in rainbow (scripts/tunjo_art.py, which also draws its icon); `family` the bases its damage
+// or defence come from, the best one for your level when it falls (a slot name: any base of that slot).
+// `props` are its own; on top it gets a mítico's worth of properties for its level.
+const SWORDS = ["espada", "estoque", "espadon", "mandoble", "sablehueso", "estoqueesmeralda", "espadacatatumbo", "sableluna", "mandoblesombra", "espadaastral"];
+export const TUNJO_ITEMS = [
+  { id: "filo", name: "Filo de Cuchavira", look: "espada", family: SWORDS, props: { dmgDictation: 60, comboKeep: 1, crit: 12 },
+    flavor: "Cuchavira tendió su arco sobre el agua y lo cortó con esto. Cada tajo deja siete colores en el aire." },
+  { id: "arco", name: "Arco de las Siete Aguas", look: "arcolargo", family: ["arco", "arcocurvo", "arcolargo", "arcoobsidiana", "arcoluna", "arcoastral"],
+    props: { dmgCloze: 60, comboStart: 5, dex: 30 }, flavor: "Sus flechas caen como la lluvia cuando hace sol." },
+  { id: "vara", name: "Vara de la Lluvia con Sol", look: "bastonruna", family: ["varita", "baston", "cetro", "varaanillada", "bastonruna", "varahueso", "cetroesmeralda", "baculotumbaga", "varasombra"],
+    props: { spellDmg: 60, slowFree: 1, manaRegen: 12 }, flavor: "Donde la apoyas, el páramo se pinta de colores un momento." },
+  { id: "rodela", name: "Rodela del Aguacero", look: "escudo", family: "off", props: { block: 15, thorns: 250, resAll: 15 },
+    flavor: "El agua que la golpea sale de colores." },
+  { id: "corona", name: "Corona del Arco Alto", look: "corona", family: "head", props: { xp: 25, typoTol: 1, allStats: 10 },
+    flavor: "Quien la lleva oye primero el trueno y después la luz." },
+  { id: "manto", name: "Manto de Cuchavira", look: "tunica", family: "body", props: { life: 450, nearExact: 1, armorPct: 120 },
+    flavor: "Tejido con el borde del arcoíris, por donde se deshilacha." },
+  { id: "manos", name: "Manos del Tejedor de Colores", look: "guantes", family: "hands", props: { hintCost: 60, typoTol: 1, leech: 8 },
+    flavor: "Separan una palabra de otra como quien separa hilos." },
+  { id: "pasos", name: "Pasos sobre el Arcoíris", look: "botas", family: "feet", props: { dodge: 15, potion: 50, gf: 80 },
+    flavor: "Para cruzar de un cerro a otro sin tocar el valle." },
+  { id: "faja", name: "Faja de los Siete Hilos", look: "faja", family: "belt", props: { beltSlots: 2, life: 250, lifeRegen: 25 },
+    flavor: "Un hilo por color, y ninguno se anuda con otro." },
+  { id: "oyente", name: "El Tunjo que Escucha", look: "amuleto", family: ["amuleto"], props: { dmgDictation: 30, dmgCloze: 30, xp: 15, comboStart: 3 },
+    flavor: "Una figurita de oro con la oreja pegada al pecho de quien la lleva." },
+  { id: "gota", name: "La Gota Partida", look: "anillo", family: ["anillo"], props: { mf: 70, gf: 70, allStats: 6 },
+    flavor: "Una gota de lluvia que se partió en colores y no se volvió a juntar." },
+  { id: "eco", name: "Anillo del Eco", look: "sortija", family: ["sortija"], props: { freeReplay: 2, replayCost: 40, manaLeech: 6 },
+    flavor: "Repite lo último que oíste, más bajito, hasta que lo entiendes." },
 ];

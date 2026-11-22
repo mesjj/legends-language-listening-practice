@@ -1047,11 +1047,30 @@ NECKLACES = {
     "firmamento": ("#1a2a74", "#e0b040", "#ffffff"),
     "madreagua": ("#0e6268", "#e8b030", "#8ae0d4"),
     "caiman": ("#2a4a1e", "#e8d040", "#9ab45a"), "andes": ("#8e2216", "#eef2f8", "#f2d12e"),
+    "arhuaco": ("#6a4a2e", "#f4f0e6", "#ffffff"),
+    "galeon": ("#1e4a52", "#d8a830", "#ffe07a"),
+    "frailejon": ("#56685a", "#d8c030", "#f8ea7a"),
+    "bochica": ("#7a5a32", "#2a8ad0", "#d0f4ff"),
+    "bufeo": ("#6a4e26", "#d07a98", "#f6c0d2"),
+    "llanero": ("#7a4a1a", "#f06a1a", "#ffb060"),
+    "madremonte": ("#1e5218", "#8ac85a", "#e0ffc0"),
+    "silbon": ("#1a1a26", "#b8ac90", "#ffffff"),
+    "tunda": ("#14504a", "#e06a3a", "#ffa880"),
+    "mahamudra": ("#1a5aa8", "#c4ccd6", "#ffffff"),
+    "candileja": ("#4a423a", "#e04a0e", "#fff0a0"),
+    "sombreron": ("#1e1a18", "#e01a1a", "#ff6a5a"),
+    "marimba": ("#7a4a16", "#2a7ac0", "#7ac0f0"),
+    "huitaca": ("#6a2a8e", "#e8d040", "#fff48a"),
+    "canocristales": ("#a01a24", "#3ac08a", "#f0e040"),
+    "dzogchen": ("#1e3a8e", "#f0b030", "#ffffff"),
 }
 # hung by tier (plain sets, then ancestral, legendary, mythic), each tier by level, as the Collares cards are
 NECK_ORDER = ["arriero", "cacique", "patasola", "centinela", "cienaga", "mohan", "yogui", "jaguar", "vajra", "averno", "trueno", "sol", "guardian",
               "tairona", "dorado", "relampago", "vigilia", "andes",
-              "laguna", "bachue", "nevado", "osario", "madreagua", "caiman", "condor", "vientos", "montana", "pacto", "origen", "kalachakra", "luzclara", "firmamento"]
+              "frailejon", "llanero", "silbon", "candileja", "marimba", "canocristales",
+              "laguna", "bachue", "nevado", "osario", "madreagua", "caiman", "bochica", "tunda", "huitaca",
+              "condor", "vientos", "montana", "arhuaco", "pacto", "galeon", "madremonte", "sombreron",
+              "origen", "kalachakra", "luzclara", "firmamento", "bufeo", "mahamudra", "dzogchen"]
 assert sorted(NECK_ORDER) == sorted(NECKLACES)
 NECKLACES = {k: NECKLACES[k] for k in NECK_ORDER}
 NECK_CELL = (16, 40)  # each necklace's own picture, hung from the top centre
@@ -1072,22 +1091,24 @@ def neck_y(i):
 
 
 def necklace(cord, pend, shine, drop):
+    """A set's magic undershirt on a wooden hanger (the cell kept the necklaces' size and name).
+    drop: how far down the hook it hangs, so the row isn't a straight line."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from set_art import shirt_pic
     im = Image.new("RGBA", NECK_CELL)
     d = ImageDraw.Draw(im)
     x = NECK_CELL[0] // 2
-    loop = [(x + math.sin(t * math.pi * 2) * 6 * math.sin(t * math.pi), 1 + math.sin(t * math.pi) * drop) for t in [k / 16 for k in range(17)]]
-    d.line(loop, fill=hexrgb(cord), width=1)
-    for k, (bx, by) in enumerate(loop[1:-1:2]):
-        d.point((bx, by), fill=hexrgb(shine if k % 2 else pend))
-    py = 1 + drop
-    d.polygon([(x, py - 1), (x + 4, py + 4), (x, py + 10), (x - 4, py + 4)], fill=hexrgb(pend), outline=hexrgb(cord))
-    d.point((x - 1, py + 3), fill=hexrgb(shine))
+    hy = drop - 8
+    d.line([(x, 0), (x, hy)], fill=hexrgb("#c8a060"))  # the hook
+    d.line([(x - 6, hy + 3), (x, hy), (x + 6, hy + 3)], fill=hexrgb("#8a5a2a"))  # the hanger's arms
+    im.alpha_composite(shirt_pic(cord, pend, shine), (0, hy + 1))
     return im
 
 
 def v_collares():
-    """The jeweller's back room: a velvet wall with a long rack of empty pegs, candles on a glass case,
-    a dark wooden floor. The necklaces are drawn apart (v-collares-necks.png): the game hangs the ones you have."""
+    """The tailor's back room: a velvet wall with two long rails of empty pegs, candles on a glass case,
+    a dark wooden floor. The sets' undershirts are drawn apart (v-camisetas-shirts.png): the game hangs the
+    ones you have. (They were necklaces once: the names inside still say neck.)"""
     im = Image.new("RGBA", (VW_, VH_))
     d = ImageDraw.Draw(im)
     gradient(im, 0, 84, "#2a0e14", "#4a1a22")
@@ -1121,13 +1142,13 @@ def v_collares():
         strip.alpha_composite(necklace(cord, pend, shine, 12 + (i % 3) * 3), (i * NECK_CELL[0], 0))
         x0, y0 = neck_x(i) - NECK_CELL[0] / 2, neck_y(i) + 2
         place[sid] = [round(x0 / VW_ * 100, 3), round(y0 / VH_ * 100, 3), i]
-    strip.save(os.path.join(OUT, "v-collares-necks.png"))
+    strip.save(os.path.join(OUT, "v-camisetas-shirts.png"))
     json.dump({"cell": NECK_CELL, "scene": [VW_, VH_], "n": len(NECKLACES), "at": place},
-              open(os.path.join(OUT, "v-collares-necks.json"), "w"), separators=(",", ":"))
+              open(os.path.join(OUT, "v-camisetas-shirts.json"), "w"), separators=(",", ":"))
     return im
 
 
-VILLAGE = {"v-collares": v_collares, "v-merchant": v_merchant, "v-gamble": v_gamble, "v-casetes": v_casetes, "v-sell": v_sell, "v-stash": v_stash, "v-alembic": v_alembic}
+VILLAGE = {"v-camisetas": v_collares, "v-merchant": v_merchant, "v-gamble": v_gamble, "v-casetes": v_casetes, "v-sell": v_sell, "v-stash": v_stash, "v-alembic": v_alembic}
 
 SCENES.update(VILLAGE)
 
@@ -1142,4 +1163,4 @@ if __name__ == "__main__":
         "Ground and scenery tiles (water, grass, grassalt, watergrass, dirt, dirt2, lava, lavarock, rock, trunk, treetop, castlewalls,\ncastlefloors_outside) and village props (barrel, buckets, cabinets, castle_lightsources, chests, country, kitchen, signs, victoria), tinted: LPC Base Assets by Lanea Zimmerman (Sharm),\n"
         "Liberated Pixel Cup. CC-BY-SA 3.0 / GPL 3.0 / OGA-BY 3.0.\n"
         "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles\n\n"
-        "Skies, mountains, mist, treelines, mangroves, reeds, frailejones, moriche palms, fire, smoke, vines, leaves,\nthe stone guardians and the stalactites; in the village the houses, walls, floors, stall, card table,\nthe bohío, the lagoon, the tunjos, the woven cloth, the sombrero, balance, coins, the copper still and the jeweller's room: original, drawn in code for Leyendas.\n")
+        "Skies, mountains, mist, treelines, mangroves, reeds, frailejones, moriche palms, fire, smoke, vines, leaves,\nthe stone guardians and the stalactites; in the village the houses, walls, floors, stall, card table,\nthe bohío, the lagoon, the tunjos, the woven cloth, the sombrero, balance, coins, the copper still, the tailor's room and the sets' undershirts: original, drawn in code for Leyendas.\n")

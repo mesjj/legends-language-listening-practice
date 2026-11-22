@@ -7,10 +7,14 @@
 #   4. forced-aligns the final text and flags lines that don't fit their audio
 #
 # usage: scripts/add-subtitled.sh <audio> <subs.srt> <id> "Episode title" "Show" ["Names for Whisper"]
+# An English episode (captions in English): WLANG=en scripts/add-subtitled.sh ...
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 AUDIO="$1"; SRT="$2"; ID="$3"; TITLE="$4"; SHOW="$5"; HINT="${6:-$SHOW}"
+WLANG="${WLANG:-es}"
+PROMPT=scripts/correction-prompt-subtitles.md
+[ "$WLANG" = es ] || PROMPT="scripts/correction-prompt-subtitles-$WLANG.md"
 DIR="media/$ID"
 mkdir -p "$DIR"
 
@@ -18,12 +22,12 @@ if [ ! -f "$DIR/audio.mp3" ]; then
   ffmpeg -loglevel error -y -i "$AUDIO" -ac 1 -b:a 96k -codec:a libmp3lame "$DIR/audio.mp3"
   ffmpeg -loglevel error -y -i "$AUDIO" -ar 16000 -ac 1 -c:a pcm_s16le "$DIR/audio16k.wav"
 fi
-cp "$SRT" "$DIR/subtitles.es.srt"
+cp "$SRT" "$DIR/subtitles.$WLANG.srt"
 DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$DIR/audio.mp3" | cut -d. -f1)
 
 # 1. subtitle words with real timings -> subtitles.json3 (the reference for step 3)
 if [ ! -f "$DIR/subtitles.json3" ]; then
-  python3 -I scripts/srt_to_transcript.py "$DIR/subtitles.es.srt" "$DIR" "$TITLE" --show "$SHOW"
+  python3 -I scripts/srt_to_transcript.py "$DIR/subtitles.$WLANG.srt" "$DIR" "$TITLE" --show "$SHOW"
   .venv/bin/python scripts/align.py "$DIR" 2>&1 | grep -v -i warning
   mv "$DIR/transcript.json" "$DIR/transcript.subs.json"
   python3 -I - "$DIR" <<'EOF'
@@ -37,7 +41,7 @@ fi
 
 # 2. whisper
 if [ ! -f "$DIR/whisper.json" ]; then
-  whisper-cli -m models/ggml-large-v3.bin -l es -f "$DIR/audio16k.wav" -ojf -of "$DIR/whisper" \
+  whisper-cli -m models/ggml-large-v3.bin -l "$WLANG" -f "$DIR/audio16k.wav" -ojf -of "$DIR/whisper" \
     --vad -vm models/ggml-silero-v5.1.2.bin -vt 0.1 -vp 400 -vsd 600 -vspd 100 -mc 64 -sns \
     --prompt "$HINT" > "$DIR/whisper.log" 2>&1
 fi
@@ -48,7 +52,7 @@ fi
 
 # 3. reconcile
 [ -d "$DIR/review" ] || python3 -I scripts/review_chunks.py prepare "$DIR" --chunks 8
-node scripts/correct.mjs "$DIR" --prompt scripts/correction-prompt-subtitles.md
+node scripts/correct.mjs "$DIR" --prompt "$PROMPT"
 python3 -I scripts/review_chunks.py apply "$DIR" "$DIR"/review/out*.json
 
 # 4. align, then flag lines whose text doesn't fit the audio (they're left out of the games)

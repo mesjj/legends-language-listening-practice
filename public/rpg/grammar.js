@@ -1,6 +1,5 @@
-// Grammar runes: forms of haber you have to catch by ear. Write one right in a line and its rune
-// drops straight into your bag. The haber form itself always drops it; another verb in the same
-// tense (tuviera for HUBIERA, podría for HABRÍA…) only sometimes.
+// Forms of haber and the tenses around them. Runes are gone from the game: this now only names the
+// tense of a word you missed ("pluscuamperfecto"), and its table converts an old save's haber runes.
 const lc = (w) => w.toLowerCase().normalize("NFC").replace(/[^\p{L}]/gu, "");
 
 // Irregular stems are listed out; regular verbs are rare enough in these tenses that a short list
@@ -54,19 +53,3 @@ export function runeOf(word) {
   return null;
 }
 export const isGrammarWord = (w) => !!runeOf(w);
-
-// Runewords made only of grammar runes. name: what the item is called.
-export const GRAMMAR_RUNEWORDS = [
-  { id: "HABIAUNAVEZ", name: "Había una vez", runes: ["HABÍA", "HUBO"], kinds: ["body"],
-    props: { armorPct: [90, 130], life: 50, resAll: 15, xp: 8 }, flavor: "Y el que lo cuenta ya sabe cómo termina." },
-  { id: "OJALA", name: "Ojalá", runes: ["HAYA", "HUBIERA"], kinds: ["head"],
-    props: { mana: 50, manaRegen: 3, hintCost: 25, replayCost: 20, mf: 30 }, flavor: "Que llueva, que haya, que hubiera." },
-  { id: "SILOHUBIERA", name: "Si lo hubiera sabido", runes: ["HUBIERA", "HABRÍA"], kinds: ["melee", "ranged"],
-    props: { dmgPct: [200, 260], crit: 10, dmgDictation: 30, dmgCloze: 30, leech: 6 }, flavor: "No habría venido. Pero vino, y trajo esto." },
-  { id: "YAHABRA", name: "Ya habrá tiempo", runes: ["HA", "HABRÁ"], kinds: ["off"],
-    props: { armorPct: [100, 140], block: 15, lifeRegen: 4, resAll: 15 }, flavor: "Lo que no ha llegado, llegará." },
-  { id: "QUIENLODIRIA", name: "Quién lo habría dicho", runes: ["HABRÍA", "HAYA", "HA"], kinds: ["ranged", "melee"],
-    props: { dmgPct: [220, 280], dmgCloze: 50, typoTol: 1, freeReplay: 1, mf: 40 }, flavor: "Nadie. Y sin embargo." },
-  { id: "CIENANOS", name: "Cien años", runes: ["HABÍA", "HUBO", "HUBIERA", "HABRÍA"], kinds: ["melee", "ranged"],
-    props: { dmgPct: [300, 380], crit: 12, dmgDictation: 50, comboKeep: true, comboStart: 3, allStats: 10 }, flavor: "Muchos años después, frente al pelotón de fusilamiento, había de recordar." },
-];

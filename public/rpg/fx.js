@@ -73,7 +73,7 @@ export function pulse(el, cls, ms = 600) {
   el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
   setTimeout(() => el.classList.remove(cls), ms);
 }
-// A column of light where something good fell (or over you, for a caught rune).
+// A column of light where something good fell.
 export function beam(stage, at, color = "#f0d25c", ms = 1600) {
   const d = put(stage, `<i class="fx-beam" style="--c:${color};--ms:${reduced() ? 1 : ms}ms"></i>`, at);
   gone(d, reduced() ? 900 : ms);

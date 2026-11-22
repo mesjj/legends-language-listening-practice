@@ -81,13 +81,15 @@ function playLine(rate = 1) {
   audio.play();
   $("#playLine").classList.add("playing");
 }
-(function watch() {
+// checked every frame, and on the audio's own progress events: frames stop in a background tab
+function checkStop() {
   if (stopAt != null && !audio.paused && audio.currentTime >= stopAt) {
     audio.pause();
     stopAt = null;
   }
-  requestAnimationFrame(watch);
-})();
+}
+(function watch() { checkStop(); requestAnimationFrame(watch); })();
+audio.addEventListener("timeupdate", checkStop);
 audio.addEventListener("pause", () => $("#playLine").classList.remove("playing"));
 
 // Penalties: first listen is free; each extra listen −10%, slow −15%, hint −30%.
@@ -133,7 +135,7 @@ function goTo(k, autoplay = true) {
       if (st.blanks.includes(i)) {
         const inp = document.createElement("input");
         inp.dataset.i = i;
-        inp.size = Math.max(3, w.w.length);
+        inp.size = Math.max(10, w.w.length); // the same width for every word up to 10 letters, so the gap gives nothing away
         inp.autocomplete = "off"; inp.spellcheck = false; inp.setAttribute("autocapitalize", "off");
         box.append(inp);
       } else box.append(w.w);

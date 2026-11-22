@@ -2,7 +2,7 @@
 import {
   RARITY, PROPS, BASES, BASE, BANDS, PREFIXES, SUFFIXES, RARE_A, RARE_B, UNIQUES, SETS, GEMS, GEM_GRADES,
   POTIONS, POTION_TIER_NAMES, CLASSES, MONSTERS, BOSSES, MONSTER_MODS, RANDOM_MODS, UNIQUE_MONSTER_NAMES, ZONES,
-  DIFFICULTY, EASY_ROSTER, LISTENING_MODS, MONSTER_RES, CRAFT, RUNES, RUNE, RUNEWORDS, UNIQUE_OWNERS, UNIQUE_TITLES, UNIQUE_FLAVORS, TOP_NAMES, TOP_FLAVORS, TIERS, SPELLS, PETS, MOUNTS, MOUNT_PROPS,
+  DIFFICULTY, EASY_ROSTER, LISTENING_MODS, MONSTER_RES, CRAFT, RUNE, UNIQUE_OWNERS, UNIQUE_TITLES, UNIQUE_FLAVORS, TOP_NAMES, TOP_FLAVORS, TIERS, SPELLS, PETS, MOUNTS, MOUNT_PROPS,
 } from "./data.js";
 export { DIFFICULTY };
 export const diffOf = (ch) => DIFFICULTY[ch.difficulty || "medio"];
@@ -77,7 +77,7 @@ export function makeItem(baseId, rarity, ilvl, extra = {}, { fullRare = false } 
   if (base.props) for (const [k, v] of Object.entries(base.props)) it.props[k] = v;
   if (rarity === "low") it.quality = -25;
   if (rarity === "normal" && chance(0.18)) it.quality = rnd(10, 25); // superior
-  // sockets: plain items often (runewords need them), magic ones sometimes, rares rarely
+  // sockets: plain items often, magic ones sometimes, rares rarely
   if (base.sockets) {
     if ((rarity === "normal" || rarity === "low") && chance(0.5)) it.sockets = rnd(1, base.sockets);
     else it.sockets = sockRoll(rarity, base);
@@ -173,37 +173,6 @@ export function makeTopItem(rarity, ilvl, slot = null) {
   it.lreq = Math.max(base.lvl, Math.round(ilvl * 0.85));
   return it;
 }
-export function makeRune(id) {
-  return { id: uid(), kind: "rune", rune: id, rarity: "rune" };
-}
-// Deeper monsters can drop later runes; the early ones stay the most common.
-export function randomRune(mlvl) {
-  const ok = RUNES.filter((r) => !r.grammar && r.lvl <= mlvl + 2);
-  const w = ok.flatMap((r, i) => Array(ok.length - i).fill(r));
-  return makeRune(pick(w).id);
-}
-// Any item + runes in the right order + exactly that many sockets = a runeword.
-export function runewordFor(it) {
-  if (it.kind || it.unid || it.runeword || it.rarity === "runeword" || !it.sockets || it.gems.length !== it.sockets || !it.gems.every((g) => g.rune)) return null;
-  const base = BASE[it.base];
-  const word = it.gems.map((g) => g.rune).join("|");
-  const kind = base.slot === "weapon" ? base.kind : base.slot;
-  return RUNEWORDS.find((w) => w.runes.join("|") === word && w.kinds.includes(kind)) || null;
-}
-export function applyRuneword(it) {
-  const w = runewordFor(it);
-  if (!w) return null;
-  // a plain item becomes the word (its own colour and name); any other keeps its rarity, name and
-  // properties, gains the word's on top, and needs the runes' level too
-  const plain = it.rarity === "normal" || it.rarity === "low";
-  if (!plain) it.lreq = Math.max(itemLevelReq(it), ...it.gems.map((g) => RUNE[g.rune]?.lvl || 1));
-  it.runeword = w.id;
-  if (plain) { it.rarity = "runeword"; it.name = w.name || w.id[0] + w.id.slice(1).toLowerCase(); }
-  it.rwProps = {}; // what the word itself gave, apart from the item's own properties (for the tooltip)
-  for (const [k, v] of Object.entries(w.props)) { const r = typeof v === "boolean" ? v : rollRange(v); it.rwProps[k] = r; it.props[k] = typeof r === "boolean" ? r : (it.props[k] || 0) + r; }
-  if (plain || !it.flavor) it.flavor = w.flavor;
-  return w;
-}
 // Alembic: magic item + gem + potion. The gem picks the family, its grade the strength.
 function makeCrafted(src, gem) {
   const base = BASE[src.base];
@@ -265,6 +234,14 @@ function rollRarityRaw(mf, bonus, good = 1, luck = 1) {
     if (g) return g;
   }
   return plainRoll(mf, bonus);
+}
+// The exact chance (in %) of each of the three top tiers per piece of gear, for showing: too rare to simulate.
+export function topOdds(mf, bonus = 1, D = null, good = 1) {
+  if (D?.noTop) return { mitico: 0, legendario: 0, ancestral: 0 };
+  const share = 1 - 0.36 / Math.min(2, Math.max(1, bonus) ** 0.35);
+  const eff = (cap) => (mf * cap) / (mf + cap), m = Math.max(0.5, bonus) ** 0.5 * Math.sqrt(good);
+  const pa = 0.006 * m * (1 + eff(150) / 100), pl = pa * 0.3, pm = pl * 0.3;
+  return { mitico: share * pm * 100, legendario: share * pl * 100, ancestral: share * pa * 100 };
 }
 function goodRoll(mf, bonus, good, luck) {
   const eff = (cap) => (mf * cap) / (mf + cap);
@@ -328,7 +305,6 @@ export function itemName(it) {
     const p = POTIONS[it.potion];
     return it.potion === "rejuv" ? p.name : `${p.name}${POTION_TIER_NAMES[it.tier] ? " " + POTION_TIER_NAMES[it.tier] : ""}`;
   }
-  if (it.kind === "rune") return `Runa ${it.rune}`;
   if (it.kind === "relic") return "Transformador del montón";
   const base = BASE[it.base];
   if (it.unid) return base.name; // its colour still says what it might be
@@ -341,7 +317,6 @@ export function itemName(it) {
 export function itemColor(it) {
   if (it.kind === "gem") return GEMS[it.gem].shades?.[it.grade] || GEMS[it.gem].color;
   if (it.kind === "potion") return POTIONS[it.potion].color;
-  if (it.kind === "rune") return RUNE[it.rune]?.grammar ? RARITY.grune.color : RARITY.rune.color;
   return RARITY[it.rarity].color;
 }
 export function itemIcon(it) {
@@ -350,7 +325,7 @@ export function itemIcon(it) {
   if (it.kind === "potion") return POTIONS[it.potion].icon;
   return BASE[it.base].icon;
 }
-// What one socketed gem or rune gives in an item of this slot.
+// What one socketed gem gives in an item of this slot (or a rune, in an old save being converted).
 export function socketEffect(s, slot) {
   if (s.rune) {
     const r = RUNE[s.rune];
@@ -399,10 +374,12 @@ export function itemValue(it) {
   if (it.kind === "gem") return [20, 80, 300][it.grade];
   if (it.kind === "potion") return 5;
   if (it.kind === "relic") return 0; // not for sale
-  if (it.kind === "rune") return RUNE[it.rune].grammar ? 250 + RUNE[it.rune].lvl * 20 : 30 + RUNE[it.rune].lvl * 12;
+  // (runes are gone: only to sell an old save's)
+  if (it.kind === "rune") return !RUNE[it.rune] ? 0 : RUNE[it.rune].grammar ? 250 + RUNE[it.rune].lvl * 20 : 30 + RUNE[it.rune].lvl * 12;
+  if (it.rarity === "tunjo") return 0; // the tunjo's rainbow items aren't for sale
   const mult = { low: 0.4, normal: 1, magic: 3, rare: 7, crafted: 8, set: 12, unique: 15, runeword: 14, ancestral: 25, legendario: 40, mitico: 70 }[it.rarity];
   // uniques and set pieces have a level of their own: they're worth that, not where they happened to drop
-  const lvl = it.rarity === "unique" || it.set || it.setNeck ? itemLevelReq(it) : it.ilvl;
+  const lvl = it.rarity === "unique" || it.set || it.setShirt ? itemLevelReq(it) : it.ilvl;
   return Math.round((10 + lvl * 6) * mult);
 }
 export function canEquip(ch, it) {
@@ -416,7 +393,7 @@ export function canEquip(ch, it) {
 export function itemLevelReq(it) {
   if (it.lreq) return it.lreq;
   if (it.rarity === "unique") return UNIQUES.find((u) => u.name === it.name)?.lvl ?? it.ilvl;
-  if (it.rarity === "runeword") return Math.max(BASE[it.base].lvl, ...it.gems.map((g) => RUNE[g.rune]?.lvl || 1));
+  if (it.rarity === "runeword") return BASE[it.base].lvl; // from an old save (runes are gone)
   if (it.set) return Math.max(BASE[it.base].lvl, SETS.find((s) => s.id === it.set)?.lvl ?? it.ilvl);
   const base = BASE[it.base];
   if (it.rarity === "rare" || it.rarity === "crafted") return Math.max(base.lvl, Math.min(it.ilvl, Math.round(it.ilvl * 0.8)));
@@ -451,7 +428,7 @@ export function newCharacter(name, cls) {
 export const xpToNext = (lvl) => Math.round(40 * Math.pow(lvl, 1.8));
 
 export function activeSlots(ch) {
-  return ["head", "neck", "body", `weapon${ch.swap}`, `off${ch.swap}`, "hands", "ring1", "ring2", "belt", "feet"];
+  return ["head", "neck", "shirt", "body", `weapon${ch.swap}`, `off${ch.swap}`, "hands", "ring1", "ring2", "belt", "feet"];
 }
 export function equippedItems(ch) {
   return activeSlots(ch).map((s) => ch.equip[s]).filter(Boolean);
@@ -468,10 +445,10 @@ export function charStats(ch) {
   const add = (props) => { for (const [k, v] of Object.entries(props)) P[k] = typeof v === "boolean" ? (P[k] || v) : (P[k] || 0) + v; };
   add(CLASSES[ch.cls].passive);
   for (const it of equippedItems(ch)) add(itemProps(it));
-  const neckSet = setNeckOf(ch);
-  if (neckSet) for (const b of Object.values(neckSet.bonus)) add(b);
+  const shirtSet = setShirtOf(ch);
+  if (shirtSet) for (const b of Object.values(shirtSet.bonus)) add(b);
   for (const [sid, n] of Object.entries(setCounts(ch))) {
-    if (sid === neckSet?.id) continue;
+    if (sid === shirtSet?.id) continue;
     const set = SETS.find((s) => s.id === sid);
     for (const [k, b] of Object.entries(set.bonus)) if (n >= +k) add(b);
   }
@@ -525,7 +502,8 @@ export function costs(ch, st, maldito = false) {
   return {
     replay: Math.max(1, Math.round(base * (1 - st.replayCost / 100))),
     slow: st.slowFree ? 0 : Math.max(1, Math.round(base * 1.5 * (1 - st.replayCost / 100))),
-    hint: Math.max(1, Math.round(base * 3 * (1 - st.hintCost / 100) * (maldito ? 2 : 1))),
+    // a hint is meant to hurt: 8 replays
+    hint: Math.max(1, Math.round(base * 8 * (1 - st.hintCost / 100) * (maldito ? 2 : 1))),
   };
 }
 
@@ -677,7 +655,7 @@ export const diceChance = (n) => (n < DICE_FROM ? 0 : Math.min(15, 1 + Math.floo
 export const prizeBonus = (n) => Math.min(4, Math.floor(n / 10));
 export const PRIZES = [ // [lowest total, kind, what it's called]
   [24, "mitico", "un objeto mítico"], [22, "legendario", "un objeto legendario"], [20, "ancestral", "un objeto ancestral"],
-  [16, "item", "un objeto raro o mejor"], [11, "gem", "una gema o una runa"], [1, "gold", "una bolsa de oro"],
+  [16, "item", "un objeto raro o mejor"], [11, "gem", "una gema"], [1, "gold", "una bolsa de oro"],
 ];
 export function streakRoll(n, lvl, st, D = DIFFICULTY.medio, easy = false) {
   const need = diceChance(n);
@@ -691,7 +669,7 @@ export function streakRoll(n, lvl, st, D = DIFFICULTY.medio, easy = false) {
   if (easy && ["mitico", "legendario", "ancestral"].includes(kind)) [kind, label] = ["item", "un objeto único"];
   Object.assign(out, { face, bonus, total, kind, label });
   if (kind === "gold") out.gold = Math.round(D.gold * (20 + lvl * 6) * (1 + n / 10) * (0.8 + Math.random() * 0.4) * (1 + (st.gf || 0) / 100));
-  else if (kind === "gem") out.item = chance(0.5) ? makeGem(pick(Object.keys(GEMS)), Math.min(2, gemGrade(lvl) + 1)) : randomRune(lvl + 2);
+  else if (kind === "gem") out.item = makeGem(pick(Object.keys(GEMS)), Math.min(2, gemGrade(lvl) + 1));
   else if (kind === "item") out.item = randomItem(lvl + 2, st.mf || 0, 5, null, D, 1, easy && label.includes("único") ? "unique" : chance(0.25) ? "unique" : chance(0.2) ? "set" : "rare");
   else out.item = randomItem(lvl + 2, st.mf || 0, 5, null, D, 1, kind);
   return out;
@@ -712,7 +690,6 @@ export function lootFor(m, ch, st, D = DIFFICULTY.medio, good = 1, luck = 1) {
   if (chance(GEM_CHANCE[m.tier])) {
     out.push(makeGem(pick(Object.keys(GEMS)), gemGrade(m.lvl)));
   }
-  if (chance({ normal: 0.025, minion: 0.015, champion: 0.1, unique: 0.25, boss: 0.7 }[m.tier] * Math.min(1.5, L * good))) out.push(randomRune(m.lvl));
   return { gold: chance(0.7) || m.tier !== "normal" ? gold : 0, items: out };
 }
 
@@ -721,10 +698,10 @@ export function nextZone(id) { const i = ZONES.findIndex((z) => z.id === id); re
 
 // ---------- alembic (crafting) ----------
 // 3 identical gems -> next grade. 3 perfect gems + a magic item -> a rare item of the same type.
-// A whole set, one of each piece and nothing else: it melts into the set's necklace (see makeSetNecklace).
+// A whole set, one of each piece and nothing else: it melts into the set's magic undershirt (see makeSetShirt).
 // Props that only shape the piece itself (its armour, its damage) don't carry over.
 const LOCAL_PROPS = new Set(["armorPct", "armor", "dmgPct", "dmgMin", "dmgMax", "block"]);
-export function makeSetNecklace(set, pieces) {
+export function makeSetShirt(set, pieces) {
   const sum = {};
   for (const it of pieces) for (const [k, v0] of Object.entries(it.props || {})) {
     // what the base itself does (a belt's pockets, an orb's mana) stays with the base
@@ -735,18 +712,18 @@ export function makeSetNecklace(set, pieces) {
   // half of what the pieces gave, rounded; never less than 1 of something they had
   const props = {};
   for (const [k, v] of Object.entries(sum)) props[k] = typeof v === "boolean" ? v : v > 0 ? Math.max(1, Math.round(v / 2)) : Math.round(v / 2);
-  return { id: uid(), base: "collar", rarity: set.tier || "set", ilvl: set.lvl, lreq: set.lvl, props, sockets: 0, gems: [], setNeck: set.id, name: `Collar de «${set.name}»` };
+  return { id: uid(), base: "camiseta", rarity: set.tier || "set", ilvl: set.lvl, lreq: set.lvl, props, sockets: 0, gems: [], setShirt: set.id, name: `Camiseta de «${set.name}»` };
 }
-// a worn set necklace: every bonus of its set, all tiers
-export const setNeckOf = (ch) => { const n = ch.equip?.neck; return n?.setNeck ? SETS.find((s) => s.id === n.setNeck) : null; };
+// a worn set undershirt (its own slot): every bonus of its set, all tiers
+export const setShirtOf = (ch) => { const n = ch.equip?.shirt; return n?.setShirt ? SETS.find((s) => s.id === n.setShirt) : null; };
 function setMelt(items) {
   const id = items[0]?.set, set = id && SETS.find((s) => s.id === id);
   if (!set || items.some((i) => i.kind || i.set !== id)) return null;
   const have = new Set(items.map((i) => i.name)).size;
   if (have !== items.length) return { result: null, text: "Hace falta una pieza de cada, sin repetir." };
   if (have < set.pieces.length) return { result: null, text: `A ${set.name} le faltan piezas: tienes ${have} de ${set.pieces.length}.` };
-  const neck = makeSetNecklace(set, items);
-  return { result: neck, necklace: neck, setId: set.id, set: set.name, text: `${set.name} se funde en un collar.` };
+  const neck = makeSetShirt(set, items);
+  return { result: neck, shirt: neck, setId: set.id, set: set.name, text: `${set.name} se funde en una camiseta encantada.` };
 }
 export function alembic(items) {
   // a whole set melts; a partial one only says what's missing if no other recipe takes the pieces
@@ -798,7 +775,7 @@ function alembicRecipe(items) {
   return null;
 }
 export const RECIPES = [
-  "Un conjunto completo (una pieza de cada, nada más) → el collar del conjunto: todas las bonificaciones del conjunto y la mitad de las propiedades de sus piezas (sin su defensa ni su daño; las gemas engastadas se pierden). Mientras lo llevas, se te ve con el conjunto entero. Va a tus collares, uno por conjunto",
+  "Un conjunto completo (una pieza de cada, nada más) → la camiseta encantada del conjunto: todas las bonificaciones del conjunto y la mitad de las propiedades de sus piezas (sin su defensa ni su daño; las gemas engastadas se pierden). Se lleva debajo de todo, en un sitio propio; mientras la llevas, se te ve con el conjunto entero (tú eliges qué piezas). Va a tus camisetas, una por conjunto",
   "3 gemas iguales → la gema del grado siguiente",
   "3 gemas perfectas + 1 objeto mágico → objeto raro del mismo tipo",
   "3 objetos raros → un objeto de nivel más alto que el mejor de los tres: único o de conjunto la mitad de las veces; si no, un raro con el máximo de propiedades",
@@ -810,6 +787,28 @@ export const RECIPES = [
 ];
 
 // A reward of a chosen rarity (casetes): "unique" may come out as a set piece.
+// One of Doña Remedios' rainbow items (data.js TUNJO_ITEMS), for this level: on the best base of its
+// family, its own properties, and a mítico's worth more, a little stronger.
+export function makeTunjoItem(def, ilvl) {
+  const fam = (typeof def.family === "string" ? BASES.filter((b) => b.slot === def.family && !b.root) : def.family.map((id) => BASE[id]))
+    .filter((b) => b && b.lvl <= Math.max(ilvl, 1)).sort((a, b) => b.lvl - a.lvl);
+  const base = fam[0] || BASE[[def.family].flat()[0]] || BASE[def.look];
+  const it = makeItem(base.id, "tunjo", ilvl);
+  Object.assign(it, { name: def.name, tunjo: def.id, look: def.look, flavor: def.flavor });
+  const T = TOP.mitico, taken = new Set(Object.keys(def.props)), L = ilvl + T.up + 6, add = (k, v) => (it.props[k] = (it.props[k] || 0) + v);
+  for (let i = 0; i < 7; i++) {
+    const a = rollAffix(chance(0.5) ? PREFIXES : SUFFIXES, base, L, taken) || rollAffix(PREFIXES, base, L, taken) || rollAffix(SUFFIXES, base, L, taken);
+    if (a) add(a.prop, Math.max(1, Math.round(a.value * 1.6)));
+  }
+  for (const [k, v] of Object.entries(def.props)) add(k, v);
+  if (base.dmg) add("dmgPct", rnd(190, 250));
+  if (base.def) add("armorPct", rnd(190, 250));
+  add("resAll", rnd(20, 30));
+  add("allStats", rnd(8, 14));
+  it.sockets = sockRoll("mitico", base);
+  it.lreq = Math.max(base.lvl, Math.round(ilvl * 0.85));
+  return it;
+}
 export function rewardItem(ilvl, rarity, slot = null) {
   if (rarity === "unique") return randomItem(ilvl, 99999, 99, slot);
   return makeItem(pickBase(ilvl, slot).id, rarity, ilvl);

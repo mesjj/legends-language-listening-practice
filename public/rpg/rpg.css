@@ -258,7 +258,7 @@ main { max-width: 960px; margin: 0 auto; padding: 22px 20px; }
 .doll {
   display: grid; gap: 8px; margin-bottom: 10px;
   grid-template-columns: 1fr 1.25fr 1fr;
-  grid-template-areas: "head pt neck" "w pt o" "w pt o" "hands pt body" "r1 pt r2" "belt pt feet";
+  grid-template-areas: "head pt neck" "w pt o" "w pt o" "hands pt body" "r1 pt r2" "belt pt feet" ". shirt .";
 }
 .doll-portrait {
   grid-area: pt; display: grid; place-items: center; border-radius: 6px; position: relative;
@@ -279,6 +279,21 @@ main { max-width: 960px; margin: 0 auto; padding: 22px 20px; }
 .doll-slot.w { grid-area: w; } .doll-slot.head { grid-area: head; } .doll-slot.o { grid-area: o; } .doll-slot.neck { grid-area: neck; }
 .doll-slot.body { grid-area: body; } .doll-slot.hands { grid-area: hands; } .doll-slot.r1 { grid-area: r1; } .doll-slot.r2 { grid-area: r2; }
 .doll-slot.belt { grid-area: belt; } .doll-slot.feet { grid-area: feet; }
+.doll-slot.shirt { grid-area: shirt; }
+/* the undershirt's picker: which of its set's pieces show over what's really worn */
+.shirtdlg { max-width: 520px; }
+.shirtdlg .shirtfig { width: 120px; margin: 0 auto 8px; }
+.shirtdlg .shirtfig svg { width: 100%; height: auto; }
+.shirtpicks { display: grid; gap: 6px; margin: 6px 0 12px; }
+.shirtpick { display: grid; grid-template-columns: 76px 1fr; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid var(--edge); border-radius: 6px; background: #14110d; }
+.shirtpick .shslot { text-align: right; }
+.shopts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.shopts .or { font-style: italic; color: var(--dim); font-size: 12px; padding: 0 2px; }
+.shopt { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 4px; min-height: 36px; border: 1px solid var(--edge); border-radius: 6px; background: transparent; opacity: .55; text-align: left; font-size: 13px; line-height: 1.2; max-width: 100%; }
+.shopt .ico { width: 28px; height: 28px; flex: none; }
+.shopt.on { opacity: 1; border-color: #d8b84a; background: rgba(216,184,74,.12); }
+.shopt[data-v="none"] { padding-left: 8px; }
+@media (max-width: 480px) { .shirtpick { grid-template-columns: 1fr; gap: 4px; } .shirtpick .shslot { text-align: left; } }
 .doll-slot .empty { color: #5c5040; font-size: 13px; }
 .doll-slot .item { width: 100%; height: 100%; min-height: 62px; border: none; }
 .doll-slot .item .ico { width: 44px; height: 44px; }
@@ -372,6 +387,7 @@ main { max-width: 960px; margin: 0 auto; padding: 22px 20px; }
 
 .exinfo.freeListen { color: #d9a441; }
 .verdict .accents { color: var(--rare, #e8d04a); font-weight: 700; margin-left: 8px; }
+.verdict .stale { color: #9a8f80; margin-left: 8px; font-size: .92em; }
 
 /* runes: a carved stone with its syllable */
 .rune-ico { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 40% 45% 42% 48%;
@@ -774,6 +790,8 @@ button.cast.rec { background: #3a1f2a; border-color: var(--miss); color: #ffd9d6
 .ltable .lact { white-space: nowrap; text-align: right; }
 .ltable .lact button { padding: 4px 10px; font-size: 14px; margin: 0 0 4px 4px; }
 .ltable .lact .sellbtn b { color: #e2b84a; font-weight: 500; font-variant-numeric: tabular-nums; }
+.ltable .lact .tossbtn { color: #c9a9a6; }
+.ltable .lact .tossbtn.sure { color: #fff; background: #8a2c28; border-color: #c0473f; }
 .ltable .bad { color: #e0605a; }
 .ltable .runes { color: var(--gold); letter-spacing: 0.04em; }
 .ltable .unid { color: #e0605a; }
@@ -1183,7 +1201,9 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .pickgroup legend { padding: 0 6px; font-weight: 600; }
 .pickopt { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; cursor: pointer; }
 .pickopt input { width: 18px; height: 18px; accent-color: #c9a24a; }
-.ground .drop.unwanted { opacity: .5; }
+/* skipped by the pick-up button: said in words, not only by fading (grey gastado items look faded anyway) */
+.ground .drop.unwanted { opacity: .55; border-style: dashed; border-color: #6a6258; }
+.ground .drop .skiptag { font-size: 12px; font-style: normal; font-weight: 400; color: #b8b2a6; border: 1px solid #5a5248; border-radius: 4px; padding: 0 5px; margin-left: 4px; white-space: nowrap; }
 .ground .drop.unwanted:hover, .ground .drop.unwanted:focus-visible { opacity: 1; }
 .pickgroup.rules { flex-direction: column; }
 .pickrule { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
@@ -1415,7 +1435,8 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .die-ico { display: inline-block; width: 11px; height: 11px; vertical-align: -1px; border-radius: 2.5px; background: #f2ead6;
   box-shadow: inset 0 0 0 1px #8a7a5a; background-image: radial-gradient(circle at 30% 30%, #2a2218 1.2px, transparent 1.6px), radial-gradient(circle at 70% 70%, #2a2218 1.2px, transparent 1.6px), radial-gradient(circle at 50% 50%, #2a2218 1.2px, transparent 1.6px); }
 .fighthead .combo .luck { color: #f0e2b0; }
-.dicebox { position: absolute; left: 12px; top: 12px; z-index: 5; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 8px;
+.dicestack { position: absolute; left: 12px; top: 12px; right: 12px; z-index: 5; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; pointer-events: none; }
+.dicebox { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 8px;
   background: rgba(10, 8, 6, .78); border: 1px solid rgba(240, 226, 176, .25); box-shadow: 0 4px 16px rgba(0,0,0,.5); pointer-events: none;
   animation: dice-in .25s ease-out; font-family: var(--serif); }
 .dicebox.out { animation: dice-out .45s ease-in forwards; }
@@ -1438,9 +1459,20 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .dicebox.prized { border-color: var(--pc); }
 .dicebox.jackpot { border-color: var(--pc); animation: jackpot .6s ease-in-out infinite alternate; }
 @keyframes jackpot { from { box-shadow: 0 0 10px color-mix(in srgb, var(--pc) 50%, transparent); } to { box-shadow: 0 0 30px var(--pc), 0 0 60px color-mix(in srgb, var(--pc) 40%, transparent); } }
-.stage.bossfight .dicebox { top: 96px; }
-@media (max-width: 700px) { .die { min-width: 28px; height: 28px; font-size: 14px; } .die.d20 { min-width: 34px; height: 34px; } .stage.bossfight .dicebox { top: 104px; } }
+.stage.bossfight .dicestack { top: 96px; }
+@media (max-width: 700px) { .die { min-width: 28px; height: 28px; font-size: 14px; } .die.d20 { min-width: 34px; height: 34px; } .stage.bossfight .dicestack { top: 104px; } }
 @media (prefers-reduced-motion: reduce) { .dicebox, .dicebox.out, .die.rolling, .die.landed, .dicebox.jackpot { animation: none; } }
+
+/* the ear streak's dice: the same dice in deep blue, the prize die in silver-blue */
+.die-ico.ear { background-color: #5a8fe0; box-shadow: inset 0 0 0 1px #1d3d78; }
+.dicebox.ear { border-color: rgba(120, 170, 255, .35); }
+.dicebox.ear.win { border-color: rgba(130, 190, 255, .8); box-shadow: 0 0 18px rgba(110, 170, 255, .4), 0 4px 16px rgba(0,0,0,.5); }
+.dicebox.ear .die { color: #f2f7ff; background: linear-gradient(145deg, #6fa2f0, #23488f); box-shadow: inset 0 -3px 0 rgba(0,0,0,.3), 0 2px 4px rgba(0,0,0,.5); }
+.dicebox.ear .die.d20 { color: #0e2346; background: linear-gradient(145deg, #eef6ff, #8fb8e8); }
+.dicebox.ear .dice-bonus, .dicebox.ear .dice-res .dice-total { color: #a9cdff; }
+.dice-kind { font-size: 11.5px; color: #a9cdff; margin-bottom: -2px; }
+.fighthead .combo .earstreak { margin-left: 10px; color: #a9cdff; cursor: help; white-space: nowrap; }
+.fighthead .combo .earstreak b { color: #e4efff; }
 
 /* the high bands' material, in an item's subtitle (data.js BANDS) */
 .tsub .band { color: #e8d9a8; border-bottom: 1px dotted rgba(232, 217, 168, .5); cursor: help; }
@@ -1471,3 +1503,37 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .zones > li.remolino .wchips { margin-top: 6px; }
 .restartep { margin: 14px 0 0; font-size: 14px; }
 .restartep button { margin-right: 8px; }
+
+
+/* ---- the tunjo's rainbow items ---- */
+:root { --r-tunjo: #ffb6f0; --rainbow: linear-gradient(90deg, #ff5b5b, #ffa23a, #ffe14d, #5fdc6a, #4fc3ff, #7a7dff, #d77bff, #ff5b5b); }
+.rainbow, .r-tunjo .tname, .tip .tname.r-tunjo { background: var(--rainbow); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+@media (prefers-reduced-motion: no-preference) { .rainbow { animation: rainbowSlide 6s linear infinite; } }
+@keyframes rainbowSlide { to { background-position: 200% 0; } }
+.item.r-tunjo { background: linear-gradient(135deg, rgba(255,91,91,.22), rgba(255,225,77,.18), rgba(95,220,106,.18), rgba(79,195,255,.2), rgba(215,123,255,.22)); color: #ffd6f6; box-shadow: inset 0 0 12px rgba(255,255,255,.15), 0 0 7px #ffb6f0; }
+.drop.r-tunjo { box-shadow: 0 0 18px #ffb6f0; }
+.toast.r-tunjo { border-color: #ffb6f0; font: 500 23px var(--serif); box-shadow: 0 0 24px rgba(255,182,240,.45); }
+.toast.r-tunjo, .toast.r-tunjo * { background: var(--rainbow); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.idreveal.tunjo { border-image: var(--rainbow) 1; }
+.tcoll { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+.tcard { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 10px 8px; border: 1px solid #4a3d2c; border-radius: 6px; background: rgba(0,0,0,.25); }
+.tcard .tpic { width: 72px; height: 72px; display: grid; place-items: center; }
+.tcard .tpic .ico { width: 64px; height: 64px; }
+.tcard.unknown .tpic .ico { filter: brightness(0) opacity(.55); }
+.tcard[data-tcoll] { border: 2px solid transparent; background: linear-gradient(#1b1611, #1b1611) padding-box, var(--rainbow) border-box; }
+.tshelf { position: absolute; left: 4%; right: 4%; bottom: 7%; display: flex; justify-content: space-between; align-items: flex-end; }
+.tshelf span { width: 7%; aspect-ratio: 1; display: grid; place-items: center; filter: drop-shadow(0 2px 2px rgba(0,0,0,.6)); }
+.tshelf span .ico { width: 100%; height: 100%; }
+.tshelf span.off .ico { filter: brightness(0) opacity(.45); }
+@media (prefers-reduced-motion: no-preference) { .tshelf span.on { animation: tFloat 3s ease-in-out infinite; animation-delay: calc(var(--i) * -0.25s); } }
+@keyframes tFloat { 50% { transform: translateY(-3px); } }
+.srow.none { opacity: .55; }
+.tprizes { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin: 8px 0 14px; }
+.tprize { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; padding: 8px 6px; border-radius: 6px; border: 1px solid var(--edge); background: rgba(0,0,0,.2); }
+.tprize .ico { width: 44px; height: 44px; }
+.tprize b { font-family: var(--serif); font-size: 14px; line-height: 1.2; }
+.tprize.can { border: 2px solid transparent; background: linear-gradient(#1b1611, #1b1611) padding-box, var(--rainbow) border-box; }
+.tprize.have { opacity: .45; }
+.unidrow { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 10px; }
+.unidrow .cell { width: 40px; height: 40px; display: grid; place-items: center; }
+.unidrow .cell .ico { width: 32px; height: 32px; }
