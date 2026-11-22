@@ -376,7 +376,7 @@ export function itemValue(it) {
   if (it.kind === "relic") return 0; // not for sale
   // (runes are gone: only to sell an old save's)
   if (it.kind === "rune") return !RUNE[it.rune] ? 0 : RUNE[it.rune].grammar ? 250 + RUNE[it.rune].lvl * 20 : 30 + RUNE[it.rune].lvl * 12;
-  if (it.rarity === "tunjo") return 0; // the tunjo's rainbow items aren't for sale
+  if (it.rarity === "tunjo") return 1; // the tunjo's rainbow items: worth everything, sold for nothing
   const mult = { low: 0.4, normal: 1, magic: 3, rare: 7, crafted: 8, set: 12, unique: 15, runeword: 14, ancestral: 25, legendario: 40, mitico: 70 }[it.rarity];
   // uniques and set pieces have a level of their own: they're worth that, not where they happened to drop
   const lvl = it.rarity === "unique" || it.set || it.setShirt ? itemLevelReq(it) : it.ilvl;
@@ -386,7 +386,7 @@ export function canEquip(ch, it) {
   if (it.kind) return false;
   const base = BASE[it.base];
   const st = charStats(ch);
-  const req = base.req || {};
+  const req = it.rarity === "tunjo" ? {} : base.req || {}; // the rainbow items ask nothing
   const lvlReq = itemLevelReq(it);
   return ch.level >= lvlReq && st.str >= (req.str || 0) && st.dex >= (req.dex || 0);
 }
@@ -789,7 +789,15 @@ export const RECIPES = [
 // A reward of a chosen rarity (casetes): "unique" may come out as a set piece.
 // One of Doña Remedios' rainbow items (data.js TUNJO_ITEMS), for this level: on the best base of its
 // family, its own properties, and a mítico's worth more, a little stronger.
-export function makeTunjoItem(def, ilvl) {
+// seed: the item's own, so made again at another level it keeps its character (main.js attuneTunjo).
+// No attribute requirements, and its level is always yours: it can always be worn.
+export function makeTunjoItem(def, ilvl, seed = Math.floor(Math.random() * 2 ** 31)) {
+  const real = Math.random;
+  let a = seed >>> 0;
+  Math.random = () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  try { return Object.assign(tunjoItem(def, ilvl), { seed }); } finally { Math.random = real; }
+}
+function tunjoItem(def, ilvl) {
   const fam = (typeof def.family === "string" ? BASES.filter((b) => b.slot === def.family && !b.root) : def.family.map((id) => BASE[id]))
     .filter((b) => b && b.lvl <= Math.max(ilvl, 1)).sort((a, b) => b.lvl - a.lvl);
   const base = fam[0] || BASE[[def.family].flat()[0]] || BASE[def.look];
@@ -806,8 +814,43 @@ export function makeTunjoItem(def, ilvl) {
   add("resAll", rnd(20, 30));
   add("allStats", rnd(8, 14));
   it.sockets = sockRoll("mitico", base);
-  it.lreq = Math.max(base.lvl, Math.round(ilvl * 0.85));
+  it.lreq = 1;
+  // and better than any rare or magic item of its slot could be, up to 4 levels above: by at least
+  // a tenth in damage or defence, attributes (all four, all-attributes counted four times) and
+  // resistances (likewise), whatever base and rolls that item got
+  const R = rivalBest(base.slot, ilvl + 4), P = it.props, need = 1.1;
+  const avg = () => { const d = itemDamage(it); return d ? (d[0] + d[1]) / 2 : 0; };
+  if (base.dmg) while (avg() < R.dmg * need) P.dmgPct = (P.dmgPct || 0) + 10;
+  if (it.def) while (itemDefense(it) < R.def * need) P.armorPct = (P.armorPct || 0) + 10;
+  const stat = ATTRS.reduce((t, k) => t + (P[k] || 0), 0) + 4 * (P.allStats || 0);
+  if (stat < R.stat * need) P.allStats = (P.allStats || 0) + Math.ceil((R.stat * need - stat) / 4);
+  const res = RESISTS.reduce((t, k) => t + (P[k] || 0), 0) + 4 * (P.resAll || 0);
+  if (res < R.res * need) P.resAll = (P.resAll || 0) + Math.ceil((R.res * need - res) / 4);
   return it;
+}
+const ATTRS = ["str", "dex", "vit", "ene"], RESISTS = ["resFire", "resCold", "resLight", "resPoison"];
+// The most a rare or magic item of this slot could have at this level, per measure, over every base.
+function affixMax(prop, base, L) {
+  let v = 0;
+  for (const list of [PREFIXES, SUFFIXES]) {
+    let m = 0;
+    for (const a of list) if (a.prop === prop && a.slots.includes(slotGroup(base))) for (const t of a.tiers) if (t[0] <= L) m = Math.max(m, t[2]);
+    v += m;
+  }
+  const own = base.props?.[prop];
+  return v + (typeof own === "number" ? own : 0);
+}
+function rivalBest(slot, L) {
+  const R = { dmg: 0, def: 0, stat: 0, res: 0 };
+  for (const b of BASES) {
+    if (b.slot !== slot || b.lvl > L) continue;
+    const top = (k) => affixMax(k, b, L);
+    if (b.dmg) { const m = 1 + top("dmgPct") / 100; R.dmg = Math.max(R.dmg, (b.dmg[0] * m + top("dmgMin") + b.dmg[1] * m + top("dmgMax")) / 2); }
+    if (b.def) R.def = Math.max(R.def, b.def[1] * (1 + top("armorPct") / 100) + top("armor"));
+    R.stat = Math.max(R.stat, ATTRS.reduce((t, k) => t + top(k), 0) + 4 * top("allStats"));
+    R.res = Math.max(R.res, RESISTS.reduce((t, k) => t + top(k), 0) + 4 * top("resAll"));
+  }
+  return R;
 }
 export function rewardItem(ilvl, rarity, slot = null) {
   if (rarity === "unique") return randomItem(ilvl, 99999, 99, slot);

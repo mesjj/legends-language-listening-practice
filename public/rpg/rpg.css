@@ -1534,6 +1534,3 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .tprize b { font-family: var(--serif); font-size: 14px; line-height: 1.2; }
 .tprize.can { border: 2px solid transparent; background: linear-gradient(#1b1611, #1b1611) padding-box, var(--rainbow) border-box; }
 .tprize.have { opacity: .45; }
-.unidrow { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 10px; }
-.unidrow .cell { width: 40px; height: 40px; display: grid; place-items: center; }
-.unidrow .cell .ico { width: 32px; height: 32px; }

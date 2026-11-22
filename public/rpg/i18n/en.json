@@ -2444,4 +2444,15 @@
 "Si aciertas, te toca uno de los {0} que aún no tienes, al azar. Los que ya tienes no vuelven a salir hasta que tengas los doce.":"If you get it right, you get one of the {0} you don't have yet, at random. The ones you already have won't come up again until you have all twelve.",
 "puede tocarte":"you could get it",
 "ya lo tienes":"you already have it",
-"El premio: uno de estos":"The prize: one of these"}
+"El premio: uno de estos":"The prize: one of these",
+"Crece contigo del nivel {0} al {1}: cada vez que subes se rehace a tu nivel, siempre mejor que cualquier objeto mágico o raro de ese nivel. Después del {2} se queda como está. No pide nada para llevarlo.":"Grows with you from level {0} to {1}: each time you level up it is remade at your level, always better than any magic or rare item of that level. After {2} it stays as it is. It asks nothing to wear.",
+"Ya lo tenías: este sale con otras propiedades y sus cincuenta niveles desde ahora, y es el que queda en la Colección.":"You already had it: this one comes with different properties and its fifty levels starting now, and it is the one kept in the Collection.",
+"Nuevo en tu Colección, para los {0}.":"New in your Collection, for the {0}.",
+"Todos los tuyos siguen creciendo: el tunjo te da uno de los doce otra vez, con otras propiedades y sus cincuenta niveles desde ahora.":"All of yours keep growing: the tunjo gives you one of the twelve again, with different properties and its fifty levels starting now.",
+"Solo te falta uno (o uno de los tuyos ya dejó de crecer): si aciertas, es ese.":"You are only missing one (or one of yours has stopped growing): if you get it right, that's the one.",
+"Si aciertas, te toca al azar uno de estos {0}: los que no tienes y los que ya dejaron de crecer.":"If you get it right, you get one of these {0} at random: the ones you don't have and the ones that have stopped growing.",
+"puede tocarte (el tuyo dejó de crecer en el {0})":"you could get it (yours stopped growing at {0})",
+"ya lo tienes ({0}–{1})":"you already have it ({0}–{1})",
+"Un objeto del arcoíris crece contigo durante cincuenta niveles desde el que tienes al ganarlo, y luego se queda como está: el que ganes ahora, {0}. {1}":"A rainbow item grows with you for fifty levels from the one you have when you win it, and then stays as it is: the one you win now, {0}. {1}",
+"niveles {0}–{1}":"levels {0}–{1}",
+"Los objetos del arcoíris solo los da el tunjo de Doña Remedios, uno por frase entendida. Se venden por 1 de oro. Si vendes, pierdes o tiras uno, aquí te lo devuelve. Tienes {0} de {1}.":"The rainbow items come only from Doña Remedios's tunjo, one for each line you understand. They sell for 1 gold. If you sell, lose or throw one away, she gives it back to you here. You have {0} of {1}."}
