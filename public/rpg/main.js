@@ -10,7 +10,7 @@ import { runeOf as runeOfEs } from "./grammar.js";
 import { SUBJ, SUBJ_CATS } from "./subjuntivo.js";
 import { startI18n, lang, setLang, LANGS } from "./i18n.js";
 import { sfx, isMuted, setMuted, setBusy, hush, quiet, wailOver } from "./sfx.js";
-import { loadBossArt, hasBossArt, bossSprite, specialMeter, bossIntro, bossShout } from "./boss.js";
+import { loadBossArt, hasBossArt, bossSprite, specialMeter, bossIntro, bossShout, bossLeap, bossFinisher, bigHit, bigHurt } from "./boss.js";
 import * as MUSIC from "./music.js";
 
 const audio = $("#audio");
@@ -2850,14 +2850,13 @@ function showDice(r) {
   // both streaks can roll on the same line: their boxes sit side by side, the ear's dice in blue
   const kind = r.kind2 || "racha";
   let show = document.querySelector(".diceshow");
-  if (!show) document.body.append((show = h(`<div class="diceshow" aria-live="polite"><div class="dice-rays"></div><div class="dicestack"></div></div>`)));
+  if (!show) document.body.append((show = h(`<div class="diceshow quiet" aria-live="polite"><div class="dice-rays"></div><div class="dicestack"></div></div>`)));
   const stack = show.querySelector(".dicestack");
   stack.querySelectorAll(`.dicebox[data-kind="${kind}"]`).forEach((n) => n.remove());
-  show.classList.remove("out", "won", "jackpot");
-  if (r.win) show.classList.add("won");
+  show.classList.remove("out");
   const done = (box) => { box.remove(); if (!stack.children.length) show.remove(); };
   const tens = (v) => String(Math.floor((v % 100) / 10)) + "0", ones = (v) => String(v % 10);
-  const box = h(`<div class="dicebox${r.win ? " win" : ""}${kind === "oido" ? " ear" : ""}" data-kind="${kind}"><i class="dice-bulbs" aria-hidden="true"></i>
+  const box = h(`<div class="dicebox${kind === "oido" ? " ear" : ""}" data-kind="${kind}"><i class="dice-bulbs" aria-hidden="true"></i>
       <div class="dice-kind">${kind === "oido" ? "Dados de oído" : "Dados de la racha"}</div>
       <div class="dice-row"><span class="die d10" data-v="${tens(r.roll)}">${tens(r.roll)}</span><span class="die d10" data-v="${ones(r.roll)}">${ones(r.roll)}</span></div>
       <div class="dice-need">gana con ${r.need === 1 ? "un 1" : `1 a ${r.need}`}</div>
@@ -2897,12 +2896,14 @@ function showDice(r) {
       res.innerHTML = `Sacas <b>${r.roll}</b>`;
       box.classList.add("lost");
       sfx.diceLose();
-      setTimeout(() => { box.classList.add("out"); if (stack.children.length === 1) show.classList.add("out"); }, 1100);
-      setTimeout(() => done(box), 1600);
+      setTimeout(() => { box.classList.add("out"); if (stack.children.length === 1) show.classList.add("out"); }, 700);
+      setTimeout(() => done(box), 1050);
       return;
     }
     res.innerHTML = `<b>¡${r.roll}!</b> Premio…`;
-    box.classList.add("landwin");
+    box.classList.add("win", "landwin");
+    show.classList.remove("quiet");
+    show.classList.add("won");
     if (!FX.reduced()) { const fl = h(`<i class="dice-flash"></i>`); show.append(fl); setTimeout(() => fl.remove(), 600); }
     rain("#f0d25c", 40);
     box.insertAdjacentHTML("afterbegin", `<div class="dice-banner">¡Premio!</div>`);
@@ -3920,7 +3921,12 @@ async function playRound(F, { hits, target, attackers, taken, incoming, hit, saf
     const el = foeEl(h.i);
     if (!el) continue;
     floatNum(h.i, h.text, `${h.cls}${combo >= 5 ? " hot" : ""}`, pop);
-    if (h.killed) { el.classList.add("dying"); setTimeout(() => (h.m?.tier === "boss" ? sfx.bossDeath() : sfx.kill()), 120); lootBeam(F, stage, h); }
+    if (h.killed && h.m?.tier === "boss") {
+      // the final blow: the boss brought up huge and cut in two, then it falls on the stage
+      sfx.finisher();
+      bossFinisher(stage, { color, bossColor: BOSSES[h.m.kind]?.color || "#e04030" }).then(() => { el.classList.add("dying"); sfx.bossDeath(); lootBeam(F, stage, h); });
+      if (FX.reduced()) { el.classList.add("dying"); sfx.bossDeath(); lootBeam(F, stage, h); }
+    } else if (h.killed) { el.classList.add("dying"); setTimeout(() => sfx.kill(), 120); lootBeam(F, stage, h); }
     else FX.pulse(el, "flinch", 360);
   }
   const tNow = foeEl(target);
@@ -3932,6 +3938,17 @@ async function playRound(F, { hits, target, attackers, taken, incoming, hit, saf
       else if (move === "thrust") FX.thrust(stage, p, color, big);
       FX.burst(stage, p, color, big);
       if (big) FX.shake(stage);
+    }
+  }
+  // a critical hit, or one that takes 40% of a monster's life or more: blown up over the whole screen
+  // (not the blow that kills a boss: that has its own finisher)
+  const tm = F.monsters[target], bossKill = hits.some((h) => h.killed && h.m?.tier === "boss");
+  if (hit.dmg && tm && !bossKill && (big || hit.dmg >= 0.4 * tm.maxHp)) {
+    const art = foeEl(target)?.querySelector(".foeart");
+    if (art) {
+      sfx.bigHit();
+      await bigHit(art, { color: color === "#f4ead2" ? "#ffe68a" : color, label: big ? "¡Crítico!" : "¡Golpe brutal!", num: hit.dmg });
+      if (!live()) return;
     }
   }
   // a boss at half its life: it changes before your eyes
@@ -3950,6 +3967,16 @@ async function playRound(F, { hits, target, attackers, taken, incoming, hit, saf
   await FX.wait(300);
   if (!live()) return;
   attackers.forEach((i, k) => setTimeout(() => FX.pulse(foeEl(i), "lunge", 360), FX.reduced() ? 0 : k * 90));
+  // the boss hitting you: it leaps out of the screen at you, huge (its signature blow bigger, with its name)
+  const bossHits = taken && attackers.some((i) => F.monsters[i]?.tier === "boss");
+  if (bev?.hit || bossHits) {
+    const d = BOSSES[F.monsters.find((m) => m.tier === "boss")?.kind];
+    if (d) {
+      sfx.bossLunge(!!bev?.hit);
+      await bossLeap(stage, { color: d.color, big: !!bev?.hit, name: bev?.hit ? d.special.name : "" });
+      if (!live()) return;
+    }
+  }
   if (blow) {
     const d = BOSSES[bev.kind], bu = stage.querySelector(".bossunit");
     FX.pulse(bu, "unleash", 700);
@@ -3962,6 +3989,8 @@ async function playRound(F, { hits, target, attackers, taken, incoming, hit, saf
   }
   await FX.wait(170);
   if (!live()) return;
+  // a heavy blow on you (a quarter of your life or more), unless the boss has just leapt at you for it
+  if (taken && !dying && !(bev?.hit || bossHits) && taken >= 0.25 * stats().maxLife) { sfx.bigHurt(); bigHurt({ num: taken }); }
   if (attackers.length || taken) hurtBanner(stage, fig?.el || me, taken, incoming, safe);
   if (taken) {
     sfx.hurt();

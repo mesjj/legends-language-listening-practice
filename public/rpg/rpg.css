@@ -1434,8 +1434,12 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 /* the roll takes over the screen: a dim backdrop with turning light rays, the box in the middle ringed by
    blinking bulbs, huge dice thrown in and tumbling; a win flashes a banner and bursts coins. Clicks and
    typing go through (pointer-events: none), so the fight carries on underneath. */
-.diceshow { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; pointer-events: none;
-  background: radial-gradient(ellipse at center, rgba(20, 12, 2, .55), rgba(0, 0, 0, .82)); animation: dshow-in .25s ease-out; }
+.diceshow { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; pointer-events: none; animation: dshow-in .25s ease-out; }
+.diceshow::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(20, 12, 2, .55), rgba(0, 0, 0, .82)); transition: opacity .35s; }
+/* every roll starts quiet: small dice near the top, nothing dimmed; only a win opens into the full show */
+.diceshow.quiet::before, .diceshow.quiet .dice-rays { opacity: 0; }
+.diceshow.quiet .dicestack { transform: translateY(calc(-50vh + 160px)) scale(.5); }
+.dice-rays { transition: opacity .4s; }
 .diceshow.out { animation: dshow-out .5s ease-in forwards; }
 @keyframes dshow-in { from { opacity: 0; } }
 @keyframes dshow-out { to { opacity: 0; } }
@@ -1448,12 +1452,13 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .diceshow.jackpot { animation: dshow-in .25s ease-out, flash .35s steps(2) 6; }
 @keyframes rays { to { transform: rotate(360deg); } }
 @keyframes flash { 50% { background-color: color-mix(in srgb, var(--pc) 22%, transparent); } }
-.dicestack { position: relative; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 28px; padding: 16px; }
+.dicestack { position: relative; transition: transform .55s cubic-bezier(.2, 1.4, .4, 1); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 28px; padding: 16px; }
 .dicebox { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 26px 34px 22px; border-radius: 22px;
   background: radial-gradient(ellipse at 50% 0%, #4a1a12, #1e0906 70%); border: 3px solid #f0d25c;
   box-shadow: 0 0 0 4px #5a1a0a, 0 0 40px rgba(240, 210, 92, .35), 0 20px 60px rgba(0,0,0,.7);
   animation: dice-in .45s cubic-bezier(.2, 1.5, .4, 1); font-family: var(--serif); text-align: center; }
 .dicebox.out, .dicebox.win.out, .dicebox.jackpot.out { animation: dice-out .45s ease-in forwards; }
+.dicebox.lost.out { animation: dice-out .3s ease-in forwards; }
 @keyframes dice-in { from { opacity: 0; transform: scale(.3) rotate(-8deg); } }
 @keyframes dice-out { from { transform: scale(var(--grow, 1)); } to { opacity: 0; transform: scale(.7) translateY(30px); } }
 /* the marquee: a ring of bulbs that chase each other round the box */
@@ -1483,14 +1488,13 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
   text-shadow: 0 3px 0 #7a3a00, 0 6px 0 #3a1800, 0 0 24px #ffb020; animation: banner .5s cubic-bezier(.2, 1.8, .4, 1), banner-glow .3s steps(2) infinite .5s; }
 @keyframes banner { from { transform: translateX(-50%) scale(3); opacity: 0; } }
 @keyframes banner-glow { 50% { color: #fff; } }
-.dicebox.win { animation: dice-in .45s cubic-bezier(.2, 1.5, .4, 1), win-grow .6s cubic-bezier(.2, 1.6, .4, 1) 1.05s both; box-shadow: 0 0 0 4px #5a1a0a, 0 0 70px rgba(240, 210, 92, .7), 0 20px 60px rgba(0,0,0,.7); }
+.dicebox.win { transform: scale(var(--grow)); transition: transform .6s cubic-bezier(.2, 1.6, .4, 1) .15s; box-shadow: 0 0 0 4px #5a1a0a, 0 0 70px rgba(240, 210, 92, .7), 0 20px 60px rgba(0,0,0,.7); }
 .dicebox.prized { border-color: var(--pc); }
 /* a win grows the box once the dice land: about a third bigger, and half again for a jackpot */
-@keyframes win-grow { from { transform: scale(1); } to { transform: scale(var(--grow, 1.3)); } }
 .dicebox.win { --grow: 1.3; }
 .dicebox.win.jackpot { --grow: 1.45; }
 @media (max-width: 700px) { .dicebox.win, .dicebox.win.jackpot { --grow: 1.08; } }
-.dicebox.jackpot { border-color: var(--pc); animation: dice-in .45s cubic-bezier(.2, 1.5, .4, 1), win-grow .6s cubic-bezier(.2, 1.6, .4, 1) 1.05s both, jackpot .4s ease-in-out infinite alternate; }
+.dicebox.jackpot { border-color: var(--pc); animation: jackpot .4s ease-in-out infinite alternate; }
 .dicebox.jackpot .dice-banner { color: var(--pc); text-shadow: 0 3px 0 #000, 0 0 30px var(--pc), 0 0 60px #fff; }
 @keyframes jackpot { from { box-shadow: 0 0 0 4px #5a1a0a, 0 0 20px color-mix(in srgb, var(--pc) 50%, transparent); } to { box-shadow: 0 0 0 4px #5a1a0a, 0 0 60px var(--pc), 0 0 120px color-mix(in srgb, var(--pc) 50%, transparent); } }
 /* a win: a white flash as the dice land, coins raining over the whole screen, rays cycling colours, dice glowing */
@@ -1505,7 +1509,7 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 @keyframes rain { to { transform: translate(var(--dx), 110vh) rotate(var(--r)); } }
 .dicebox.landwin .die { box-shadow: inset 0 -8px 0 rgba(0,0,0,.18), 0 0 0 3px #ffe68a, 0 0 30px #ffcf40, 0 10px 22px rgba(0,0,0,.6); animation: land .45s cubic-bezier(.3, 1.8, .5, 1), dglow .3s steps(2) infinite .45s; }
 @keyframes dglow { 50% { box-shadow: inset 0 -8px 0 rgba(0,0,0,.18), 0 0 0 3px #fff, 0 0 50px #fff2a0, 0 10px 22px rgba(0,0,0,.6); } }
-.diceshow.won { animation: dshow-in .25s ease-out, wshake .5s ease-out 1.05s; }
+.diceshow.won { animation: dshow-in .25s ease-out, wshake .5s ease-out .1s; }
 @keyframes wshake { 20% { transform: translate(-8px, 4px); } 40% { transform: translate(7px, -5px); } 60% { transform: translate(-5px, 3px); } 80% { transform: translate(3px, -2px); } }
 /* a group beaten (celebrate in main.js): the dice's show, with the title, the gold counting up and the drops */
 .wincard { min-width: min(440px, 88vw); max-width: 92vw; padding-top: 40px; }
@@ -1526,7 +1530,7 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 @keyframes win-pop { from { opacity: 0; transform: scale(2.2) translateY(-10px); } }
 @keyframes win-top { to { box-shadow: 0 0 34px var(--c), inset 0 0 18px var(--c); } }
 .win-more { font-size: 15px; color: #e8dcc0; }
-.wincel .dicebox.win { animation: dice-in .45s cubic-bezier(.2, 1.5, .4, 1); }
+.wincel .dicebox.win { animation: dice-in .45s cubic-bezier(.2, 1.5, .4, 1); transform: none; }
 .wincel.boss .dicebox.win { animation: dice-in .45s cubic-bezier(.2, 1.5, .4, 1), jackpot .4s ease-in-out infinite alternate; border-color: var(--pc); }
 .wincel.out { animation: dshow-out .5s ease-in forwards; }
 @media (max-width: 700px) { .wincard { padding: 34px 14px 16px; } }
@@ -1634,3 +1638,50 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .hasshirt { position: absolute; left: 2px; top: 2px; width: 17px; height: 17px; display: grid; place-items: center; background: rgba(8,24,10,.85); border: 1px solid #5fae5a; border-radius: 4px; pointer-events: none; }
 .cell .hasshirt .ico, .hasshirt svg { width: 13px; height: 13px; }
 .tset > .sethave.on { font-size: 12.5px; white-space: normal; margin-bottom: 2px; }
+
+/* ---------- the boss leaping at you, and the final blow (bossLeap / bossFinisher in boss.js) ---------- */
+.bossleap { position: fixed; inset: 0; z-index: 950; pointer-events: none; overflow: hidden; }
+.bossleap::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at center, color-mix(in srgb, var(--bc) 25%, transparent), rgba(10, 0, 0, .88)); }
+.bossleap.finish::before { background: radial-gradient(ellipse at center, rgba(30, 20, 10, .6), rgba(0, 0, 0, .94)); }
+.bl-boss { position: fixed; display: grid; place-items: center; transform-origin: center; will-change: transform; image-rendering: pixelated; }
+.bl-boss .bsprite { filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 10px var(--bc)); }
+.bl-boss > * { max-width: 100%; max-height: 100%; }
+.bl-name { position: absolute; left: 0; right: 0; bottom: 9vh; text-align: center; font: 900 clamp(34px, 9vw, 76px)/1 var(--serif); color: #fff;
+  text-shadow: 0 4px 0 #000, 0 0 30px var(--bc), 0 0 60px var(--bc); animation: bl-name .5s cubic-bezier(.2, 1.8, .4, 1) .3s both; }
+.bl-name.final { top: 7vh; bottom: auto; color: #ffe68a; text-shadow: 0 4px 0 #3a1800, 0 0 30px #ffb020, 0 0 70px var(--hc); animation-delay: .15s; }
+@keyframes bl-name { from { opacity: 0; transform: scale(3); } }
+.bl-flash { position: absolute; inset: 0; background: var(--bc); mix-blend-mode: screen; animation: bl-flash .45s ease-out forwards; }
+.bl-flash.white { background: #fff; mix-blend-mode: normal; }
+@keyframes bl-flash { from { opacity: .9; } to { opacity: 0; } }
+/* a crack of light out from the middle when it lands */
+.bl-crack { position: absolute; left: 50%; top: 50%; width: 140vmax; height: 140vmax; margin: -70vmax; opacity: .0;
+  background: repeating-conic-gradient(from 10deg, color-mix(in srgb, var(--bc) 80%, #fff) 0 2deg, transparent 2deg 22deg);
+  -webkit-mask: radial-gradient(circle, #000 8%, transparent 40%); mask: radial-gradient(circle, #000 8%, transparent 40%); animation: bl-crack .7s ease-out forwards; }
+@keyframes bl-crack { from { opacity: .9; transform: scale(.4) rotate(0); } to { opacity: 0; transform: scale(1.2) rotate(12deg); } }
+/* the final cuts: two blades of light sweeping across the screen */
+.bl-cut { position: absolute; left: 50%; top: 50%; width: 150vmax; height: 14px; margin: -7px 0 0 -75vmax; border-radius: 50%;
+  background: linear-gradient(90deg, transparent, var(--hc) 20%, #fff 50%, var(--hc) 80%, transparent); box-shadow: 0 0 30px var(--hc), 0 0 60px var(--hc);
+  transform-origin: center; animation: bl-cut .35s cubic-bezier(.2, .9, .3, 1) both; }
+.bl-cut.a { --rot: -24deg; }
+.bl-cut.b { --rot: 24deg; animation-delay: .14s; }
+@keyframes bl-cut { from { transform: rotate(var(--rot)) scaleX(0); opacity: 1; } 60% { transform: rotate(var(--rot)) scaleX(1); opacity: 1; } to { transform: rotate(var(--rot)) scaleX(1) scaleY(.2); opacity: .0; } }
+.bl-shard { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px; background: var(--bc); box-shadow: 0 0 10px var(--bc);
+  clip-path: polygon(50% 0, 100% 60%, 30% 100%); animation: bl-shard 1.2s cubic-bezier(.1, .7, .3, 1) both; }
+.bl-shard.hot { background: #fff; box-shadow: 0 0 14px var(--hc), 0 0 4px #fff; width: 22px; height: 22px; margin: -11px; }
+@keyframes bl-shard { from { transform: translate(0, 0) rotate(0) scale(1.4); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(.4); opacity: 0; } }
+/* a critical or huge hit of yours, and a heavy blow on you (bigHit / bigHurt in boss.js) */
+.bossleap.crit::before { background: radial-gradient(ellipse at center, color-mix(in srgb, var(--hc) 18%, rgba(20, 14, 6, .5)), rgba(0, 0, 0, .85)); }
+.bossleap.crit .bl-cut.a { --rot: -18deg; animation-delay: .22s; }
+.bossleap.crit .bl-flash.white { animation-delay: .28s; animation-duration: .3s; opacity: 0; animation-fill-mode: both; }
+.bl-name.crit { top: 8vh; bottom: auto; color: #fff; text-shadow: 0 4px 0 #000, 0 0 26px var(--hc), 0 0 60px var(--hc); animation-delay: .2s; }
+.bl-num { position: absolute; left: 0; right: 0; bottom: 8vh; text-align: center; font: 900 clamp(60px, 18vw, 150px)/1 var(--serif); color: #ffe68a;
+  text-shadow: 0 5px 0 #6a2a00, 0 10px 0 #2a1000, 0 0 40px #ffb020; animation: bl-num .55s cubic-bezier(.2, 1.9, .4, 1) .25s both; }
+@keyframes bl-num { from { opacity: 0; transform: scale(4) rotate(-6deg); } }
+.bossleap.hurt::before { background: radial-gradient(ellipse at center, rgba(120, 0, 0, .25), rgba(90, 0, 0, .85)); }
+.bl-num.hurt { top: 50%; bottom: auto; margin-top: -.5em; color: #ff4a3a; text-shadow: 0 5px 0 #3a0000, 0 0 40px #ff2010, 0 0 90px #ff2010; animation: bl-num .45s cubic-bezier(.2, 1.9, .4, 1) both, bl-throb .12s steps(2) 5 .45s; }
+@keyframes bl-throb { 50% { color: #fff; } }
+.bl-glass { position: absolute; left: 50%; top: 50%; width: var(--l); height: 3px; transform-origin: 0 50%; transform: rotate(var(--a));
+  background: linear-gradient(90deg, #fff, rgba(255, 220, 220, .7) 40%, transparent); box-shadow: 0 0 8px rgba(255, 80, 60, .8);
+  clip-path: polygon(0 0, 100% 40%, 100% 60%, 0 100%); animation: bl-glass .18s ease-out both; }
+@keyframes bl-glass { from { width: 0; } }
+@media (prefers-reduced-motion: reduce) { .bossleap { display: none; } }

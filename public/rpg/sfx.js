@@ -187,6 +187,19 @@ export const sfx = {
     noise(2.3, 0.8, 0.3, 5000, 0.5);
     for (let i = 0; i < 24; i++) { const t = 2.3 + i * 0.05 + Math.random() * 0.03; tone("square", 2400 + Math.random() * 1600, t, 0.04, 0.045); }
   },
+  // a boss leaping at you: a rush of air and a heavy impact; its signature blow is heavier
+  bossLunge(big = false) { noise(0, 0.28, 0.35, 700, 0.7); rumble(0.25, big ? 0.9 : 0.5, big ? 0.9 : 0.6, 160, 35); noise(0.27, 0.12, 0.6, 1800, 1); },
+  // the final blow on a boss: two cuts, a ringing impact, a shatter
+  finisher() {
+    [0.62, 0.76].forEach((t) => { noise(t, 0.18, 0.55, 4200, 0.8); tone("sawtooth", [1600, 300], t, 0.18, 0.08); });
+    rumble(0.9, 1.4, 1, 220, 30); tone("sine", 1318, 0.9, 1.2, 0.12); tone("sine", 1975, 0.9, 1, 0.08);
+    for (let i = 0; i < 18; i++) { const t = 1.35 + i * 0.035 + Math.random() * 0.03; tone("square", 2800 + Math.random() * 2400, t, 0.05, 0.05); }
+    noise(1.35, 0.6, 0.4, 3000, 0.4);
+  },
+  // a critical or huge hit: a sharp cut, a heavy impact and a ring
+  bigHit() { noise(0.18, 0.16, 0.6, 4200, 0.8); tone("sawtooth", [1800, 300], 0.18, 0.16, 0.08); rumble(0.25, 0.7, 0.9, 200, 35); tone("sine", 1568, 0.25, 0.7, 0.1); },
+  // a heavy blow on you: glass cracking over a deep thud
+  bigHurt() { rumble(0, 0.8, 1, 140, 30); noise(0, 0.08, 0.7, 900, 1); for (let i = 0; i < 9; i++) noise(0.02 + i * 0.02, 0.05, 0.35, 5000 + Math.random() * 3000, 2); },
   levelup() { [0, 4, 7, 12].forEach((s, i) => tone("square", 392 * Math.pow(2, s / 12), i * 0.1, 0.3, 0.12)); },
   // bosses: their entrance, the note the Silbón has reached (fainter as it climbs), their big blow
   bossIntro(kind) { BOSS_SOUND[kind]?.(); },
@@ -214,12 +227,8 @@ export const sfx = {
     noise(0.72, 0.5, 0.25, 6000, 0.6);  // a cymbal
     for (let i = 0; i < 22; i++) { const t = 0.3 + i * 0.05 + Math.random() * 0.03; tone("square", 2400 + Math.random() * 1600, t, 0.04, 0.05); tone("sine", 3200 + Math.random() * 1500, t + 0.01, 0.06, 0.04); }
   },
-  // a miss: the sad trombone, wah wah wah waaah
-  diceLose() {
-    const notes = [[392, 370], [370, 349], [349, 330]];
-    notes.forEach(([a, b], i) => voice("sawtooth", a, b, i * 0.3, 0.27, 0.16, { band: 900, q: 2, attack: 0.03 }));
-    voice("sawtooth", 330, 294, 0.9, 0.9, 0.16, { band: 800, q: 2, vib: 9, vibHz: 6, attack: 0.03 });
-  },
+  // a miss: a soft little bonk, nothing more
+  diceLose() { tone("sine", [330, 220], 0, 0.16, 0.12); tone("triangle", [247, 165], 0.09, 0.2, 0.08); },
   coin() { tone("square", 1318, 0, 0.06, 0.12); tone("square", 1760, 0.05, 0.12, 0.12); },
 };
 
