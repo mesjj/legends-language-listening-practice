@@ -2812,9 +2812,13 @@ function coinRain(layer, color, n, delay = 0.8) {
 // A group (or a boss) beaten: a celebration over the whole screen, like the dice's, with what dropped.
 // It lets clicks and keys through, so the loot buttons underneath work at once; it fades by itself,
 // and goes as soon as you move on.
-function endCelebration() { document.querySelector(".wincel")?.remove(); }
-function celebrateWin({ boss, title, sub, gold, items }) {
+function endCelebration() { clearTimeout(celebrateWin.wait); document.querySelector(".wincel")?.remove(); }
+function celebrateWin(opts) {
   endCelebration();
+  // one show at a time: wait for the dice (or a boss's finisher) still playing; moving on cancels it
+  const busy = document.querySelector(".diceshow:not(.wincel), .bossleap") || (pendingDice.size && document.body);
+  if (busy) { busy.classList.add("hurry"); return void (celebrateWin.wait = setTimeout(() => celebrateWin(opts), 250)); }
+  const { boss, title, sub, gold, items } = opts;
   const top = items.filter((it) => BEAM_RANK[it.rarity]);
   const best = top.length ? E.itemColor(top.sort((a, b) => BEAM_RANK[b.rarity] - BEAM_RANK[a.rarity])[0]) : "#f0d25c";
   const shown = items.slice(0, 8);
@@ -2843,13 +2847,17 @@ function celebrateWin({ boss, title, sub, gold, items }) {
 }
 const dieIco = (kind = "racha") => `<i class="die-ico${kind === "oido" ? " ear" : ""}" aria-hidden="true"></i>`;
 // Two percentile dice tumble and land; on a win, the gold prize die (a d20) rolls too, and the prize shows.
+const pendingDice = new Set(); // rolls waiting for another show to end (they go before a victory celebration)
 function showDice(r) {
   const stage = $(".stage");
   if (!stage) return;
+  // one show at a time: the dice wait for a boss's finisher or a victory celebration to end
+  if (document.querySelector(".bossleap, .wincel")) { pendingDice.add(r); return void setTimeout(() => showDice(r), 250); }
+  pendingDice.delete(r);
   // the dice take over the screen (a layer over everything that lets clicks and typing through);
   // both streaks can roll on the same line: their boxes sit side by side, the ear's dice in blue
   const kind = r.kind2 || "racha";
-  let show = document.querySelector(".diceshow");
+  let show = document.querySelector(".diceshow:not(.wincel)");
   if (!show) document.body.append((show = h(`<div class="diceshow quiet" aria-live="polite"><div class="dice-rays"></div><div class="dicestack"></div></div>`)));
   const stack = show.querySelector(".dicestack");
   stack.querySelectorAll(`.dicebox[data-kind="${kind}"]`).forEach((n) => n.remove());
@@ -2933,8 +2941,16 @@ function showDice(r) {
     if (me && (top || r.kind === "item")) FX.beam(stage, FX.pointOn(me, stage, 0.5, 0.9), color, top ? 2600 : 1600);
     if (top) FX.shake(stage);
     renderHud(); renderPanels();
-    setTimeout(() => { box.classList.add("out"); if (stack.children.length === 1) show.classList.add("out"); }, top ? 4200 : 3000);
-    setTimeout(() => done(box), top ? 4700 : 3500);
+    // the prize stays a while; less if a victory is waiting to be celebrated (it marks the show "hurry")
+    const t0 = Date.now(), hold = top ? 4200 : 3000;
+    const wait = () => {
+      if (!box.isConnected) return;
+      const t = Date.now() - t0;
+      if (t < hold && !(show.classList.contains("hurry") && t > 1500)) return void setTimeout(wait, 100);
+      box.classList.add("out"); if (stack.children.length === 1) show.classList.add("out");
+      setTimeout(() => done(box), 500);
+    };
+    setTimeout(wait, 100);
   });
 }
 function renderCombo() {
