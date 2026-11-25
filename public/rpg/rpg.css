@@ -299,7 +299,7 @@ main { max-width: 960px; margin: 0 auto; padding: 22px 20px; }
 .doll-slot .item .ico { width: 44px; height: 44px; }
 .swaprow { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; font-size: 14px; }
 .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; }
-.grid.stash { grid-template-columns: repeat(10, 1fr); max-width: 560px; }
+.grid.stash { grid-template-columns: repeat(var(--scols, 10), 1fr); } /* as wide as the village picture above it */
 .cell { position: relative; aspect-ratio: 1; background: #14110d; border: 1px solid #2c251c; border-radius: 3px; display: grid; place-items: center; padding: 0; }
 .cell .ico { width: 70%; height: 70%; }
 .item { position: relative; background: #14110d; }
@@ -1521,3 +1521,34 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .tprize.have { opacity: .45; }
 .tprize .small { margin-top: 4px; }
 .tprize.have:has([data-tback]) { opacity: .8; }
+.idall { display: block; width: 100%; margin: 6px 0 8px; }
+.cls .clspow { display: block; margin-top: 6px; font-size: 13px; }
+.spells .spell.power { margin-right: 6px; }
+/* the class ability next to Pista: only on phones, where the HUD hides while you type */
+.powbtn { display: none; }
+.powbtn .ico { width: 16px; height: 16px; vertical-align: -3px; }
+.powbtn.on { border-color: var(--sc); box-shadow: 0 0 0 1px var(--sc) inset; }
+@media (max-width: 760px) { .powbtn { display: inline-flex; align-items: center; gap: 4px; } }
+/* the keyboard shortcuts card (Mercader tab) */
+.keyscard { margin-top: 22px; padding: 14px 16px; border: 1px solid var(--edge); border-radius: 8px; background: #17130e; }
+.keyscard h3 { margin: 0 0 2px; }
+.keysgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 6px 28px; margin-top: 8px; }
+.keysgroup h4 { margin: 8px 0 4px; color: #d8c49a; font-weight: 600; }
+.keysgroup dl { display: grid; grid-template-columns: max-content 1fr; gap: 5px 12px; margin: 0; align-items: baseline; }
+.keysgroup dt { white-space: nowrap; text-align: right; }
+.keysgroup dd { margin: 0; font-size: 14px; color: #cbbd9f; }
+.keyscard kbd { display: inline-block; min-width: 1.6em; padding: 1px 6px; border: 1px solid #4a3f30; border-bottom-width: 2px; border-radius: 4px; background: #231c14; font: 12px/1.4 inherit; text-align: center; color: #eadbb8; }
+/* runes: their sets in tooltips and in the Alambique's guide */
+.trunaset { margin: 4px 0; padding: 4px 6px; border-left: 2px solid #6d5a9a; font-size: 13px; }
+.trunaset.on { border-color: #a98bff; background: rgba(169,139,255,.08); }
+.runaguide { margin-top: 18px; }
+.runaguide .runarow { margin: 4px 0; font-size: 14px; }
+.runasets { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; margin-top: 10px; }
+.runasets .trunaset { margin: 0; padding: 8px 10px; border: 1px solid var(--edge); border-left-width: 3px; border-radius: 6px; background: #17130e; }
+
+/* a set piece you have: worn, in the bag or in the stash */
+.sethave { font-size: 11.5px; color: #8fd18a; opacity: 1; white-space: nowrap; }
+.tset .dim .sethave { color: #a7c9a2; }
+.hasshirt { position: absolute; left: 2px; top: 2px; width: 17px; height: 17px; display: grid; place-items: center; background: rgba(8,24,10,.85); border: 1px solid #5fae5a; border-radius: 4px; pointer-events: none; }
+.cell .hasshirt .ico, .hasshirt svg { width: 13px; height: 13px; }
+.tset > .sethave.on { font-size: 12.5px; white-space: normal; margin-bottom: 2px; }

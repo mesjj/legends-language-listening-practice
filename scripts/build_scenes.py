@@ -1019,14 +1019,25 @@ NECKLACES = {
     "huitaca": ("#6a2a8e", "#e8d040", "#fff48a"),
     "canocristales": ("#a01a24", "#3ac08a", "#f0e040"),
     "dzogchen": ("#1e3a8e", "#f0b030", "#ffffff"),
+    "pastor": ("#b8a48a", "#5aa040", "#fffaf0"),
+    "barquero": ("#3a7ab0", "#c8a850", "#e8f6ff"),
+    "rey": ("#5a1e8a", "#e8b030", "#ffe07a"),
+    "shakya": ("#e8961a", "#a02a3a", "#fff2d0"),
+    "tsokye": ("#0e3e8a", "#e0609a", "#ffb0d4"),
+    "loden": ("#d0d6de", "#4a96c8", "#ffffff"),
+    "pemagyalpo": ("#d83a3a", "#e8b030", "#ffe4dc"),
+    "pandita": ("#b8402a", "#d8b030", "#f8e070"),
+    "nyima": ("#e0c020", "#e06a10", "#fffce0"),
+    "sengedradrok": ("#1a3a90", "#f06a10", "#fff0a0"),
+    "drollo": ("#8e2a14", "#e8801a", "#ffc060"),
 }
 # hung by tier (plain sets, then ancestral, legendary, mythic), each tier by level, as the Collares cards are
 NECK_ORDER = ["arriero", "cacique", "patasola", "centinela", "cienaga", "mohan", "yogui", "jaguar", "vajra", "averno", "trueno", "sol", "guardian",
-              "tairona", "dorado", "relampago", "vigilia", "andes",
+              "tairona", "dorado", "pastor", "relampago", "vigilia", "shakya", "andes", "loden",
               "frailejon", "llanero", "silbon", "candileja", "marimba", "canocristales",
-              "laguna", "bachue", "nevado", "osario", "madreagua", "caiman", "bochica", "tunda", "huitaca",
-              "condor", "vientos", "montana", "arhuaco", "pacto", "galeon", "madremonte", "sombreron",
-              "origen", "kalachakra", "luzclara", "firmamento", "bufeo", "mahamudra", "dzogchen"]
+              "laguna", "bachue", "nevado", "osario", "madreagua", "barquero", "caiman", "tsokye", "bochica", "pandita", "tunda", "huitaca",
+              "condor", "vientos", "montana", "arhuaco", "rey", "pacto", "galeon", "pemagyalpo", "madremonte", "nyima", "sombreron",
+              "origen", "kalachakra", "luzclara", "firmamento", "bufeo", "mahamudra", "sengedradrok", "drollo", "dzogchen"]
 assert sorted(NECK_ORDER) == sorted(NECKLACES)
 NECKLACES = {k: NECKLACES[k] for k in NECK_ORDER}
 NECK_CELL = (16, 40)  # each necklace's own picture, hung from the top centre

@@ -106,5 +106,10 @@ small-fire: lorc
 snowflake-2: lorc
 lightning-helix: lorc
 poison-bottle: lorc
+arrow-cluster: lorc
+shouting: lorc
+healing: delapouite
+magic-swirl: lorc
+rune-stone: lorc
 tunjo.svg: drawn for this app.
 cassette.svg: drawn for this app.

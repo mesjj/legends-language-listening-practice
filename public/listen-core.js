@@ -189,7 +189,7 @@ export function scoreDictation(allWords, typedText, opts = {}) {
 function scoreWords(words, typedText, { extraTol = 0, nearIsExact = false } = {}) {
   const typedRaw = typedText.trim().split(/\s+/).filter(Boolean);
   const ops = alignWords(words.map((w) => norm(w.w)), typedRaw.map(norm), extraTol);
-  let got = 0, exact = 0, near = 0, html = "", accents = true, accentMiss = 0;
+  let got = 0, strict = 0, exact = 0, near = 0, html = "", accents = true, accentMiss = 0;
   // Extra words before the first or after the last word of the line are fine: the clip often
   // catches a fragment of the line before or after. Only extras in the middle count as wrong.
   const firstHit = ops.findIndex((o) => !o.extra), lastHit = ops.length - 1 - [...ops].reverse().findIndex((o) => !o.extra);
@@ -217,14 +217,17 @@ function scoreWords(words, typedText, { extraTol = 0, nearIsExact = false } = {}
     perWord.push({ i: op.t, w, typed: typedW, ok: op.s === 2 && !badAccent, near: op.s === 1, accent: badAccent });
     if (op.s !== 2 || badAccent) accents = false;
     if (badAccent) accentMiss++;
-    const s = op.s === 1 && nearIsExact ? 2 : op.s;
+    const s = op.s;
     if (s === 2) exact++; else if (s === 1) near++;
     got += s === 2 ? 1 : s === 1 ? 0.5 : 0;
+    strict += op.s === 2 ? 1 : op.s === 1 ? 0.5 : 0;
     const title = op.s === 1 ? ` title="You typed: ${esc(typedRaw[op.y])}"` : badAccent ? ` title="Accent: you typed ${esc(typedRaw[op.y])}"` : "";
     html += `<span class="${s === 2 ? "ok" : s === 1 ? "close" : "miss"}${badAccent ? " accent" : ""}"${title}>${esc(w)}</span> `;
   }
   // accentsPerfect: every word right, spelled exactly, accents and ñ included
-  return { acc: Math.max(0, got / words.length - ACCENT_PENALTY * accentMiss), html, exact, near, accentMiss,
+  // nearIsExact (an item's help in a fight): a missing accent costs nothing. strictAcc is what you
+  // really wrote, accents counted, for mastery
+  return { acc: Math.max(0, got / words.length - (nearIsExact ? 0 : ACCENT_PENALTY * accentMiss)), strictAcc: Math.max(0, strict / words.length - ACCENT_PENALTY * accentMiss), html, exact, near, accentMiss,
     missed: words.length - exact - near, typed: typedRaw.join(" "), words: perWord,
     // only counts when there was an accent (or ñ) to get right
     accentsPerfect: accents && got === words.length && words.some((w) => hasAccent(w.w)) };
@@ -232,7 +235,7 @@ function scoreWords(words, typedText, { extraTol = 0, nearIsExact = false } = {}
 
 // Score "fill the gaps" inputs ({wordIndex: typed}). Same return shape.
 export function scoreCloze(words, blanks, typed, { extraTol = 0, nearIsExact = false } = {}) {
-  let got = 0, exact = 0, near = 0, html = "", accents = true, accentMiss = 0;
+  let got = 0, strict = 0, exact = 0, near = 0, html = "", accents = true, accentMiss = 0;
   const perWord = [];
   words.forEach((w, i) => {
     if (!blanks.includes(i)) { html += esc(w.w) + " "; return; }
@@ -241,13 +244,13 @@ export function scoreCloze(words, blanks, typed, { extraTol = 0, nearIsExact = f
     perWord.push({ i, w: w.w, typed: typed[i] || null, ok: s === 2 && !badAccent, near: s === 1, accent: badAccent });
     if (s !== 2 || badAccent) accents = false;
     if (badAccent) accentMiss++;
-    if (s === 1 && nearIsExact) s = 2;
+    strict += s === 2 ? 1 : s === 1 ? 0.5 : 0;
     if (s === 2) exact++; else if (s === 1) near++;
     got += s === 2 ? 1 : s === 1 ? 0.5 : 0;
     const title = badAccent ? "Accent: you typed " + esc(typed[i]) : s === 2 ? "" : "You typed: " + esc(typed[i] || "(nothing)");
     html += `<span class="${s === 2 ? "ok" : s === 1 ? "close" : "miss"}${badAccent ? " accent" : ""}" title="${title}">${esc(w.w)}</span> `;
   });
-  return { acc: Math.max(0, got / blanks.length - ACCENT_PENALTY * accentMiss), html, exact, near, accentMiss,
+  return { acc: Math.max(0, got / blanks.length - (nearIsExact ? 0 : ACCENT_PENALTY * accentMiss)), strictAcc: Math.max(0, strict / blanks.length - ACCENT_PENALTY * accentMiss), html, exact, near, accentMiss,
     missed: blanks.length - exact - near, words: perWord, accentsPerfect: accents && got === blanks.length && blanks.some((i) => hasAccent(words[i].w)) };
 }
 

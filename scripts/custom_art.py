@@ -639,7 +639,9 @@ def ornament(sid, full, phase):
      "kalachakra": kalachakra_wheel, "luzclara": luzclara_rainbow,
      "osario": osario_dance, "tairona": tairona_terraces, "dorado": dorado_discs, "relampago": relampago_crown,
      "vigilia": vigilia_moon, "pacto": pacto_shadow, "firmamento": firmamento_stars, "madreagua": madreagua_river, "caiman": caiman_swamp, "andes": andes_peaks, "arhuaco": arhuaco_weave,
-     "galeon": galeon_wreck, "frailejon": frailejon_mist, "bochica": bochica_falls, "bufeo": bufeo_river, "llanero": llanero_plains, "madremonte": madremonte_leaves, "silbon": silbon_whistle, "tunda": tunda_mangrove, "mahamudra": mahamudra_sky, "candileja": candileja_fire, "sombreron": sombreron_hat, "marimba": marimba_waves, "huitaca": huitaca_dance, "canocristales": canocristales_river, "dzogchen": dzogchen_thigle}[sid](back, front, full, phase)
+     "galeon": galeon_wreck, "frailejon": frailejon_mist, "bochica": bochica_falls, "bufeo": bufeo_river, "llanero": llanero_plains, "madremonte": madremonte_leaves, "silbon": silbon_whistle, "tunda": tunda_mangrove, "mahamudra": mahamudra_sky, "candileja": candileja_fire, "sombreron": sombreron_hat, "marimba": marimba_waves, "huitaca": huitaca_dance, "canocristales": canocristales_river, "dzogchen": dzogchen_thigle,
+     "pastor": pastor_flock, "barquero": barquero_boat, "rey": rey_way, "shakya": shakya_halo, "tsokye": tsokye_lotus, "loden": loden_letters,
+     "pemagyalpo": pemagyalpo_mirror, "pandita": pandita_rainbow, "nyima": nyima_sun, "sengedradrok": senge_roar, "drollo": drollo_tigress}[sid](back, front, full, phase)
     return [(4, back), (150, front)]
 
 
@@ -1787,6 +1789,192 @@ def dzogchen_thigle(back, front, full, phase):
             put(layer, x, y, hexrgb("#ffffff", int(255 * math.sin(t * math.pi))))
 
 
+
+# ---------- the three bodhisattvas and the eight manifestations of Guru Rinpoche ----------
+def pastor_flock(back, front, full, phase):
+    """Sheep walking ahead across the ground, the shepherd last of all; with the whole set, a long flock
+    and the far bank of a stream they cross before him."""
+    n = 6 if full else 3
+    if full:
+        d = ImageDraw.Draw(back)
+        for x in range(64):
+            put(back, x, 58 + math.sin(x / 5 + phase * TAU), hexrgb("#5a8ab0", 170))
+        d.line([(0, 54), (63, 54)], fill=hexrgb("#5aa040", 160))
+    for i in range(n):
+        x = (6 + i * 10 + phase * 10) % 70 - 3
+        y = 60 - (i % 2) * 2
+        layer = front if i % 2 else back
+        blob(layer, x, y - 2, 2, hexrgb("#fffaf0", 235))
+        put(layer, x + 3, y - 3, hexrgb("#3e3020")); put(layer, x - 1, y, hexrgb("#3e3020")); put(layer, x + 1, y, hexrgb("#3e3020"))
+
+
+def barquero_boat(back, front, full, phase):
+    """A ferry under the figure's feet, rocking on the river; with the whole set, passengers sit in it
+    and the far shore shows ahead: everyone crosses together."""
+    bob = round(math.sin(phase * TAU))
+    d = ImageDraw.Draw(front)
+    for x in range(64):
+        put(back, x, 61 + math.sin(x / 4 + phase * TAU) * 1, hexrgb("#3a7ab0", 200))
+    d.polygon([(10, 57 + bob), (54, 57 + bob), (48, 62 + bob), (16, 62 + bob)], fill=hexrgb("#6a4a22", 235))
+    d.line([(10, 57 + bob), (54, 57 + bob)], fill=hexrgb("#c8a850"))
+    if full:
+        db = ImageDraw.Draw(back)
+        db.polygon([(40, 40), (63, 38), (63, 48), (44, 48)], fill=hexrgb("#2a6a2a", 150))
+        for x0, col in ((14, "#e0609a"), (46, "#5aa040"), (51, "#e8b030")):
+            blob(front, x0, 54 + bob, 2, hexrgb(col))
+            put(front, x0, 51 + bob, hexrgb("#f0c8a0"))
+
+
+def rey_way(back, front, full, phase):
+    """A golden road of light opening ahead of the king; with the whole set, a royal parasol over him
+    and banners either side."""
+    for row in range(8):
+        y = 62 - row
+        w = 6 + row * 2
+        a = int(110 + 120 * (0.5 + 0.5 * math.sin(phase * TAU - row / 2)))
+        for x in range(32 - w // 2, 32 + w // 2):
+            put(back, x, y, hexrgb("#ffe07a", a))
+    if full:
+        d = ImageDraw.Draw(back)
+        d.line([(32, 0), (32, 12)], fill=hexrgb("#a8701a"))
+        d.pieslice([18, 0, 46, 16], 180, 360, fill=hexrgb("#8a4ac0", 220))
+        for x in (18, 25, 32, 39, 46):
+            put(back, x, 8, hexrgb("#ffe07a"))
+        for bx in (4, 58):
+            d.line([(bx, 20), (bx, 56)], fill=hexrgb("#a8701a"))
+            wave = round(math.sin(phase * TAU + bx))
+            d.polygon([(bx, 20), (bx + (5 if bx < 32 else -5), 23 + wave), (bx, 30)], fill=hexrgb("#5a1e8a"))
+
+
+def shakya_halo(back, front, full, phase):
+    """A soft saffron halo behind the head; with the whole set, a ring of light round the whole body and
+    lotus petals at the feet."""
+    d = ImageDraw.Draw(back)
+    r = 9 + math.sin(phase * TAU) * 0.6
+    d.ellipse([32 - r, 20 - r, 32 + r, 20 + r], outline=hexrgb("#ffc860", 200), width=2)
+    if full:
+        d.ellipse([10, 8, 54, 62], outline=hexrgb("#e8961a", 120), width=1)
+        for i in range(8):
+            x = 14 + i * 5
+            d.polygon([(x, 62), (x + 2, 57), (x + 4, 62)], fill=hexrgb("#d86a74" if i % 2 else "#ffc860", 220))
+
+
+def tsokye_lotus(back, front, full, phase):
+    """A pink lotus open under the feet on dark lake water; with the whole set, the lake spreads out in
+    rings and more lotuses float on it."""
+    d = ImageDraw.Draw(back)
+    for k in range(3 if full else 1):
+        r = ((phase + k / 3) % 1) * (28 if full else 16)
+        d.ellipse([32 - r, 60 - r / 4, 32 + r, 60 + r / 4], outline=hexrgb("#8ab8ff", int(200 * (1 - r / 30))))
+    df = ImageDraw.Draw(front)
+    for i, dx in enumerate((-8, -4, 0, 4, 8)):
+        h = 5 - abs(dx) // 4
+        df.polygon([(32 + dx - 2, 62), (32 + dx, 62 - h), (32 + dx + 2, 62)], fill=hexrgb("#ffb0d4" if i % 2 else "#e0609a"))
+    if full:
+        for x in (8, 54):
+            for dx in (-2, 0, 2):
+                put(back, x + dx, 58 - (dx == 0), hexrgb("#e0609a"))
+
+
+def loden_letters(back, front, full, phase):
+    """Small pages of scripture circling the head as if being read; with the whole set, a ring of them
+    round the body and a soft light."""
+    n = 10 if full else 5
+    for i in range(n):
+        a = TAU * (phase / 2 + i / n)
+        rx, ry, cy = (20, 4, 34) if full and i % 2 else (14, 3, 14)
+        x, y = 32 + math.cos(a) * rx, cy + math.sin(a) * ry
+        layer = front if math.sin(a) > 0 else back
+        for dx in range(3):
+            put(layer, x + dx, y, hexrgb("#f4f6f8"))
+            put(layer, x + dx, y + 1, hexrgb("#a8d8f8" if dx == 1 else "#d0d6de"))
+
+
+def pemagyalpo_mirror(back, front, full, phase):
+    """Lotus petals open behind the king like a throne; with the whole set, a white parasol above and
+    flashes of light off the mirror."""
+    d = ImageDraw.Draw(back)
+    for i in range(7):
+        a = math.pi + math.pi * i / 6
+        x, y = 32 + math.cos(a) * 18, 46 + math.sin(a) * 18
+        d.ellipse([x - 3, y - 3, x + 3, y + 3], fill=hexrgb("#ff8a7a" if i % 2 else "#d83a3a", 200))
+    if full:
+        d.line([(32, 0), (32, 10)], fill=hexrgb("#e8b030"))
+        d.pieslice([20, 0, 44, 12], 180, 360, fill=hexrgb("#fffbe0", 230))
+        k = int(phase * 8) % 8
+        if k in (0, 1):
+            for dx, dy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
+                put(front, 12 + dx, 38 + dy, hexrgb("#ffffff"))
+
+
+def pandita_rainbow(back, front, full, phase):
+    """A rainbow of five colours arched behind the scholar; with the whole set, it widens and books and
+    scrolls float either side."""
+    d = ImageDraw.Draw(back)
+    cols = ("#e03030", "#f0d030", "#30c050", "#2a5ae0", "#ffffff")
+    R = 26 if full else 20
+    for k, col in enumerate(cols):
+        r = R - k * 2
+        d.arc([32 - r, 34 - r, 32 + r, 34 + r], 180, 360, fill=hexrgb(col, 170))
+    if full:
+        for i, bx in enumerate((6, 56)):
+            y = 30 + math.sin(phase * TAU + i * 2) * 2
+            d.rectangle([bx - 3, y, bx + 3, y + 3], fill=hexrgb("#d8b030"))
+            d.line([(bx - 3, y + 1), (bx + 3, y + 1)], fill=hexrgb("#7a1e14"))
+
+
+def nyima_sun(back, front, full, phase):
+    """Rays of sunlight fanning out behind the yogi; with the whole set, the sun itself, held in place by
+    the khatvanga, burns over his head."""
+    n = 16 if full else 10
+    for i in range(n):
+        a = TAU * i / n + phase * TAU / n
+        L = 26 if full else 18
+        for rr in range(10, L, 2):
+            put(back, 32 + math.cos(a) * rr, 30 + math.sin(a) * rr, hexrgb("#fff07a", int(220 * (1 - rr / L))))
+    if full:
+        d = ImageDraw.Draw(back)
+        d.ellipse([24, -2, 40, 12], fill=hexrgb("#ffa040", 230))
+        d.ellipse([27, 1, 37, 9], fill=hexrgb("#fff07a"))
+
+
+def flame_wreath(back, front, phase, cols, height, n):
+    """A ring of flames licking upwards round the figure (the wrathful forms stand in fire)."""
+    for i in range(n):
+        x = 6 + i * (52 / max(1, n - 1))
+        h = height * (0.6 + 0.4 * math.sin(phase * TAU * 2 + i * 1.7)) * (0.7 + abs(x - 32) / 40)  # taller at the sides
+        for k in range(int(h)):
+            col = cols[min(len(cols) - 1, k * len(cols) // max(1, int(h)))]
+            y = 62 - k
+            w = max(0, 2 - k * 3 // max(1, int(h)))
+            for dx in range(-w, w + 1):
+                put(back, x + dx, y, hexrgb(col, max(60, 230 - k * 6)))
+
+
+def senge_roar(back, front, full, phase):
+    """Wrathful flames round the figure; with the whole set, they rise higher and the lion's roar goes
+    out in rings."""
+    flame_wreath(back, front, phase, ("#fff0a0", "#ffb040", "#f06a10", "#a82a04"), 18 if full else 10, 11 if full else 7)
+    if full:
+        d = ImageDraw.Draw(front)
+        r = 6 + (phase % 1) * 22
+        d.arc([32 - r, 18 - r, 32 + r, 18 + r], 200, 340, fill=hexrgb("#c0d0ff", int(230 * (1 - r / 30))))
+
+
+def drollo_tigress(back, front, full, phase):
+    """Wrathful fire round the figure; with the whole set, the pregnant tigress he rides prowls beneath,
+    striped orange and black, in the flames."""
+    flame_wreath(back, front, phase, ("#fff4d0", "#ffc060", "#e8401a", "#8e1a0a"), 20 if full else 11, 12 if full else 7)
+    if full:
+        d = ImageDraw.Draw(back)  # behind: he stands on her
+        bob = round(math.sin(phase * TAU))
+        d.ellipse([8, 54 + bob, 56, 64 + bob], fill=hexrgb("#e8801a"))
+        for x in range(12, 54, 5):
+            d.line([(x, 55 + bob), (x + 2, 62 + bob)], fill=hexrgb("#140600"))
+        d.ellipse([50, 50 + bob, 60, 59 + bob], fill=hexrgb("#e8801a"))
+        put(back, 56, 53 + bob, hexrgb("#fff4d0")); put(back, 58, 53 + bob, hexrgb("#fff4d0"))
+        d.line([(8, 58 + bob), (2, 52 + bob)], fill=hexrgb("#e8801a"), width=2)
+
 ANIMS = {"idle": 1, "side": 1, "slash": 6, "thrust": 8, "shoot": 13, "spellcast": 7, "hurt": 6}
 SOUTH = 2
 
@@ -1797,7 +1985,8 @@ def custom_looks():
     for sid in ("laguna", "condor", "origen", "cienaga", "mohan", "yogui", "vajra", "averno", "trueno", "sol", "guardian",
                 "bachue", "nevado", "vientos", "montana", "kalachakra", "luzclara",
                 "osario", "tairona", "dorado", "relampago", "vigilia", "pacto", "firmamento", "madreagua", "caiman", "andes", "arhuaco",
-                "galeon", "frailejon", "bochica", "bufeo", "llanero", "madremonte", "silbon", "tunda", "mahamudra", "candileja", "sombreron", "marimba", "huitaca", "canocristales", "dzogchen"):
+                "galeon", "frailejon", "bochica", "bufeo", "llanero", "madremonte", "silbon", "tunda", "mahamudra", "candileja", "sombreron", "marimba", "huitaca", "canocristales", "dzogchen",
+                "pastor", "barquero", "rey", "shakya", "tsokye", "loden", "pemagyalpo", "pandita", "nyima", "sengedradrok", "drollo"):
         for variant in ("part", "full"):
             full = variant == "full"
             # the atlas keeps 128px cells with the 64px frame in the middle (see build_lpc.py)

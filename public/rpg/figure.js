@@ -67,9 +67,14 @@ export function shownGear(ch) {
       if (c === "none") g[k] = null;
       else if (c === "set") g[k] = setPieceFor(set, sl);
     }
+    // a two-handed weapon and something in the other hand: what you picked yourself in the
+    // undershirt's picker wins (a bow you chose to show over the set's shield); otherwise the
+    // set's piece, as before
     const two = g[w] && BASE[g[w].base]?.twoHanded;
     if (two && g[o]) {
-      if (from.off === "set" && from.weapon !== "set") g[w] = null;
+      const pickedW = shirt.show?.weapon != null, pickedO = shirt.show?.off != null;
+      if (pickedW !== pickedO) { if (pickedW) g[o] = null; else g[w] = null; }
+      else if (from.off === "set" && from.weapon !== "set") g[w] = null;
       else g[o] = null;
     }
   }
@@ -87,7 +92,7 @@ function lookOf(it, body) {
 }
 // The ornaments of the three top-tier sets (original art, scripts/custom_art.py): the Laguna's gold dust, the Cóndor's wings,
 // the Origen's rings of sound. Worn with any piece of the set; fuller with the whole set on.
-const ORNAMENTS = { laguna: 1, condor: 1, origen: 1, cienaga: 1, mohan: 1, yogui: 1, vajra: 1, averno: 1, trueno: 1, sol: 1, guardian: 1, bachue: 1, nevado: 1, vientos: 1, montana: 1, kalachakra: 1, luzclara: 1, osario: 1, tairona: 1, dorado: 1, relampago: 1, vigilia: 1, pacto: 1, firmamento: 1, madreagua: 1, caiman: 1, andes: 1, arhuaco: 1, galeon: 1, frailejon: 1, bochica: 1, bufeo: 1, llanero: 1, madremonte: 1, silbon: 1, tunda: 1, mahamudra: 1, candileja: 1, sombreron: 1, marimba: 1, huitaca: 1, canocristales: 1, dzogchen: 1 };
+const ORNAMENTS = { laguna: 1, condor: 1, origen: 1, cienaga: 1, mohan: 1, yogui: 1, vajra: 1, averno: 1, trueno: 1, sol: 1, guardian: 1, bachue: 1, nevado: 1, vientos: 1, montana: 1, kalachakra: 1, luzclara: 1, osario: 1, tairona: 1, dorado: 1, relampago: 1, vigilia: 1, pacto: 1, firmamento: 1, madreagua: 1, caiman: 1, andes: 1, arhuaco: 1, galeon: 1, frailejon: 1, bochica: 1, bufeo: 1, llanero: 1, madremonte: 1, silbon: 1, tunda: 1, mahamudra: 1, candileja: 1, sombreron: 1, marimba: 1, huitaca: 1, canocristales: 1, dzogchen: 1, pastor: 1, barquero: 1, rey: 1, shakya: 1, tsokye: 1, loden: 1, pemagyalpo: 1, pandita: 1, nyima: 1, sengedradrok: 1, drollo: 1 };
 function ornamentKeys(ch) {
   const worn = shownGear(ch).map(([, it]) => it).filter(Boolean);
   const out = [];

@@ -30,7 +30,8 @@
    "bachue",
    "luzclara",
    "dorado",
-   "arhuaco"
+   "arhuaco",
+   "shakya"
   ],
   "baston": [
    "cacique",
@@ -261,20 +262,25 @@
   ],
   "yelmotumbaga": [
    "dorado",
-   "madreagua"
+   "madreagua",
+   "pastor"
   ],
   "corazatumbaga": [
-   "dorado"
+   "dorado",
+   "pastor"
   ],
   "baculotumbaga": [
    "dorado",
-   "arhuaco"
+   "arhuaco",
+   "pastor"
   ],
   "grebastumbaga": [
-   "dorado"
+   "dorado",
+   "pastor"
   ],
   "cintotumbaga": [
-   "dorado"
+   "dorado",
+   "pastor"
   ],
   "corazacatatumbo": [
    "madreagua",
@@ -305,13 +311,15 @@
    "vigilia",
    "llanero",
    "madremonte",
-   "tunda"
+   "tunda",
+   "barquero"
   ],
   "mantoluna": [
    "vigilia",
    "llanero",
    "madremonte",
-   "tunda"
+   "tunda",
+   "barquero"
   ],
   "arcoluna": [
    "vigilia"
@@ -320,7 +328,8 @@
    "vigilia",
    "llanero",
    "madremonte",
-   "tunda"
+   "tunda",
+   "barquero"
   ],
   "brazalesluna": [
    "vigilia",
@@ -332,7 +341,8 @@
    "vigilia",
    "llanero",
    "madremonte",
-   "tunda"
+   "tunda",
+   "barquero"
   ],
   "cintocatatumbo": [
    "arhuaco"
@@ -342,36 +352,44 @@
    "caiman",
    "galeon",
    "silbon",
-   "canocristales"
+   "canocristales",
+   "rey"
   ],
   "corazasombra": [
    "pacto",
    "caiman",
    "galeon",
    "silbon",
-   "canocristales"
+   "canocristales",
+   "rey",
+   "shakya"
   ],
   "mandoblesombra": [
    "pacto",
-   "sombreron"
+   "sombreron",
+   "rey"
   ],
   "guantessombra": [
    "pacto",
    "caiman",
    "galeon",
-   "silbon"
+   "silbon",
+   "rey"
   ],
   "pezunassombra": [
    "pacto",
    "caiman",
-   "silbon"
+   "silbon",
+   "shakya"
   ],
   "cintosombra": [
    "pacto",
    "galeon",
    "silbon",
    "sombreron",
-   "canocristales"
+   "canocristales",
+   "rey",
+   "shakya"
   ],
   "mangualsombra": [
    "caiman",
@@ -382,7 +400,8 @@
    "firmamento",
    "candileja",
    "huitaca",
-   "dzogchen"
+   "dzogchen",
+   "pemagyalpo"
   ],
   "capiroteastral": [
    "firmamento",
@@ -395,7 +414,14 @@
    "sombreron",
    "marimba",
    "huitaca",
-   "dzogchen"
+   "dzogchen",
+   "tsokye",
+   "loden",
+   "pemagyalpo",
+   "pandita",
+   "nyima",
+   "sengedradrok",
+   "drollo"
   ],
   "vestiduraastral": [
    "firmamento",
@@ -408,13 +434,25 @@
    "sombreron",
    "marimba",
    "huitaca",
-   "dzogchen"
+   "dzogchen",
+   "tsokye",
+   "loden",
+   "pemagyalpo",
+   "pandita",
+   "nyima",
+   "sengedradrok",
+   "drollo"
   ],
   "espadaastral": [
    "firmamento",
    "candileja",
    "huitaca",
-   "dzogchen"
+   "dzogchen",
+   "tsokye",
+   "loden",
+   "pemagyalpo",
+   "sengedradrok",
+   "drollo"
   ],
   "guantesastral": [
    "firmamento",
@@ -428,7 +466,14 @@
    "marimba",
    "huitaca",
    "canocristales",
-   "dzogchen"
+   "dzogchen",
+   "tsokye",
+   "loden",
+   "pemagyalpo",
+   "pandita",
+   "nyima",
+   "sengedradrok",
+   "drollo"
   ],
   "zapatillasastral": [
    "firmamento",
@@ -442,7 +487,14 @@
    "marimba",
    "huitaca",
    "canocristales",
-   "dzogchen"
+   "dzogchen",
+   "tsokye",
+   "loden",
+   "pemagyalpo",
+   "pandita",
+   "nyima",
+   "sengedradrok",
+   "drollo"
   ],
   "arcoastral": [
    "andes",
@@ -454,7 +506,13 @@
    "frailejon",
    "bufeo",
    "mahamudra",
-   "marimba"
+   "marimba",
+   "tsokye",
+   "loden",
+   "pandita",
+   "nyima",
+   "sengedradrok",
+   "drollo"
   ],
   "sableluna": [
    "galeon"
@@ -465,15 +523,22 @@
   "varasombra": [
    "frailejon",
    "bochica",
-   "madremonte"
+   "madremonte",
+   "shakya"
   ],
   "lanzaastral": [
    "bufeo",
-   "canocristales"
+   "canocristales",
+   "pandita",
+   "nyima"
   ],
   "tridenteluna": [
    "llanero",
-   "tunda"
+   "tunda",
+   "barquero"
+  ],
+  "escudosombra": [
+   "rey"
   ]
  },
  "uniques": {

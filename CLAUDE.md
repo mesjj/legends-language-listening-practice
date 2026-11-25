@@ -46,7 +46,7 @@ TV, film and talk-show episodes are **not** in the repo: they're copyrighted, so
 | `../listen-core.js` | Shared with the listening pages: scoring, `playable()` lines, blanks for the gap exercise |
 
 Key ideas:
-- **Zones are fixed stretches of the episode.** Each has 6 lines per group and 12 for the boss.
+- **Zones are fixed stretches of the episode.** Its lines are shared among the normal groups. The boss only appears once half of them are mastered, and brings the unheard and most-missed ones.
 - **The Abismo's descents** carry on to the episode's end.
 - **El Remolino** is the last level. It opens when the whole episode is mastered and is rebuilt from the lines you struggled with most.
 - **Progress is per episode** (`ch.zonesByEp`), and a new episode's zone levels are shifted to the character's level.
@@ -59,6 +59,7 @@ The generated art is committed, so you only need these when changing art:
 
 - **Item, figure and icon art:** `node scripts/lpc_items.mjs && .venv/bin/python scripts/build_lpc.py` takes about 2.5 minutes. It needs the LPC source in `.lpc-cache/`, which `lpc_items.mjs` downloads, and a Python venv with Pillow.
 - **Set ornaments:** `scripts/custom_art.py`.
+- **The bodhisattva and Guru Rinpoche sets:** `scripts/orig_art.py` draws their pieces from scratch in every frame. LPC layers are only measured for where the body is. `build_lpc.py` calls it.
 - **Scenes:** `scripts/build_scenes.py`.
 - **Bosses:** `scripts/build_bosses.py`.
 - **Credits:** `public/rpg/**/CREDITS*.txt`. LPC art is CC-BY-SA / GPL / OGA-BY, so keep the credits with it.

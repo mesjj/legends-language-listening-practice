@@ -1,6 +1,6 @@
 // Leyendas: a listening RPG. Every attack is a listening exercise on a line of the episode.
 import { $, esc, store, api, md, CFG, logout, playable, chooseBlanks, isSound, scoreDictation, scoreCloze, flagLine, norm, hash, accentKey } from "../listen-core.js";
-import { RARITY, SLOTS, BASE, CLASSES, ZONES, BOSSES, EASY_ROSTER, MONSTER_MODS, POTIONS, SETS, GEMS, RUNE, CRAFT, TIERS, BANDS, SPELLS, PETS, PET_KIND, MOUNTS, MOUNT_PROPS, COMPANION_MIN_SECONDS, PROPS, TUNJO_ITEMS } from "./data.js";
+import { RARITY, SLOTS, BASE, CLASSES, ZONES, BOSSES, EASY_ROSTER, MONSTER_MODS, POTIONS, SETS, GEMS, RUNE, CRAFT, TIERS, BANDS, SPELLS, PETS, PET_KIND, MOUNTS, MOUNT_PROPS, COMPANION_MIN_SECONDS, PROPS, TUNJO_ITEMS, POWERS, RUNAS, RUNA, RUNA_TIERS, RUNA_SETS } from "./data.js";
 import * as E from "./engine.js";
 import { figureSvg, itemIconSvg, monsterSvg, loadFigure, loadAnims, fightFigure, attackAnim, lookOfChar, stanceLoop, SHOW_SLOTS, setPieceFor, shirtChoice } from "./figure.js";
 import { loadLook, lookData, prepareLook, defaultLook, randomLook, fixLook, fits } from "./look.js";
@@ -19,7 +19,7 @@ const stopAll = () => { audio.pause(); cardAudio.pause(); };
 setBusy(() => !audio.paused || !cardAudio.paused); // no effect sounds over the Spanish
 MUSIC.setBusy(() => !audio.paused || !cardAudio.paused); // and the music drops while it plays
 const screen = $("#screen");
-const INV_SIZE = 56, STASH_SIZE = 200; // the bag: 7 rows of 8
+const INV_SIZE = 56, STASH_SIZE = 500; // the bag: 7 rows of 8
 // forms of haber (and the tenses near them) get their tense named when you miss one; Spanish only
 const runeOf = (w) => (CFG.lang === "es" ? runeOfEs(w) : null);
 // online: no Anki, no Claude, no voice (they need the owner's computer); see .online in rpg.css
@@ -46,10 +46,22 @@ const icon = (name, color, cls = "") =>
   `<i class="ico ${cls}" style="-webkit-mask-image:url(rpg/icons/${name}.svg);mask-image:url(rpg/icons/${name}.svg);background:${color}"></i>`;
 // still: without the glow filter (for long lists, where many filters make scrolling stutter)
 const itemIco = (it, still = false) => (it.kind === "relic" ? `<span class="ico relic-ico" aria-hidden="true"><i></i></span>` : itemIconSvg(it, "", { still }) || icon(E.itemIcon(it), E.itemColor(it)));
+// what fills a socket: a gem or a runa
+const sockColor = (g) => (g.runa ? RUNA_TIERS[RUNA[g.runa].tier].color : GEMS[g.gem].shades?.[g.grade] || GEMS[g.gem].color);
 const socketLine = (g, slot) => {
   const e = E.socketEffect(g, slot);
-  return `<div class="tgem" style="color:${GEMS[g.gem].shades?.[g.grade] || GEMS[g.gem].color}">◆ ${esc(E.propText(e.prop, e.value))}</div>`;
+  return `<div class="tgem" style="color:${sockColor(g)}">${g.runa ? `ᚱ <b>${esc(RUNA[g.runa].name)}</b>:` : "◆"} ${esc(E.propText(e.prop, e.value))}</div>`;
 };
+const RUNA_KINDS = [["w", "En un arma"], ["a", "En armadura (casco, torso, manos, pies, cinturón)"], ["o", "En un escudo"]];
+const runaKindName = { w: "armas", a: "armaduras", o: "escudos" };
+// A rune set's lines: its runes (the ones in this item lit), what it gives, and in what
+function runaSetHtml(rs, have = [], on = false, kind = null) {
+  const left = [...have];
+  const runes = rs.runas.map((r) => { const i = left.indexOf(r), got = i >= 0; if (got) left.splice(i, 1); return `<span class="${got ? "" : "dim"}" style="${got ? `color:${RUNA_TIERS[RUNA[r].tier].color}` : ""}">${esc(RUNA[r].name)}</span>`; }).join(" · ");
+  const kinds = kind ? [kind] : rs.kinds;
+  return `<div class="trunaset${on ? " on" : ""}"><div><b>${esc(rs.name)}</b> <span class="dim">(${rs.runas.length} runas, en ${rs.kinds.map((k) => runaKindName[k]).join(", ")})</span></div><div>${runes}</div>` +
+    kinds.map((k) => `<div class="${on ? "" : "dim"}">${kind ? "" : `<span class="dim">En ${runaKindName[k]}:</span> `}${Object.entries(rs.bonus[k]).map(([p, v]) => esc(E.propText(p, v))).join(", ")}</div>`).join("") + `</div>`;
+}
 const h = (html) => { const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstElementChild; };
 const findItem = (id) => {
   for (const [where, list] of [["inv", ch.inv], ["stash", ch.stash], ["belt", ch.belt]]) {
@@ -213,12 +225,28 @@ function zoneOffset(z, depth = 0) {
   if (z.endless && depth === descentsOf(z) - 1 && S.base?.length) return Math.max(zoneStart(z), Math.min(off, S.base.length - zoneSize(z)));
   return off;
 }
+// A zone's boss waits until you've mastered half its lines. Until then every line of its stretch
+// (the boss's old ones too) is shared out among the normal groups, and once you've beaten them all
+// more groups come, the ones you know least first. The boss brings what's left: the lines you've
+// never heard and the ones that have cost you most. Courses and El Remolino keep their own rules.
+const BOSS_GATE = 0.5;
+const gated = (z) => !z.fights && !z.dynamic && !z.review;
+const zoneDone = (z, depth = 0) => { const zl = zoneLines(z, depth); return { n: zl.length, m: zl.filter((si) => lineMastered(si, "dict") || lineMastered(si, "cloze")).length }; };
+const bossReady = (z, depth = 0) => { const { n, m } = zoneDone(z, depth); return m >= Math.ceil(n * BOSS_GATE); };
+const bossNeed = (z, depth = 0) => { const { n, m } = zoneDone(z, depth); return `${m}/${Math.ceil(n * BOSS_GATE)}`; };
+// past the last group with the boss not ready: the group whose lines you know least (ties: the next in turn)
+function extraGroup(z, zp) {
+  const k = zp.extra || 0, known = (p) => groupLines(z, p, zp.depth || 0).filter((si) => lineMastered(si)).length / Math.max(1, groupLines(z, p, zp.depth || 0).length);
+  let best = k % z.packs;
+  for (let j = 1; j < z.packs; j++) { const p = (k + j) % z.packs; if (known(p) < known(best)) best = p; }
+  return best;
+}
 function groupLines(z, pack, depth = 0) {
   if (z.fights) return courseFight(z, pack).lines.filter((si) => !S.T.segments[si].flagged);
   if (z.dynamic) { const L = (ch.zones[z.id]?.lines || []).filter((si) => !S.T.segments[si]?.flagged), head = L.length - PER_BOSS; return pack >= z.packs ? L.slice(Math.max(0, head)) : L.slice(pack * PER_PACK, Math.min(head, (pack + 1) * PER_PACK)); }
-  const boss = pack >= z.packs;
-  const off = zoneOffset(z, depth) + (boss ? z.packs * PER_PACK : pack * PER_PACK);
-  const n = boss ? PER_BOSS : PER_PACK;
+  if (pack >= z.packs) return []; // the boss's lines are chosen when you meet it (bossLines)
+  const N = zoneSize(z), a = Math.floor((pack * N) / z.packs), b = Math.floor(((pack + 1) * N) / z.packs);
+  const off = zoneOffset(z, depth) + a, n = b - a;
   const ok = (si) => !S.T.segments[si].flagged;
   const out = [];
   for (let k = 0; k < n; k++) out.push(S.base[(off + k) % S.base.length]);
@@ -229,7 +257,7 @@ function groupLines(z, pack, depth = 0) {
 }
 function zoneLines(z, depth = 0) {
   const out = [];
-  for (let p = 0; p <= z.packs; p++) out.push(...groupLines(z, p, depth));
+  for (let p = 0; p < z.packs + (gated(z) ? 0 : 1); p++) out.push(...groupLines(z, p, depth));
   return out;
 }
 // The Abismo goes on where the other zones stop: each descent is the next stretch of the episode,
@@ -326,9 +354,10 @@ const exMastered = (e, kind, M = mastery(kind)) => (M[exKey(e)] ?? 0) >= 1;
 const passes = (e, kind, M) => exMastered(e, kind, M) && ((kind ?? scoreKind()) !== "cloze" || !hasSecond(e) || exMastered({ ...e, v: 1 }, kind, M));
 const lineMastered = (si, kind, M) => passes({ si, a: 0, b: S.T.segments[si].words.length }, kind, M) || [4, 8].some((mx) => { const c = chunks(si, mx); return c.length > 1 && c.every((e) => passes(e, kind, M)); });
 const mastered = (lines, kind) => lines.filter((si) => lineMastered(si, kind)).length;
-function buildQueue() {
+function buildQueue(slot = {}) {
   const zp = ch.zones[S.zone.id];
-  const lines = groupLines(S.zone, zp.pack, zp.depth || 0);
+  if (slot.boss && gated(S.zone)) return bossQueue(S.zone, zp.depth || 0);
+  const lines = groupLines(S.zone, slot.group ?? zp.pack, zp.depth || 0);
   // a course's sentences are short and asked whole
   const fight = S.zone.fights && courseFight(S.zone, zp.pack);
   const all = fight?.items ? fight.items.filter((it) => lines.includes(it.si)).map((it) => ({ ...it }))
@@ -345,17 +374,48 @@ function buildQueue() {
   for (const e of all.slice(-2)) if (hasSecond(e)) both.push({ ...e, v: 1 });
   return bossMix([0, 1, 2].flatMap((r) => both.filter((e) => rank(e) === r)), fight);
 }
-// Bosses know what you've missed. Besides their own lines they bring back phrases you've heard
+// A zone's boss brings the lines of its stretch you haven't mastered: the ones you've never heard
+// (in story order) taking turns with the ones that have cost you most (weighted by how much they've
+// cost, how badly you did and how recently you missed them, with a little chance so no two fights
+// are the same). Later bosses bring more; Difícil and deeper descents add more, Fácil fewer. A few
+// lines you already know wait at the very end, in case the fight outlasts the rest.
+function bossQueue(z, depth) {
+  const zi = Math.max(0, ZONES.indexOf(z)), diff = ch.difficulty || "medio";
+  const want = PER_BOSS + Math.max(2, Math.min(18, 3 + 2 * zi + (diff === "dificil" ? 3 : diff === "facil" ? -2 : 0) + Math.min(6, depth)));
+  const M = mastery(), A = missAt(), cost = ch.struggle?.[S.ep] || {}, cloze = scoreKind() === "cloze";
+  const exs = (si) => chunks(si, E.diffOf(ch).maxWords).flatMap((c) => (cloze && hasSecond(c) ? [c, { ...c, v: 1 }] : [c]));
+  const fresh = [], hard = [], known = [];
+  for (const si of zoneLines(z, depth)) {
+    if (S.T.segments[si].flagged) continue;
+    if (lineMastered(si)) { known.push(...exs(si)); continue; }
+    const open = exs(si).filter((e) => !((M[exKey(e)] ?? 0) >= 1));
+    if (!open.length) continue;
+    if (open.every((e) => M[exKey(e)] == null) && !cost[si]) { fresh.push(open); continue; }
+    const tried = open.filter((e) => M[exKey(e)] != null);
+    const worst = tried.length ? Math.min(...tried.map((e) => M[exKey(e)])) : 0;
+    const last = Math.max(0, ...open.map((e) => A[exKey(e)] || 0)), ago = last ? (Date.now() - last) / 864e5 : 30;
+    hard.push({ open, w: ((cost[si] || 0) + (1 - worst) * 2 + 1 / (1 + ago)) * (0.75 + Math.random() * 0.5) });
+  }
+  hard.sort((a, b) => b.w - a.w);
+  const out = [];
+  let nf = 0, nh = 0;
+  while (out.length < want && (nf < fresh.length || nh < hard.length)) {
+    if (nh < hard.length) out.push(...hard[nh++].open.map((e) => ({ ...e, back: true })));
+    if (out.length < want && nf < fresh.length) out.push(...fresh[nf++]);
+  }
+  out.push(...known.sort(() => Math.random() - 0.5).slice(0, 6));
+  out.misses = nh; out.fresh = nf;
+  return out;
+}
+// El Remolino's boss knows what you've missed. Besides its own lines it brings back phrases you've heard
 // and not yet got to 100%, drawn at random but weighted to the worst and the most recently missed,
-// so no two boss fights are the same. Its own lines you already know are swapped for more of these. Each boss draws only from its own zone's stretch of the
-// episode, except the last zone's, which draws from the whole episode. Later bosses bring more;
-// Difícil and deeper descents add more, Fácil fewer.
+// so no two boss fights are the same. Its own lines you already know are swapped for more of these.
 function bossMix(own, course) {
   const zp = ch.zones[S.zone.id], depth = zp.depth || 0;
-  if (course || S.zone.review || zp.pack < S.zone.packs) return own;
+  if (course || S.zone.review || gated(S.zone) || zp.pack < S.zone.packs) return own;
   const zi = Math.max(0, ZONES.indexOf(S.zone)), diff = ch.difficulty || "medio";
   const want = Math.max(2, Math.min(18, 3 + 2 * zi + (diff === "dificil" ? 3 : diff === "facil" ? -2 : 0) + Math.min(6, depth)));
-  const from = new Set(S.zone === ZONES[ZONES.length - 1] ? S.base : zoneLines(S.zone, depth));
+  const from = new Set(zoneLines(S.zone, depth));
   const mine = new Set(own.map((e) => e.si)), M = mastery(), A = missAt(), cloze = scoreKind() === "cloze";
   const pool = [];
   for (const si of from) {
@@ -470,11 +530,11 @@ function renderHud() {
 // The brujo's spells: one kept prepared (ch.spell), cast with every attack while there's mana.
 function renderSpells(st = stats()) {
   const bar = $("#spells");
-  const list = E.spellsFor(ch);
-  bar.hidden = !list.length;
-  if (!list.length) return;
+  const list = E.spellsFor(ch), pw = E.powerOf(ch);
+  bar.hidden = !list.length && !pw;
+  if (bar.hidden) return;
   const can = E.canCast(ch, st);
-  bar.innerHTML = list.map((sp) => {
+  bar.innerHTML = powerButton(st) + list.map((sp) => {
     const locked = ch.level < sp.lvl, cost = E.spellCost(ch, sp), on = ch.spell === sp.id && !locked;
     const why = locked ? `Se aprende en el nivel ${sp.lvl}.` : !can ? "Necesitas una varita, un cetro o un bastón." : on ? "Preparado: sale con cada ataque. Clic para guardarlo." : "Clic para prepararlo.";
     return `<button class="spell${on ? " on" : ""}${locked ? " locked" : ""}" data-spell="${sp.id}" style="--sc:${sp.color}" ${locked ? "disabled" : ""}
@@ -482,6 +542,77 @@ function renderSpells(st = stats()) {
   }).join("");
   bar.classList.toggle("nowand", !can);
   bar.querySelectorAll("[data-spell]").forEach((b) => (b.onclick = () => prepSpell(b.dataset.spell)));
+  bar.querySelector("[data-power]")?.addEventListener("click", usePower);
+  $("#powBtn")?.classList.toggle("on", S.view === "fight" && powerOn());
+}
+// The runes and their sets, in the Alambique tab: what each set asks and gives, and which runes you have.
+function runaGuide() {
+  const have = {};
+  for (const it of [...ch.inv, ...(ch.stash || [])]) if (it.kind === "runa") have[it.runa] = (have[it.runa] || 0) + 1;
+  const tiers = Object.entries(RUNA_TIERS).map(([t, T]) => `<div class="runarow"><b style="color:${T.color}">${T.name.replace("Runa ", "")}:</b> ${RUNAS.filter((r) => r.tier === t).map((r) => `<span class="${have[r.id] ? "" : "dim"}" title="${esc(`«${r.gloss}» · nivel ${r.lvl} · arma: ${E.propText(...r.w)} · armadura: ${E.propText(...r.a)} · escudo: ${E.propText(...r.o)}`)}">${esc(r.name)}${have[r.id] ? ` <span class="small">×${have[r.id]}</span>` : ""}</span>`).join(" · ")}</div>`).join("");
+  return `<section class="runaguide"><h3>Runas y conjuntos rúnicos</h3>
+    <p class="dim small">Las runas caen muy de vez en cuando (las medias, raras; las altas, casi nunca) y se engastan como las gemas: cada una da lo suyo según dónde esté. Si todas las runas de un conjunto están en un mismo objeto blanco, en cualquier orden, despierta y da además su bonificación. Un objeto blanco de 5 o 6 engastes con un conjunto alto puede valer más que un legendario. Aquí, en el alambique, 3 runas iguales hacen la siguiente. Las que tienes en la bolsa o el alijo, sin atenuar.</p>
+    ${tiers}
+    <div class="runasets">${RUNA_SETS.map((rs) => runaSetHtml(rs, Object.keys(have))).join("")}</div></section>`;
+}
+// The keyboard shortcuts, listed in the village's Mercader tab (keep in step with the keydown handler).
+function keysCard() {
+  const alt = /Mac|iPhone|iPad/.test(navigator.platform) ? "Opción" : "Alt", pw = E.powerOf(ch);
+  const k = (...ks) => ks.map((x) => `<kbd>${x}</kbd>`).join(" + ");
+  const group = (title, rows) => `<div class="keysgroup"><h4>${title}</h4><dl>${rows.map(([keys, what]) => `<dt>${keys}</dt><dd>${what}</dd>`).join("")}</dl></div>`;
+  return `<section class="keyscard"><h3>Atajos de teclado</h3>
+    <p class="dim small">Con ${alt} funcionan también mientras escribes la respuesta.</p>
+    <div class="keysgrid">
+    ${group("Pociones", [
+      [`${k("1")} … ${k("9")}`, "Bebe la poción de ese hueco del cinturón"],
+      [k(alt, "1"), "Una poción de vida"], [k(alt, "2"), "Una de maná"], [k(alt, "3"), "Una de rejuvenecimiento"],
+    ])}
+    ${group("En combate", [
+      [k("Enter"), "Ataca con lo que escribiste; después, sigue"],
+      [k("Tab"), "Vuelve a oír la frase (en los huecos, pasa al siguiente)"],
+      [k("Mayús", "Tab"), "La oyes despacio"],
+      [k(alt, "H"), "Pista"],
+      ...(pw ? [[`${k("F")} o ${k(alt, "F")}`, `${esc(pw.name)}, tu habilidad de clase`]] : []),
+      ...(E.spellsFor(ch).length ? [[`${k("Q")} ${k("W")} ${k("E")} ${k("R")}`, `Prepara un hechizo (o ${alt} con la letra)`]] : []),
+      [k("V"), "Tras la frase: conjura repitiéndola en voz alta (otra vez V para parar)"],
+      [k("G"), "Tras la frase: abre el grimorio, si lo tienes"],
+      [`${k("Espacio")} y ${k("1")}–${k("4")}`, "En las tarjetas: muestra la respuesta y califícala"],
+    ])}
+    ${group("En todas partes", [
+      [k(alt, "S"), "Cambia de armas (I y II)"],
+      [k("C"), "Personaje"], [k("I"), "Inventario"], [k("M"), "Sonido sí / no"],
+      [k("Esc"), "Cierra paneles y ventanas"],
+    ])}
+    </div></section>`;
+}
+// The class ability (POWERS): one per class, for a fight, paid with a share of your maximum mana.
+const powerOn = (F = S.F) => !!(F && (F.power || F.roar > 0));
+function powerButton(st) {
+  const pw = E.powerOf(ch);
+  if (!pw) return "";
+  const cost = E.powerCost(ch, st), F = S.F, on = S.view === "fight" && powerOn(F);
+  const state = on ? (F.power ? "Preparada: sale con tu próximo golpe." : `Activa: ${F.roar === 1 ? "queda 1 turno" : `quedan ${F.roar} turnos`}.`) : "Úsala en un combate (F, o Alt+F mientras escribes).";
+  return `<button class="spell power${on ? " on" : ""}" data-power style="--sc:${pw.color}" title="${esc(`${pw.name} (${cost} de maná): ${pw.desc} ${state}`)}">${icon(pw.icon, pw.color)}<span class="sn">${cost}</span><kbd>F</kbd></button>`;
+}
+function usePower() {
+  const pw = E.powerOf(ch), F = S.F, st = stats();
+  if (!pw) return;
+  if (S.view !== "fight" || !F || F.over || !alive(F).length) return toast(`${pw.name}: solo en un combate`);
+  if (powerOn(F)) return toast(F.power ? `${pw.name} ya está preparada: sale con tu próximo golpe` : `${pw.name} sigue activa (${F.roar} ${F.roar === 1 ? "turno" : "turnos"} más)`);
+  if (pw.heal && ch.life >= st.maxLife && !F.boss?.burn) return toast("Tienes la vida entera: no hay nada que sanar");
+  const cost = E.powerCost(ch, st);
+  if (!spend(cost)) return;
+  if (pw.arm) { F.power = pw.id; addLog(`<b style="color:${pw.color}">${esc(pw.name)}</b> <span class="dim">(−${cost} de maná)</span>: sale con tu próximo golpe.`, "good"); }
+  if (pw.roar) { F.roar = pw.turns; addLog(`<b style="color:${pw.color}">¡${esc(pw.name)}!</b> <span class="dim">(−${cost} de maná)</span> Los monstruos se encogen: durante ${pw.turns} turnos te hacen la mitad de daño.`, "good"); }
+  if (pw.heal) {
+    const before = ch.life;
+    ch.life = Math.min(st.maxLife, ch.life + Math.round(st.maxLife * pw.heal));
+    const burnt = F.boss?.burn > 0; if (burnt) F.boss.burn = 0;
+    addLog(`<b style="color:${pw.color}">${esc(pw.name)}</b> <span class="dim">(−${cost} de maná)</span>: recuperas <b>${Math.round(ch.life - before)}</b> de vida${burnt ? " y se apaga el fuego" : ""}.`, "good");
+    flashOrb("#lifeOrb", "heal");
+  }
+  sfx.spell(1);
+  save(); renderHud();
 }
 function prepSpell(id) {
   const sp = E.spellsFor(ch).find((x) => x.id === id);
@@ -535,6 +666,15 @@ function tooltipHtml(it, compare = true) {
     }
     return out + `<div class="tsub">Valor: ${E.itemValue(it)} de oro</div>`;
   }
+  if (it.kind === "runa") {
+    const r = RUNA[it.runa], sets = RUNA_SETS.filter((x) => x.runas.includes(r.id));
+    out += `<div class="tsub" style="color:${color}">${RUNA_TIERS[r.tier].name} · «${esc(r.gloss)}» en muisca</div>`;
+    for (const [k, label] of RUNA_KINDS) out += `<div class="tline"><span class="dim">${label}:</span> ${esc(E.propText(...r[k]))}</div>`;
+    if (r.lvl > 1) out += `<div class="tline dim">El objeto en que la engastes pide nivel ${r.lvl}.</div>`;
+    if (sets.length) out += `<div class="tline dim">Forma parte de:</div>` + sets.map((x) => runaSetHtml(x)).join("");
+    out += `<div class="tline dim">Un conjunto rúnico despierta cuando todas sus runas están en un mismo objeto blanco (normal, superior o gastado), en cualquier orden.</div>`;
+    return out + `<div class="tsub">Valor: ${E.itemValue(it)} de oro</div>`;
+  }
   if (it.kind === "relic") return out + `<div class="tsub" style="color:${color}">Reliquia · muy rara</div><div class="tline">En la aldea, en el Montón: por cada ${MOUND_STEP} gemas perfectas del montón, un objeto mítico, una mascota o una montura. Se gasta al usarlo; las gemas que sobren se quedan.</div><div class="tsub">No se vende</div>`;
   if (it.kind === "potion") {
     const P = POTIONS[it.potion];
@@ -578,6 +718,12 @@ function tooltipHtml(it, compare = true) {
   if (it.sockets) {
     out += `<div class="tline dim">Engastes: ${it.gems.length}/${it.sockets}</div>`;
     for (const g of it.gems) out += socketLine(g, base.slot);
+    const rs = E.runaSetOf(it), have = it.gems.filter((g) => g.runa).map((g) => g.runa), kind = E.runaKind(base.slot);
+    if (rs) out += `<div class="tline" style="color:${RUNA_TIERS.alta.color}">Conjunto rúnico despierto (sus bonificaciones ya están sumadas arriba de lo que da cada runa):</div>` + runaSetHtml(rs, have, true, kind);
+    else if (have.length && E.isPlain(it)) {
+      const near = RUNA_SETS.filter((x) => x.kinds.includes(kind) && x.runas.length <= it.sockets && have.every((r) => x.runas.includes(r)));
+      if (near.length) out += `<div class="tline dim">Con sus runas va camino de:</div>` + near.map((x) => runaSetHtml(x, have, false, kind)).join("");
+    } else if (have.length) out += `<div class="tline dim">Los conjuntos rúnicos solo despiertan en objetos blancos.</div>`;
   }
   if (it.setShirt) {
     const set = SETS.find((s) => s.id === it.setShirt), c = RARITY[set.tier || "set"].color;
@@ -590,7 +736,10 @@ function tooltipHtml(it, compare = true) {
     const set = SETS.find((s) => s.id === it.set), have = E.setCounts(ch)[it.set] || 0;
     const owned = new Set(E.equippedItems(ch).filter((x) => x.set === it.set).map((x) => x.name));
     out += `<div class="tset"${set.tier ? ` style="color:${RARITY[set.tier].color}"` : ""}><div style="color:${RARITY[set.tier || "set"].color}">${esc(set.name)}${set.tier ? ` <span class="dim">· conjunto ${RARITY[set.tier].name.toLowerCase()}</span>` : ""}</div>` +
-      set.pieces.map((p) => `<div class="${owned.has(p.name) ? "" : "dim"}">${esc(p.name)}</div>`).join("") +
+      // each piece: worn (bright), or a mark when it's in your bag or the stash (identified: an unidentified one doesn't count yet)
+      (!it.unid && hasShirt(it.set) ? `<div class="sethave on">✓ Ya tienes su camiseta${ch.equip.shirt?.setShirt === it.set ? " (la llevas puesta)" : ""}: este conjunto no te hace falta para fundirla.</div>` : "") +
+      set.pieces.map((p) => { const where = owned.has(p.name) ? "puesta" : ch.inv.some((x) => !x.unid && x.set === it.set && x.name === p.name) ? "en la bolsa" : (ch.stash || []).some((x) => !x.unid && x.set === it.set && x.name === p.name) ? "en el alijo" : "";
+        return `<div class="${owned.has(p.name) ? "" : "dim"}">${esc(p.name)}${where ? ` <span class="sethave${owned.has(p.name) ? " on" : ""}">✓ ${where}</span>` : ""}</div>`; }).join("") +
       Object.entries(set.bonus).map(([n, b]) => `<div class="${have >= +n ? "" : "dim"}">(${n} piezas) ${Object.entries(b).map(([k, v]) => esc(E.propText(k, v))).join(", ")}</div>`).join("") + `</div>`;
   }
   if (it.flavor) out += `<div class="tflavor">${esc(it.flavor)}</div>`;
@@ -675,7 +824,7 @@ function itemActions(id) {
   if (it.kind === "potion") {
     if (where !== "belt") A.push(["Al cinturón", () => toBelt(it.id), ch.belt.length >= stats().beltSlots]);
     if (where === "belt") A.push(["Beber", () => drink(it.id)]);
-  } else if (it.kind === "gem") {
+  } else if (it.kind === "gem" || it.kind === "runa") {
     const hosts = [...Object.values(ch.equip).filter(Boolean), ...ch.inv].filter((x) => !x.kind && !x.unid && x.sockets > x.gems.length);
     for (const host of hosts.slice(0, 8)) A.push([`Engastar en ${E.itemName(host)}`, () => socket(it.id, host.id)]);
     if (!hosts.length) A.push(["No tienes objetos con engastes libres", () => {}, true]);
@@ -824,9 +973,17 @@ function shirtDisplay() {
     mark();
   };
   const choose = (sl, v) => { it.show = { ...(it.show || {}), [sl]: v }; };
+  // a two-handed weapon and the other hand can't both show: picking one clears the other
+  const shownIn = (sl) => { const c = shirtChoice(it, set, sl); return c === "set" ? setPieceFor(set, sl) : c === "real" ? realOf(sl) : null; };
+  const twoH = (x) => !!(x && BASE[x.base]?.twoHanded);
+  const pick = (sl, v) => {
+    choose(sl, v);
+    if (sl === "weapon" && twoH(shownIn("weapon")) && shownIn("off")) choose("off", "none");
+    if (sl === "off" && v !== "none" && twoH(shownIn("weapon"))) choose("weapon", "none");
+  };
   // carry an older choice (pieces unticked by name) over before anything changes
   if (it.hide) { for (const sl of SHOW_SLOTS) { const c = shirtChoice(it, set, sl); if (c !== "set" && setPieceFor(set, sl)) choose(sl, c); } }
-  d.querySelectorAll(".shopt").forEach((b) => (b.onclick = () => { choose(b.dataset.sl, b.dataset.v); apply(); }));
+  d.querySelectorAll(".shopt").forEach((b) => (b.onclick = () => { pick(b.dataset.sl, b.dataset.v); apply(); }));
   d.querySelector("#shirtAll").onclick = () => { for (const sl of SHOW_SLOTS) if (setPieceFor(set, sl)) choose(sl, "set"); apply(); };
   d.querySelector("#shirtReal").onclick = () => { for (const sl of SHOW_SLOTS) choose(sl, "real"); apply(); };
   d.querySelector("#shirtOff").onclick = () => { closeDialog(); unequip("shirt"); };
@@ -847,8 +1004,9 @@ function socket(gemId, hostId) {
   const host = findItem(hostId)?.it;
   if (!host || host.gems.length >= host.sockets) return;
   const gem = remove(gemId);
-  host.gems.push({ gem: gem.gem, grade: gem.grade });
-  toast(`Engastaste ${E.itemName(gem)}`);
+  host.gems.push(gem.kind === "runa" ? { runa: gem.runa } : { gem: gem.gem, grade: gem.grade });
+  const rs = gem.kind === "runa" && E.runaSetOf(host);
+  toast(rs ? `¡${RUNA_SETS.find((x) => x.id === rs.id).name}! El conjunto rúnico despierta en ${E.itemName(host)}` : `Engastaste ${E.itemName(gem)}`, rs ? "levelup" : "", rs ? 4000 : undefined);
   afterGearChange();
 }
 // The stash in order: gear (best rarity first, then by slot, higher level first), gems
@@ -859,6 +1017,7 @@ const GEM_RANK = Object.keys(GEMS);
 // [numbers..., name]: compared number by number, then by name (sortCompare)
 function sortKey(it) {
   if (it.kind === "gem") return [2, GEM_RANK.indexOf(it.gem), -it.grade, 0, 0, ""];
+  if (it.kind === "runa") return [2, 50, -RUNAS.findIndex((r) => r.id === it.runa), 0, 0, ""];
   if (it.kind === "potion") return [3, ["life", "mana", "rejuv"].indexOf(it.potion), -(it.tier || 0), 0, 0, ""];
   if (it.kind) return [4, 0, 0, 0, 0, E.itemName(it)];
   // a set's pieces together, in the set's own order, after the rest of their rarity's sets... by set
@@ -875,8 +1034,13 @@ function sortCompare(a, b) {
   for (let i = 0; i < n; i++) if (x[i] !== y[i]) return x[i] - y[i];
   return x[n].localeCompare(y[n]);
 }
-// The stash holds STASH_SIZE, but shows 80 slots and grows a row at a time, always one row free
-const stashShown = () => Math.min(STASH_SIZE, Math.max(80, (Math.ceil(ch.stash.length / 10) + 1) * 10));
+// The stash holds STASH_SIZE, but shows 8 rows and grows a row at a time, always one row free.
+// Rows run the page's width, as wide as the village picture: 10 slots on a phone, 16 on a computer,
+// each slot about as big as the bag's.
+let stashColsShown = 0;
+const stashCols = () => Math.max(10, Math.min(24, Math.floor((screen.clientWidth - 40 + 3) / 57)));
+const stashShown = (cols = stashCols()) => Math.min(STASH_SIZE, Math.max(cols * 8, (Math.ceil(ch.stash.length / cols) + 1) * cols));
+new ResizeObserver(() => { if (S.view === "town" && S.townTab === "stash" && stashCols() !== stashColsShown) renderTown(); }).observe(screen);
 function sortStash() { sortList(ch.stash); }
 function sortBag() { sortList(ch.inv); toast("Bolsa ordenada"); }
 function sortList(list) {
@@ -903,6 +1067,7 @@ function listRows(tab) {
 // What it is, in a few words: rarity and kind of item
 function listKind(it) {
   if (it.kind === "gem") return "Gema";
+  if (it.kind === "runa") return RUNA_TIERS[RUNA[it.runa].tier].name;
   if (it.kind === "relic") return "Reliquia";
   if (it.kind === "potion") return "Poción";
   const base = BASE[it.base];
@@ -953,6 +1118,7 @@ function listProps(it) {
     const P = POTIONS[it.potion];
     return it.potion === "life" ? `Recupera ${P.heal[it.tier]} de vida` : it.potion === "mana" ? `Recupera ${P.mana[it.tier]} de maná` : "Recupera el 40% de vida y maná";
   }
+  if (it.kind === "runa") return [["w", "Arma"], ["a", "Armadura"], ["o", "Escudo"]].map(([k, l]) => `<div><span class="dim">${l}:</span> ${esc(E.propText(...RUNA[it.runa][k]))}</div>`).join("");
   if (it.kind === "relic") return `En el Montón: cada ${MOUND_STEP} gemas perfectas, un mítico, una mascota o una montura`;
   if (it.unid) return `<span class="unid">Sin identificar</span>`;
   let out = Object.entries(it.props).sort((a, b) => E.PROP_ORDER(a[0]) - E.PROP_ORDER(b[0])).map(([k, v]) => `<div>${esc(E.propText(k, v))}</div>`).join("");
@@ -969,7 +1135,7 @@ function listReq(it) {
 }
 function listSockets(it) {
   if (!it.sockets) return `<span class="dim">—</span>`;
-  const used = it.gems.map((g) => `<span style="color:${GEMS[g.gem].shades?.[g.grade] || GEMS[g.gem].color}">◆</span>`).join(" ");
+  const used = it.gems.map((g) => `<span style="color:${sockColor(g)}">${g.runa ? "ᚱ" : "◆"}</span>`).join(" ");
   return `${it.gems.length}/${it.sockets}${used ? `<div>${used}</div>` : ""}`;
 }
 function listActions(it, tab, slot) {
@@ -1143,6 +1309,8 @@ function renderChar() {
     ${st.dmgDictation ? row("Daño en dictado", `+${st.dmgDictation}%`) : ""}
     ${st.dmgCloze ? row("Daño en huecos", `+${st.dmgCloze}%`) : ""}
     ${st.leech ? row("Robo de vida", `${st.leech}%`) : ""}
+    ${E.powerOf(ch) ? `<h3>Habilidad de ${esc(CLASSES[ch.cls].name.toLowerCase())}</h3>
+      <div class="srow spellrow"><span>${icon(E.powerOf(ch).icon, E.powerOf(ch).color)} <b>${esc(E.powerOf(ch).name)}</b> <kbd>F</kbd><small>${esc(E.powerOf(ch).desc)} En un combate: F, o Alt+F mientras escribes.</small></span><b>${E.powerCost(ch, st)} maná</b></div>` : ""}
     ${companionsPanel()}
     <h3>Defensa</h3>
     ${row("Vida", `${Math.round(ch.life)}/${st.maxLife}`)}
@@ -1249,12 +1417,16 @@ function slotCell(slot, label, cls = "") {
   const it = ch.equip[slot];
   return `<div class="doll-slot ${cls}" title="${label}">${it ? `<button class="item r-${it.rarity}" data-id="${it.id}">${itemIco(it)}${it.sockets ? `<span class="sock">${it.gems.length}/${it.sockets}</span>` : ""}</button>` : `<span class="empty">${label}</span>`}</div>`;
 }
+// you already have this set's undershirt (on the shelf or on you): a little shirt in the item's corner
+// (not while the item is unidentified)
+const hasShirt = (sid) => !!(sid && (ch.shirts?.[sid] || ch.equip.shirt?.setShirt === sid));
+const shirtMark = (it) => (it.set && !it.unid && hasShirt(it.set) ? `<span class="hasshirt" title="Ya tienes la camiseta de este conjunto">${icon("leather-vest", "#8fd18a")}</span>` : "");
 function grid(list, size) {
   let out = "";
   // never hide anything: a bag that somehow holds more than it should shows the extra too
   for (let i = 0; i < Math.max(size, list.length); i++) {
     const it = list[i];
-    out += it ? `<button class="cell item r-${it.rarity}" data-id="${it.id}">${itemIco(it)}${it.sockets ? `<span class="sock">${it.gems.length}/${it.sockets}</span>` : ""}${!it.kind && !E.canEquip(ch, it) ? `<span class="noreq"></span>` : ""}</button>` : `<span class="cell"></span>`;
+    out += it ? `<button class="cell item r-${it.rarity}" data-id="${it.id}">${itemIco(it)}${shirtMark(it)}${it.sockets ? `<span class="sock">${it.gems.length}/${it.sockets}</span>` : ""}${!it.kind && !E.canEquip(ch, it) ? `<span class="noreq"></span>` : ""}</button>` : `<span class="cell"></span>`;
   }
   return out;
 }
@@ -1274,7 +1446,8 @@ function dollFigure(box) {
 }
 // One place per set for its magic undershirt (made at the alembic from the whole set); the one you wear shows here too
 // you, as you'd look with this set's undershirt on, every piece shown (the shelf: in colour if you have it, a shadow if not)
-const dressedIn = (set) => ({ ...ch, equip: { ...ch.equip, shirt: { base: "camiseta", rarity: set.tier || "set", setShirt: set.id } } });
+// the shelf shows you in the set alone: no other gear, no horse
+const dressedIn = (set) => ({ ...ch, mount: null, equip: { shirt: { base: "camiseta", rarity: set.tier || "set", setShirt: set.id } } });
 // the shelf in tiers: plain sets, then ancestral, legendary and mythic, each by level (as the shirts hang)
 const TIER_RANK = { ancestral: 1, legendario: 2, mitico: 3, tunjo: 4 };
 const SETS_BY_TIER = SETS.map((s, i) => [s, i]).sort(([a, i], [b, j]) => (TIER_RANK[a.tier] || 0) - (TIER_RANK[b.tier] || 0) || a.lvl - b.lvl || i - j).map(([s]) => s);
@@ -1483,7 +1656,7 @@ function renderCreate() {
       <h3>Clase</h3>
       <div class="classes">
         ${Object.entries(CLASSES).map(([id, c]) => `
-          <button class="cls" data-cls="${id}">${icon(c.icon, "#d8c49a", "big")}<b>${c.name}</b><span>${esc(c.blurb)}</span></button>`).join("")}
+          <button class="cls" data-cls="${id}">${icon(c.icon, "#d8c49a", "big")}<b>${c.name}</b><span>${esc(c.blurb)}</span>${POWERS[id] ? `<span class="clspow" style="color:${POWERS[id].color}">${esc(POWERS[id].name)}: <span class="dim">${esc(POWERS[id].desc)}</span></span>` : ""}</button>`).join("")}
       </div>
     </section>`;
   // the look you pick here is kept whatever the class; untouched, each class brings its own
@@ -1676,7 +1849,7 @@ function renderTown() {
         const P = POTIONS[type], tier = type === "rejuv" ? 0 : tierNow, price = P.price[tier];
         const tmp = E.makePotion(type, tier);
         return `<div class="ware">${itemIco(tmp)}<div><b>${esc(E.itemName(tmp))}</b><span class="dim">${price} de oro</span></div><button data-buy="${type}" ${ch.gold < price ? "disabled" : ""}>Comprar</button></div>`;
-      }).join("") + `</div><button id="fillBelt">Llenar el cinturón</button>`;
+      }).join("") + `</div><button id="fillBelt">Llenar el cinturón</button>${touch() ? "" : keysCard()}`;
   } else if (S.townTab === "casetes") {
     const p = tunjoPrice(), wait = tunjoWait(), G = ch.grimoire || [];
     const short = Math.max(0, p - ch.gold);
@@ -1698,13 +1871,14 @@ function renderTown() {
   } else if (S.townTab === "monton") {
     body = moundPanel();
   } else if (S.townTab === "stash") {
-    body = `<p class="dim">Lo que guardes aquí no ocupa el inventario. ${touch() ? "Toca un objeto del inventario para guardarlo, y uno del alijo para sacarlo." : "Clic en un objeto del inventario para guardarlo, y en uno del alijo para sacarlo. Clic derecho para más opciones."}</p>${invInline()}<h3 class="rwtitle">El alijo <span class="dim">${ch.stash.length}/${STASH_SIZE}</span></h3><div class="grid stash">${grid(ch.stash, stashShown())}</div><div class="row"><button id="sortStash" ${ch.stash.length > 1 ? "" : "disabled"} title="Equipo (de mejor a peor, cada conjunto junto), gemas, pociones">Ordenar el alijo</button><button id="stashList" title="El alijo en una tabla, sin pasar el ratón por encima">Ver como lista</button></div>`;
+    body = `<p class="dim">Lo que guardes aquí no ocupa el inventario. ${touch() ? "Toca un objeto del inventario para guardarlo, y uno del alijo para sacarlo." : "Clic en un objeto del inventario para guardarlo, y en uno del alijo para sacarlo. Clic derecho para más opciones."}</p>${invInline()}<h3 class="rwtitle">El alijo <span class="dim">${ch.stash.length}/${STASH_SIZE}</span></h3><div class="grid stash" style="--scols:${(stashColsShown = stashCols())}">${grid(ch.stash, stashShown(stashColsShown))}</div><div class="row"><button id="sortStash" ${ch.stash.length > 1 ? "" : "disabled"} title="Equipo (de mejor a peor, cada conjunto junto), gemas, pociones">Ordenar el alijo</button><button id="stashList" title="El alijo en una tabla, sin pasar el ratón por encima">Ver como lista</button></div>${unidCount() ? `<button id="idAll" class="idall">Identificar uno tras otro <span class="dim">(${unidCount()} sin identificar, en la bolsa y el alijo)</span></button>` : ""}`;
   } else {
     body = `<p class="dim">Pon objetos del inventario en el alambique y transmuta. ${touch() ? "Toca" : "Clic en"} un objeto del inventario para meterlo, y en el alambique para sacarlo.${touch() ? "" : " Clic derecho para más opciones."}</p>
       <div class="alembic">${[...Array(ALEM_SIZE).keys()].map((i) => { const it = S.alembic[i]; return it ? `<button class="cell item r-${it.rarity}" data-alem="${i}" title="${esc(E.itemName(it))}">${itemIco(it)}</button>` : `<span class="cell"></span>`; }).join("")}</div>
       <div class="row"><button id="transmute" class="primary" ${S.alembic.length ? "" : "disabled"}>Transmutar</button><button id="emptyAlem" ${S.alembic.length ? "" : "disabled"}>Vaciar</button>${massGemButton()}</div>
       ${invInline()}
-      <ul class="recipes">${E.RECIPES.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>`;
+      <ul class="recipes">${E.RECIPES.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>
+      ${runaGuide()}`;
   }
   screen.innerHTML = `
     <section class="town">
@@ -1726,6 +1900,7 @@ function renderTown() {
   $("#buyTunjo")?.addEventListener("click", buyTunjo);
   screen.querySelectorAll("[data-tback]").forEach((b) => (b.onclick = () => tunjoBack(b.dataset.tback)));
   $("#sortStash")?.addEventListener("click", sortStash);
+  $("#idAll")?.addEventListener("click", () => { const n = nextUnid(); if (n) identify(n.id, true); });
   $("#stashList")?.addEventListener("click", () => openItemList("stash"));
   screen.querySelectorAll("[data-gplay]").forEach((b) => (b.onclick = () => { const g = ch.grimoire[+b.dataset.gplay]; playRange(g.start, g.end); }));
   screen.querySelectorAll("[data-buy]").forEach((b) => (b.onclick = () => buyPotion(b.dataset.buy)));
@@ -1814,7 +1989,7 @@ function descentList(z, zp) {
     const lines = zoneLines(z, d), reach = d <= deep, here = d === cur;
     const prize = ["dict", "cloze"].map((k) => zoneRewardGot(z, d, k) ? "✓" : "").join("");
     return `<li class="descent${here ? " here" : ""}${reach ? "" : " far"}">
-      <span class="dname"><b>${label}</b> <span class="dim">nivel ${atLevel(z).lvl[0] + d * 2}${span ? ` · ${span}` : ""}</span>${here ? ` <span class="dhere">grupo ${zp.pack + 1}</span>` : ""}</span>
+      <span class="dname"><b>${label}</b> <span class="dim">nivel ${atLevel(z).lvl[0] + d * 2}${span ? ` · ${span}` : ""}</span>${here ? ` <span class="dhere">${zp.pack >= z.packs ? (bossReady(z, d) ? "jefe" : `grupos extra: ${bossNeed(z, d)} para el jefe`) : `grupo ${zp.pack + 1}`}</span>` : ""}</span>
       <span class="dmast">${bar(lines, "dict")}${bar(lines, "cloze")}${prize ? `<span class="dprize" title="Premios recibidos: dictado y huecos al 100%">${prize}</span>` : ""}</span>
       ${reach ? `<button data-zone="${z.id}" data-depth="${d}" class="${here ? "primary" : ""}">${here ? "Seguir" : "Entrar"}</button>` : `<span class="dim small">Llega desde el descenso ${d}</span>`}</li>`;
   };
@@ -1845,8 +2020,9 @@ function renderMap() {
         ${ZONES.map((z, i) => {
           const zp = ch.zones[z.id] || { pack: 0 };
           const open = unlocked(i);
-          const prog = z.endless ? `Descenso ${(zp.depth || 0) + 1} · grupo ${zp.pack + 1}`
+          const prog = z.endless ? `Descenso ${(zp.depth || 0) + 1} · ${zp.pack < z.packs ? `grupo ${zp.pack + 1}` : bossReady(z, zp.depth || 0) ? `te espera ${BOSSNAME(z)}` : `${BOSSNAME(z)} aparece cuando domines la mitad de las frases (${bossNeed(z, zp.depth || 0)})`}`
             : zp.cleared ? `Liberada. Puedes volver a por botín.`
+            : zp.pack >= z.packs && !bossReady(z) ? `${BOSSNAME(z)} aparece cuando domines la mitad de las frases (${bossNeed(z)})`
             : zp.pack >= z.packs ? `Te espera ${BOSSNAME(z)}`
             : `Grupo ${zp.pack + 1} de ${z.packs}, luego ${BOSSNAME(z)}`;
           const zl = zoneLines(z, zp.depth || 0);
@@ -1947,7 +2123,13 @@ function cardFight(name) {
   try { startEncounter(); }
   catch (e) { console.error(e); S.F = null; S.review = null; show("map"); toast(`No se pudo abrir el repaso: ${e.message}`, "", 5000); }
 }
-const cardsLeft = () => (S.review ? S.review.cards.length - S.review.i : 0);
+// La encrucijada never runs out: when its sentences are used up, another round of them is dealt
+const cardsLeft = () => {
+  const R = S.review;
+  if (!R) return 0;
+  if (R.source === "subj" && R.cards.length - R.i <= 0) R.cards.push(...subjSession(R.cats).map((x) => ({ ...x, kind: "subj", deck: "subj", deckName: SUBJ_CATS[x.cat] })));
+  return R.cards.length - R.i;
+};
 async function answerCard(card, ease) {
   S.review.counts[ease]++;
   if (card.kind === "subj") return subjProgress(card, ease >= 3);
@@ -1983,12 +2165,26 @@ function pickCard() {
   return R.cards[R.i++];
 }
 // Out of cards: whatever is left runs off, and you keep what's on the ground.
+// Flash cards go on with no screen between groups: the gold goes straight into your purse and the next
+// group comes, until the cards run out.
+function reviewNextPack() {
+  const F = S.F, gold = F.ground.gold;
+  stopAll();
+  ch.gold += gold;
+  if (S.review) S.review.gold = (S.review.gold || 0) + gold;
+  ch.zones.repaso.pack++;
+  save();
+  if (gold) sfx.coin();
+  startEncounter();
+  addLog(`Grupo derrotado${gold ? `: <b class="gold">+${gold} de oro</b>` : ""}. Llegan más.`, "good");
+  renderHud(); renderPanels();
+}
 function repasoDone() {
   const F = S.F, R = S.review;
   stopAll();
   F.over = true;
   ch.gold += F.ground.gold;
-  S.loot = { gold: F.ground.gold, items: F.ground.items };
+  S.loot = { gold: F.ground.gold + (R.gold || 0), items: [] };
   save();
   const n = Object.values(R.counts).reduce((x, y) => x + y, 0);
   $("#arena").innerHTML = `
@@ -2000,14 +2196,10 @@ function repasoDone() {
         ${R.failed ? `<span class="bad">${R.failed} no se guardaron en Anki.</span>` : `<span class="dim">Todo guardado en Anki.</span>`}</p>`}
       ${alive(F).length ? `<p class="dim">Sin más ${R.source === "subj" ? "frases" : "tarjetas"}, los monstruos que quedaban huyen.</p>` : ""}
       ${S.loot.gold ? `<p class="gold">${icon("coins-pile", "#e2b84a")} +${S.loot.gold} de oro</p>` : ""}
-      <div class="ground" id="ground"></div>
-      <div class="row"><button id="goMain" class="primary" data-go="Volver a la aldea"></button><button id="goSkip" class="ghost">Volver sin recoger</button></div>
+      <div class="row"><button id="goMain" class="primary">Volver a la aldea</button></div>
     </div>`;
-  renderGround();
   if (S.loot.gold) sfx.coin();
-  const home = () => { S.F = null; S.review = null; show("town"); };
-  $("#goMain").onclick = () => collectThen(home);
-  $("#goSkip").onclick = home;
+  $("#goMain").onclick = () => { S.F = null; S.review = null; show("town"); };
   $("#goMain").focus();
 }
 function setupCardExercise() {
@@ -2123,7 +2315,7 @@ function subjSession(cats, n = 16) {
 function enterEncrucijada(cats) {
   const cards = subjSession(cats).map((x) => ({ ...x, kind: "subj", deck: "subj", deckName: SUBJ_CATS[x.cat] }));
   if (!cards.length) return toast("Elige al menos un tipo de frase");
-  S.review = { cards, i: 0, counts: { 1: 0, 2: 0, 3: 0, 4: 0 }, failed: 0, source: "subj" };
+  S.review = { cards, i: 0, counts: { 1: 0, 2: 0, 3: 0, 4: 0 }, failed: 0, source: "subj", cats: new Set(cats) };
   try { cardFight("La encrucijada"); }
   catch (e) { console.error(e); S.F = null; S.review = null; show("map"); toast(`No se pudo abrir la encrucijada: ${e.message}`, "", 5000); }
 }
@@ -2213,7 +2405,7 @@ function showSubjResult(r) {
   res.innerHTML = `${subjVerdictHtml(card, r)}
     <div class="row">
       <button id="reviewBtn" title="Claude revisa tu frase entera: el modo, y si es correcta y natural">Que lo revise Claude</button>
-      <button id="nextBtn" class="primary">${!cardsLeft() ? "Terminar" : alive(F).length ? "Siguiente frase" : "Recoger el botín"} <kbd>Enter</kbd></button>
+      <button id="nextBtn" class="primary">${!cardsLeft() ? "Terminar" : alive(F).length ? "Siguiente frase" : "Siguiente grupo"} <kbd>Enter</kbd></button>
     </div>
     <div class="explain" id="explainOut" hidden></div>`;
   res.hidden = false;
@@ -2263,10 +2455,14 @@ let warmed = false;
 function warmVoice() { if (!warmed && voiceOk()) { warmed = true; fetch("api/shadow/warm", { method: "POST" }).catch(() => {}); } }
 function startEncounter() {
   warmVoice();
-  const zp = ch.zones[S.zone.id];
-  const enc = E.makeEncounter(atLevel(S.zone), zp.pack, zp.depth || 0, E.diffOf(ch));
-  const queue = S.zone.review ? [] : buildQueue();
+  const zp = ch.zones[S.zone.id], z = S.zone;
+  // past the last group, a gated zone's boss only comes once you've mastered half its lines
+  const late = zp.pack >= z.packs, held = late && gated(z) && !bossReady(z, zp.depth || 0);
+  const slot = { boss: late && !held, group: held ? extraGroup(z, zp) : null };
+  const enc = E.makeEncounter(atLevel(z), held ? z.packs - 1 : zp.pack, zp.depth || 0, E.diffOf(ch));
+  const queue = S.zone.review ? [] : buildQueue(slot);
   S.F = { enc, monsters: enc.monsters, target: 0, combo: Math.max(stats().comboStart, ch.streak || 0), ear: ch.earStreak || 0, log: [], si: null, ground: { gold: 0, items: [] }, queue, qi: 0, review: !!S.zone.review };
+  if (held) S.F.extra = true;
   if (enc.boss) S.F.boss = { charge: 0, armed: false, p2: false, stolen: [], deal: null, burn: 0, tangle: 0 };
   S.loot = null;
   const foe = S.zone.review ? leechFoe(enc) : weakFoe(enc, queue);
@@ -2275,7 +2471,9 @@ function startEncounter() {
   if (enc.intro) addLog(enc.intro, "intro");
   if (foe) addLog(foe.lore, "weak");
   if ((ch.streak || 0) >= 2 && !S.F.review) addLog(`Sigues con tu racha de <b>${ch.streak}</b> (×${(1 + 0.1 * Math.min(ch.streak, 10)).toFixed(1)}).`, "good");
-  if (queue.misses) addLog(`<b>${esc(BOSSES[S.zone.boss].name)}</b> conoce tus fallos: trae ${queue.misses} ${queue.misses === 1 ? "frase que aún no dominas" : "frases que aún no dominas"}. Y lo que falles aquí te lo devuelve enseguida.`, "intro");
+  if (held) addLog(`${esc(BOSSES[z.boss].name)} no aparece hasta que domines la mitad de las frases de esta zona (llevas ${bossNeed(z, zp.depth || 0)}). Otro grupo, con las frases que menos dominas.`, "intro");
+  if (enc.boss && gated(z)) addLog(`<b>${esc(BOSSES[z.boss].name)}</b> trae ${queue.fresh === 1 ? "1 frase nueva" : `${queue.fresh} frases nuevas`} y ${queue.misses === 1 ? "1 de las que más te cuestan" : `${queue.misses} de las que más te cuestan`}. Y lo que falles aquí te lo devuelve enseguida.`, "intro");
+  else if (queue.misses) addLog(`<b>${esc(BOSSES[S.zone.boss].name)}</b> conoce tus fallos: trae ${queue.misses} ${queue.misses === 1 ? "frase que aún no dominas" : "frases que aún no dominas"}. Y lo que falles aquí te lo devuelve enseguida.`, "intro");
   const boss = bossOf(S.F);
   if (boss && hasBossArt(boss.kind)) {
     if (bossRules(S.F)) addLog(`<b>${esc(BOSSES[boss.kind].special.name)}</b>: lo verás venir en su barra. Cuando se llene, <b>solo una frase perfecta</b> lo esquiva. A la mitad de su vida, cambia.`, "boss");
@@ -2291,7 +2489,8 @@ function startEncounter() {
 const bossOf = (F) => F?.monsters?.find((m) => m.tier === "boss" && m.kind in BOSSES) || null;
 const bossRules = (F) => !!(F?.boss && !F.review && !S.zone?.fights);
 const isEasy = () => (ch.difficulty || "medio") === "facil";
-const bossEvery = (F, m) => (F.boss.p2 && BOSSES[m.kind].p2.every) || BOSSES[m.kind].special.every;
+// the signature attack: one turn sooner than its card says (never more often than every 2 turns), except on Fácil
+const bossEvery = (F, m) => { const n = (F.boss.p2 && BOSSES[m.kind].p2.every) || BOSSES[m.kind].special.every; return isEasy() ? n : Math.max(2, n - 1); };
 const PRICE = 0.15; // the Mandingas's deal: what each line short of perfect costs, of your life
 // Its turn: let go of the signature attack if it was ready (it hits instead of its normal blow), or charge it.
 function bossTurn(F, m, acc, st, D, unleash, wasFrozen) {
@@ -2499,10 +2698,10 @@ function renderFight() {
   screen.innerHTML = `
     <section class="fight">
       <div class="fighthead">
-        <div><b>${esc(S.zone.name)}</b> <span class="dim">${F.review ? `${S.review?.source === "subj" ? "Subjuntivo o no" : "Repaso de Anki"} · grupo ${zp.pack + 1}` : S.zone.fights ? `${LEVEL_NAME[courseFight(S.zone, zp.pack).mode]}${F.enc.boss ? " · jefe" : ` · combate ${zp.pack + 1} de ${S.zone.packs}`}` : F.enc.boss ? "Jefe" : S.zone.endless ? `Descenso ${(zp.depth || 0) + 1} · grupo ${zp.pack + 1}` : `Grupo ${zp.pack + 1} de ${S.zone.packs}`} · nivel ${F.enc.lvl} · ${E.diffOf(ch).name}</span>
+        <div><b>${esc(S.zone.name)}</b> <span class="dim">${F.review ? `${S.review?.source === "subj" ? "Subjuntivo o no" : "Repaso de Anki"} · grupo ${zp.pack + 1}` : S.zone.fights ? `${LEVEL_NAME[courseFight(S.zone, zp.pack).mode]}${F.enc.boss ? " · jefe" : ` · combate ${zp.pack + 1} de ${S.zone.packs}`}` : F.enc.boss ? "Jefe" : F.extra ? `${S.zone.endless ? `Descenso ${(zp.depth || 0) + 1} · ` : ""}grupo extra · ${bossNeed(S.zone, zp.depth || 0)} frases para el jefe` : S.zone.endless ? `Descenso ${(zp.depth || 0) + 1} · grupo ${zp.pack + 1}` : `Grupo ${zp.pack + 1} de ${S.zone.packs}`} · nivel ${F.enc.lvl} · ${E.diffOf(ch).name}</span>
           <div class="dim small" id="groupMastery"></div></div>
         <div class="combo" id="combo"></div>
-        <button id="portal" class="ghost" title="Vuelves a la aldea. El grupo actual se reinicia.">Volver a la aldea</button>
+        <button id="portal" class="ghost" title="${F.review ? "Vuelves a la aldea con el oro que llevas ganado." : "Vuelves a la aldea. El grupo actual se reinicia."}">Volver a la aldea</button>
       </div>
       <div class="stage${sceneOf(S.zone) ? ` scene scene-${sceneOf(S.zone)}` : ""}${bossOf(F) && hasBossArt(bossOf(F).kind) ? ` bossfight bf-${bossOf(F).kind}` : ""}">
         ${sceneOf(S.zone) ? sceneFx(sceneOf(S.zone)) : ""}
@@ -2515,7 +2714,9 @@ function renderFight() {
     </section>`;
   // the log is folded away unless you open it (remembered on this device)
   $("#logbox").ontoggle = (e) => localStorage.setItem("rpgLogOpen", e.target.open ? "1" : "0");
-  $("#portal").onclick = () => { stopAll(); S.F = null; show("town"); };
+  // a card fight has no end of its own (La encrucijada) or none you must reach: leaving keeps the gold of
+  // what you've already beaten in this group
+  $("#portal").onclick = () => { stopAll(); if (F.review && !F.over) { ch.gold += F.ground.gold; F.ground.gold = 0; S.review = null; save(); } S.F = null; show("town"); };
   renderMe(); renderFoes(); renderCombo(); addLog("", "");
   S.F.log = S.F.log.filter((l) => l.text);
   $("#log").innerHTML = S.F.log.map((l) => `<li class="${l.cls}">${l.text}</li>`).join("");
@@ -2525,7 +2726,7 @@ function renderGroupMastery() {
   if (!el || !F) return;
   if (F.review && S.review.source === "subj") {
     const R = S.review, done = R.i - (F.checked ? 0 : 1), good = R.counts[3] + R.counts[4];
-    el.innerHTML = `<b class="ankideck">${esc(F.ex?.card?.deckName || "")}</b> · frase ${Math.min(R.i, R.cards.length)} de ${R.cards.length} · ${good}/${done} con el modo bien`;
+    el.innerHTML = `<b class="ankideck">${esc(F.ex?.card?.deckName || "")}</b> · frase ${R.i} · ${good}/${done} con el modo bien`;
     return;
   }
   if (F.review) {
@@ -2969,7 +3170,7 @@ function setupExercise(keep) {
       <div class="excontrols">
         <button id="playBtn" class="playbtn" title="Escuchar (Tab)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
         <button id="slowBtn" ${eco ? "disabled title='El eco no te deja escuchar despacio'" : F.boss?.tangle > 0 ? "disabled title='Las enredaderas no te dejan'" : `title="Escuchar despacio (Mayús+Tab)"`}>Despacio <span class="cost">${C.slow ? C.slow + " maná" : "gratis"}</span></button>
-        <button id="hintBtn" ${F.boss?.tangle > 0 ? "disabled title='Las enredaderas no te dejan'" : `title="Primera letra de cada palabra (Alt+H)"`}>Pista <span class="cost">${C.hint} maná</span></button>
+        <button id="hintBtn" ${F.boss?.tangle > 0 ? "disabled title='Las enredaderas no te dejan'" : `title="Primera letra de cada palabra (Alt+H)"`}>Pista <span class="cost">${C.hint} maná</span></button>${E.powerOf(ch) ? `<button id="powBtn" class="powbtn${powerOn(F) ? " on" : ""}" style="--sc:${E.powerOf(ch).color}" title="${esc(E.powerOf(ch).desc)}">${icon(E.powerOf(ch).icon, E.powerOf(ch).color)} ${esc(E.powerOf(ch).name)} <span class="cost">${E.powerCost(ch, stats())} maná</span></button>` : ""}
         <span class="dim exinfo" id="exinfo"></span>
         ${F.review ? `<span class="deckname">${esc(F.ex.card.deckName)}</span>` : `<button class="flagBtn ghost" title="El texto no coincide con el audio (palabras equivocadas o el corte suena mal). Quita la frase de los juegos y deshace sus efectos.">No coincide</button>`}
       </div>
@@ -2997,6 +3198,7 @@ function setupExercise(keep) {
   $("#playBtn").onclick = () => { doPlay(false); focusInput(); };
   $("#slowBtn").onclick = () => { doPlay(true); focusInput(); };
   if (earOnlyAfter()) for (const b of ["#playBtn", "#slowBtn"]) { $(b).disabled = true; $(b).title = "La frase suena después de responder"; }
+  $("#powBtn")?.addEventListener("click", usePower);
   $("#hintBtn").onclick = () => hint(); // not `= hint`: the click event would arrive as `free`
   $("#attackBtn").onclick = attack;
   bindFlag();
@@ -3180,9 +3382,12 @@ function resolveAttack(r, acc, perfectFirst) {
   // the streak counting this answer (kills land before the streak is updated below): its loot luck
   F.luckCombo = acc >= 1 ? F.combo + 1 : st.comboKeep && acc >= 0.85 ? F.combo : 0;
   ch.stats.lines++;
-  if (acc >= 1) ch.stats.perfect++;
+  // an item that counts near misses as right helps in the fight (damage, streak, dodging), but what
+  // you really wrote is what counts for mastery and your record
+  const wrote = r.strictAcc ?? acc;
+  if (wrote >= 1) ch.stats.perfect++;
   if (F.review) F.masteredNow = 0;
-  else { masteryUpdate(acc, words, D); trackWords(r); if (F.masteredNow) zoneRewards(S.zone); }
+  else { masteryUpdate(wrote, words, D); trackWords(r); if (F.masteredNow) zoneRewards(S.zone); }
   const caught = []; // (runes caught by ear used to rise over you here)
   if (acc >= 1 && ch.streakLost) sfx.regain(F.combo + 1); else if (acc >= 1) sfx.correct(F.combo, perfectFirst); else if (acc >= 0.8) sfx.partial();
   const said = new Set((r.words || []).map((x) => norm(x.w))), right = new Set((r.words || []).filter((x) => x.ok).map((x) => norm(x.w)));
@@ -3225,6 +3430,14 @@ function resolveAttack(r, acc, perfectFirst) {
       addLog(hit.dmg ? `Lanzas <b style="color:${spell.color}">${esc(spell.name)}</b> <span class="dim">(−${cost} de maná)</span>.` : `<b>${esc(spell.name)}</b> se deshace en el aire: no acertaste ninguna palabra <span class="dim">(−${cost} de maná)</span>.`, hit.dmg ? "" : "bad");
     }
   }
+  // the class ability waiting for this hit (a hit with no word right keeps it for the next)
+  const armed = F.power && hit.dmg ? POWERS[ch.cls] : null;
+  if (armed) {
+    F.power = null;
+    if (armed.double) { for (const k in hit.parts) hit.parts[k] *= 2; hit.dmg *= 2; }
+    addLog(`<b style="color:${armed.color}">${esc(armed.name)}</b>${armed.volley ? ": el golpe cae sobre todos" : ": el doble de daño"}.`, "good");
+  }
+  const volley = !!armed?.volley;
   // overkill carries over to the next monster, as the same share of each part of the hit
   let share = hit.dmg ? 1 : 0, totalDealt = 0, remaining = hit.dmg;
   const order = [target, ...alive(F).filter((m) => m !== target)];
@@ -3249,7 +3462,7 @@ function resolveAttack(r, acc, perfectFirst) {
     totalDealt += dealt;
     fxHits.push({ i: F.monsters.indexOf(m), text: (hit.crit && m === target ? "¡" : "") + dmg + (hit.crit && m === target ? "!" : ""), cls: hit.crit ? "crit" : "dmg", killed: m.hp <= 0, m });
     // a spell that hits everyone hits each one whole; otherwise only overkill carries on
-    share = cast?.all && hit.dmg ? 1 : m.hp < 0 && dmg ? share * (-m.hp / dmg) : 0;
+    share = (cast?.all || volley) && hit.dmg ? 1 : m.hp < 0 && dmg ? share * (-m.hp / dmg) : 0;
     if (m.hp <= 0) kill(m);
   }
   // a fireball splashes onto every other monster still standing
@@ -3387,6 +3600,10 @@ function resolveAttack(r, acc, perfectFirst) {
     addLog(`Te golpean por <b class="taken">${taken}</b>${kinds.length > 1 ? ` <span class="dim">(${kinds.join(" + ")})</span>` : ""}.`, "bad");
   }
   if (frozenNow.length && !(acc >= D.safeAcc)) addLog(`${frozenNow.map((n) => `<b>${esc(n)}</b>`).join(", ")} no ${frozenNow.length > 1 ? "pueden" : "puede"} moverse: ${frozenNow.length > 1 ? "están congelados" : "está congelado"}.`, "good");
+  if (F.roar > 0) {
+    if (taken) { const cut = Math.floor(taken / 2); taken -= cut; addLog(`El grito de guerra les quita fuerza: <b>${cut}</b> de daño menos.`, "good"); }
+    if (--F.roar === 0) addLog("Se apaga el efecto del grito de guerra.", "dim");
+  }
   if (F.shield && taken) {
     const soak = Math.min(F.shield, taken);
     F.shield -= soak; taken -= soak;
@@ -3421,7 +3638,7 @@ function masteryUpdate(acc, words, D) {
   if (acc >= 1) { recordPerfect(F.ex, scoreKind()); checkCompanions(); }
   if (acc >= 1 && !(prevBest >= 1)) {
     const share = words.length / S.T.segments[F.si].words.length;
-    const bonus = Math.max(1, Math.round(E.xpFor(ch.level) * 0.6 * share * D.xp * rewardMul()));
+    const bonus = Math.max(1, Math.round(E.xpFor(ch.level) * 0.6 * share * D.xp * rewardMul() * XP_RATE));
     gainXp(bonus);
     F.masteredNow = bonus;
   } else F.masteredNow = 0;
@@ -3709,6 +3926,11 @@ function lootBeam(F, stage, h) {
 // Every piece of gear that falls, by rarity (what you saw, after a review's reduced rewards): the
 // character panel shows the tally, the debug export the last ones in detail.
 function logDrops(items, m) {
+  for (const it of items.filter((x) => x.kind === "runa")) {
+    const r = RUNA[it.runa];
+    addLog(`<b style="color:${E.itemColor(it)}">¡Una runa ${esc(r.name)}!</b> <span class="dim">(${RUNA_TIERS[r.tier].name.toLowerCase()})</span>`, "good");
+    if (r.tier !== "comun") toast(`¡Runa ${r.name}!`, "levelup", 3500);
+  }
   const gear = items.filter((it) => !it.kind);
   if (!gear.length) return;
   ch.stats.drops ||= {};
@@ -3727,13 +3949,14 @@ function kill(m) {
   const pen = m.lvl < ch.level - 6 ? 0.3 : 1;
   const D = E.diffOf(ch);
   const mul = rewardMul();
-  gainXp(Math.round(m.xp * pen * D.xp * mul * (1 + st.xp / 100)));
+  gainXp(Math.round(m.xp * pen * D.xp * mul * (1 + st.xp / 100) * XP_RATE));
   if (st.killHeal) ch.life = Math.min(st.maxLife, ch.life + st.killHeal);
   const loot = E.lootFor(m, ch, st, D, F.goodLoot || 1, E.streakLuck(F.luckCombo || 0) * (F.freshLoot ?? 1));
   // the Mandingas pays what he promised
   if (m.tier === "boss" && F.boss?.deal === "signed") { const more = E.lootFor(m, ch, st, D, F.goodLoot || 1, E.streakLuck(F.luckCombo || 0) * (F.freshLoot ?? 1)); loot.gold += more.gold; loot.items.push(...more.items); }
   F.ground.gold += Math.round(loot.gold * mul);
-  const items = mul < 1 ? loot.items.filter(() => Math.random() < mul) : loot.items;
+  // flash cards (Anki's, La encrucijada's) pay gold only: nothing falls to pick up
+  const items = F.review ? [] : mul < 1 ? loot.items.filter(() => Math.random() < mul) : loot.items;
   // good things fall unidentified: you find out what they are by ear (Identificar)
   for (const it of items) if (!it.kind && UNID.has(it.rarity)) it.unid = true;
   m.drops = items;
@@ -3744,6 +3967,8 @@ function kill(m) {
   if (m.tier === "boss" && F.boss && m.kind in BOSSES) bossFalls(F, m);
   if (m.weak && !m.mask) addLog(`Vences a tu punto débil «<b>${esc(m.word)}</b>». Sigue acertándola y no volverá.`, "good");
 }
+// all experience, kills and mastered lines, at this rate (0.5: levels take twice the play they used to)
+const XP_RATE = 0.5;
 function gainXp(n) {
   ch.xp += n;
   while (ch.xp >= E.xpToNext(ch.level)) {
@@ -3769,7 +3994,7 @@ function showCardResult(r, acc) {
     <div class="verdict"><b>${acc < 1 ? Math.min(99, Math.round(acc * 100)) : 100}%</b> ${anki}</div>
     <div class="cardback">${cleanHtml(card.back)}</div>`;
   res.innerHTML += `<div class="row"><button id="againBtn">Volver a oír</button>
-    <button id="nextBtn" class="primary">${!cardsLeft() ? "Terminar el repaso" : alive(F).length ? "Siguiente tarjeta" : "Recoger el botín"} <kbd>Enter</kbd></button></div>`;
+    <button id="nextBtn" class="primary">${!cardsLeft() ? "Terminar el repaso" : alive(F).length ? "Siguiente tarjeta" : "Siguiente grupo"} <kbd>Enter</kbd></button></div>`;
   res.hidden = false;
   $("#grades") && ($("#grades").hidden = true);
   $("#attackBtn") && ($("#attackBtn").hidden = true);
@@ -3791,7 +4016,7 @@ function showResult(r, acc, hit) {
     <div class="diff">${r.html}</div>
     ${F.mode === "dictation" ? `<div class="you">Escribiste: <span class="typed">${esc(r.typed || "(nada)")}</span></div>` : ""}
     ${nearMissHtml(r)}
-    <div class="verdict"><b>${pct}%</b> ${acc >= 1 ? "Perfecto." : r.accentMiss && acc >= 0.9 ? `Casi: ${r.accentMiss === 1 ? "falta una tilde" : `fallan ${r.accentMiss} tildes`} (palabras subrayadas).` : acc >= 0.8 ? "Casi." : acc >= 0.5 ? "A medias." : "Se te escapó."}
+    <div class="verdict"><b>${pct}%</b> ${acc >= 1 && (r.strictAcc ?? 1) < 1 ? `En el combate cuenta como perfecta: a tu equipo no le importan las tildes que faltan. Lo que escribiste: <b>${Math.min(99, Math.round(r.strictAcc * 100))}%</b>, así que no cuenta para dominarla.` : acc >= 1 ? "Perfecto." : r.accentMiss && acc >= 0.9 ? `Casi: ${r.accentMiss === 1 ? "falta una tilde" : `fallan ${r.accentMiss} tildes`} (palabras subrayadas).` : acc >= 0.8 ? "Casi." : acc >= 0.5 ? "A medias." : "Se te escapó."}
       <span class="dim">${F.prevBest == null ? "Primera vez que la oyes." : `Tu mejor antes: ${Math.round(F.prevBest * 100)}%.`}</span>
       ${F.masteredNow ? `<span class="mastered">¡Frase dominada! +${F.masteredNow} exp</span>` : ""}
       ${F.lesson ? "" : r.accentsPerfect ? `<span class="accents" title="Todas las palabras bien escritas, con tildes y eñes: el botín de este golpe tiene el doble de probabilidad de ser raro, de conjunto o único.">Tildes perfectas: botín ×2</span>` : ""}
@@ -3830,6 +4055,7 @@ function afterResult() {
   if (F.review && afterAnswer(afterResult)) return;
   if (F.review && !cardsLeft()) return repasoDone();
   if (alive(F).length) return nextExercise();
+  if (F.review) return reviewNextPack();
   victory();
 }
 // The transcript is wrong for this line: flag it, give back what it cost you, move on.
@@ -3923,7 +4149,8 @@ function victory() {
       zp.wins = (zp.wins || 0) + 1; zp.cleared = true; zp.pack = 0; zp.lines = null;
     } else if (S.zone.endless) { zp.depth = (zp.depth || 0) + 1; zp.maxDepth = Math.max(zp.maxDepth || 0, zp.depth); zp.pack = 0; }
     else { zp.cleared = true; zp.pack = 0; if (S.zone.fights) (zp.done ||= {})[modeOf(S.zone.id)] = true; const nz = E.nextZone(S.zone.id); if (nz) ch.zones[nz.id] = ch.zones[nz.id] || { pack: 0, cleared: false, depth: 0 }; }
-  } else zp.pack++;
+  } else if (F.extra) zp.extra = (zp.extra || 0) + 1;
+  else zp.pack++;
   ch.gold += F.ground.gold;
   S.loot = { gold: F.ground.gold, items: F.ground.items };
   save();
@@ -3956,11 +4183,13 @@ const PICKUP = [
   { title: "Equipo", hint: "por rareza (sin identificar también: su color ya dice cuál es)", keys: ["low", "normal", "magic", "rare", "set", "unique", "ancestral", "legendario", "mitico", "crafted"].map((k) => [k, RARITY[k].name, RARITY[k].color]) },
   { title: "Pociones", keys: Object.entries(POTIONS).map(([k, p]) => [`p:${k}`, p.name, p.color]) },
   { title: "Gemas", keys: [["g:0", "Fragmentos de gema"], ["g:1", "Gemas"], ["g:2", "Gemas perfectas"]].map(([k, n]) => [k, n, "#e4dfd2"]) },
+  { title: "Runas", keys: [["comun", "Runas comunes"], ["media", "Runas medias"], ["alta", "Runas altas"]].map(([k, n]) => [`r:${k}`, n, RUNA_TIERS[k].color]) },
 ];
 const PICKUP_KEYS = new Set(PICKUP.flatMap((g) => g.keys.map(([k]) => k)));
 function pickKey(it) {
   if (it.kind === "potion") return `p:${it.potion}`;
   if (it.kind === "gem") return `g:${it.grade}`;
+  if (it.kind === "runa") return `r:${RUNA[it.runa].tier}`;
   return it.rarity;
 }
 // Extra rules for equipment (off unless ticked): picked up if they match, whatever the rarity box says.
@@ -4367,12 +4596,17 @@ const ID_WORDS = { rare: [4, 8], set: [6, 11], unique: [8, 15], ancestral: [9, 1
 function revealItem(it) {
   delete it.unid; delete it.idLine;
   ch.stats.identified = (ch.stats.identified || 0) + 1;
-  save(); renderPanels();
+  save(); renderPanels(); if (S.view === "town" && S.townTab === "stash") renderTown(); // the stash shows the identify button's count
   sfx.identify();
   setTimeout(() => sfx.drop(it.rarity), 350);
   return `<div class="idreveal" style="--c:${E.itemColor(it)}">${tooltipHtml(it, false)}</div>`;
 }
-function identify(id) {
+// Identifying one after another (the inventory's button, in the village): the bag first, then the stash.
+const unidList = () => [...ch.inv, ...ch.stash].filter((x) => x.unid);
+const unidCount = () => unidList().length;
+const nextUnid = () => unidList()[0] || null;
+// chain: after one is right, Siguiente (Enter) opens the next
+function identify(id, chain = false) {
   const f = findItem(id);
   if (!f?.it.unid) return;
   closeMenu();
@@ -4389,9 +4623,14 @@ function identify(id) {
     ],
     onFlag: (r) => { it.idLine = null; save(); if (r.acc < 0.9) identify(id); },
     onResult: (r) => {
-      if (r.acc >= 0.9) return `<p class="good">Lo entendiste: ya sabes qué es.</p>${revealItem(it)}`;
+      if (r.acc >= 0.9) {
+        const html = `<p class="good">Lo entendiste: ya sabes qué es.</p>${revealItem(it)}`, next = chain && nextUnid();
+        if (!next) return html;
+        const n = unidCount();
+        return { html: html + `<p class="dim">${n === 1 ? "Te queda 1 sin identificar." : `Te quedan ${n} sin identificar.`}</p>`, again: () => identify(next.id, true), againLabel: "Siguiente" };
+      }
       it.idLine = null; save(); // the next try is a different line
-      return { html: `<p>No basta para saber qué es (hace falta un 90%). La próxima vez, otra frase.</p>`, again: () => identify(id) };
+      return { html: `<p>No basta para saber qué es (hace falta un 90%). La próxima vez, otra frase.</p>`, again: () => identify(id, chain) };
     },
   });
 }
@@ -4608,7 +4847,7 @@ async function spellHit(F, score, { all = false, mult = 1 } = {}) {
 function afterSpell(F) {
   if (S.F !== F) return;
   const nb = $("#nextBtn");
-  if (nb && !alive(F).length) nb.innerHTML = `Recoger el botín <kbd>Enter</kbd>`;
+  if (nb && !alive(F).length) nb.innerHTML = `${!F.review ? "Recoger el botín" : cardsLeft() ? "Siguiente grupo" : "Terminar el repaso"} <kbd>Enter</kbd>`;
   nb?.focus();
 }
 async function castShadow() {
@@ -4695,6 +4934,7 @@ document.addEventListener("keydown", (e) => {
   const spKey = E.spellsFor(ch).find((sp) => e.code === `Key${sp.key.toUpperCase()}`);
   if (spKey && (e.altKey || (!e.target.matches("input, textarea, select") && !e.ctrlKey && !e.metaKey))) { e.preventDefault(); return prepSpell(spKey.id); }
   if (e.altKey && e.code === "KeyH") { e.preventDefault(); if (S.F) hint(); return; }
+  if (e.code === "KeyF" && S.view === "fight" && (e.altKey || (!typing && !e.ctrlKey && !e.metaKey))) { e.preventDefault(); return usePower(); }
   if (S.view === "fight" && S.F) {
     if (e.key === "Tab") {
       e.preventDefault();
@@ -4797,4 +5037,4 @@ async function quickStart() {
 }
 
 // for debugging in the console
-window.leyendas = { S, get ch() { return ch; }, E, showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats };
+window.leyendas = { S, get ch() { return ch; }, E, socket, toAlembic, tooltipHtml2: (it) => tooltipHtml(it), showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats };

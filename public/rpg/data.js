@@ -20,6 +20,7 @@ export const RARITY = {
   tunjo:      { name: "Del arcoíris", color: "#ffb6f0" }, // only from Doña Remedios' tunjo: one of each, never sold
   relic:  { name: "Reliquia", color: "#ff9cf2" },
   gem:    { name: "Gema",     color: "#e4dfd2" },
+  runa:   { name: "Runa",     color: "#b9b2a2" },
   potion: { name: "Poción",   color: "#e4dfd2" },
 };
 
@@ -79,7 +80,7 @@ export const PROPS = {
   freeReplay:  { fmt: "+{v} repetición gratis por frase", order: 42 },
   slowFree:    { fmt: "Escuchar despacio no cuesta maná", order: 43, flag: true },
   typoTol:     { fmt: "Se perdona {v} letra más por palabra", order: 44 },
-  nearExact:   { fmt: "Las palabras casi correctas cuentan como correctas", order: 45, flag: true },
+  nearExact:   { fmt: "En el combate, las tildes que faltan no restan", order: 45, flag: true },
   comboStart:  { fmt: "Empiezas cada combate con racha de al menos {v}", order: 46 },
   comboKeep:   { fmt: "Un error leve no rompe tu racha", order: 47, flag: true },
   potion:      { fmt: "Las pociones curan {v}% más", order: 50 },
@@ -437,6 +438,71 @@ export const CRAFT = {
   topacio:   { name: "de fortuna",  props: { mf: [[10, 20], [20, 30], [30, 45]], gf: [[20, 40], [40, 70], [70, 100]] } },
   diamante:  { name: "de oído",     props: { replayCost: [[8, 12], [12, 18], [18, 25]], hintCost: [[8, 15], [15, 25], [25, 35]] } },
 };
+
+// ---------- runas (the new runes) ----------
+// Stones cut with Muisca words: numbers for the common ones, the land for the middle ones, its gods for the
+// high ones. One goes in a socket like a gem (kind "runa", in it.gems as { runa: id }) and gives what it
+// gives in that kind of item: w in a weapon, a in armour (head, torso, hands, feet, belt), o in a shield.
+// A runa asks for its level: the item needs at least that level to be worn.
+// tier: comun / media / alta. They drop rarely (RUNA_CHANCE in engine.js), the high ones very rarely, and
+// 3 of the same in the alembic make the next one up (never into the last).
+export const RUNA_TIERS = {
+  comun: { name: "Runa común", color: "#c9c0ad", weight: 1 },
+  media: { name: "Runa media", color: "#e0a640", weight: 0.15 },
+  alta:  { name: "Runa alta",  color: "#a98bff", weight: 0.004 },
+};
+const RN = (id, name, tier, lvl, w, a, o, gloss) => ({ id, name, tier, lvl, w, a, o, gloss });
+export const RUNAS = [
+  RN("ata", "Ata", "comun", 1, ["dmgMax", 3], ["armor", 8], ["block", 3], "uno"),
+  RN("bosa", "Bosa", "comun", 3, ["dmgMin", 2], ["life", 12], ["armor", 12], "dos"),
+  RN("mica", "Mica", "comun", 6, ["fire", 6], ["resFire", 12], ["resFire", 15], "tres"),
+  RN("muyhica", "Muyhica", "comun", 9, ["cold", 6], ["resCold", 12], ["resCold", 15], "cuatro"),
+  RN("hisca", "Hisca", "comun", 12, ["light", 8], ["resLight", 12], ["resLight", 15], "cinco"),
+  RN("ta", "Ta", "comun", 15, ["poison", 8], ["resPoison", 12], ["resPoison", 15], "seis"),
+  RN("cuhupcua", "Cuhupcua", "media", 20, ["dmgPct", 25], ["armorPct", 25], ["armorPct", 30], "siete"),
+  RN("suhuza", "Suhuza", "media", 24, ["crit", 3], ["dex", 7], ["dodge", 3], "ocho"),
+  RN("aca", "Aca", "media", 28, ["leech", 3], ["vit", 7], ["life", 30], "nueve"),
+  RN("ubchihica", "Ubchihica", "media", 32, ["manaLeech", 3], ["ene", 7], ["mana", 30], "diez"),
+  RN("sie", "Sie", "media", 35, ["cold", 16], ["manaRegen", 2], ["resCold", 25], "agua"),
+  RN("fiba", "Fiba", "media", 38, ["dmgCloze", 20], ["dodge", 3], ["block", 6], "aire"),
+  RN("gata", "Gata", "media", 41, ["fire", 18], ["lifeRegen", 3], ["resFire", 25], "fuego"),
+  RN("hyca", "Hyca", "media", 44, ["dmgDictation", 20], ["str", 7], ["thorns", 12], "piedra"),
+  RN("quyca", "Quyca", "media", 47, ["killHeal", 6], ["gf", 40], ["resAll", 8], "tierra"),
+  RN("zipa", "Zipa", "media", 50, ["dmgPct", 40], ["mf", 15], ["armorPct", 45], "el señor de Bacatá"),
+  RN("sue", "Sué", "alta", 55, ["dmgPct", 60], ["armorPct", 60], ["armorPct", 70], "el sol"),
+  RN("chia", "Chía", "alta", 58, ["crit", 5], ["manaRegen", 4], ["mana", 60], "la luna"),
+  RN("bachue", "Bachué", "alta", 61, ["leech", 6], ["life", 60], ["life", 75], "la madre que salió de la laguna"),
+  RN("bochica", "Bochica", "alta", 64, ["dmgDictation", 35], ["replayCost", 25], ["hintCost", 30], "el que enseñó a hilar"),
+  RN("nencatacoa", "Nencatacoa", "alta", 67, ["dmgCloze", 35], ["allStats", 6], ["allStats", 8], "el de las fiestas"),
+  RN("huitaca", "Huitaca", "alta", 70, ["manaLeech", 6], ["mf", 30], ["dodge", 6], "la rebelde"),
+  RN("chibchacum", "Chibchacum", "alta", 74, ["dmgMin", 12], ["str", 15], ["block", 12], "el que carga la tierra"),
+  RN("guahaioque", "Guahaioque", "alta", 78, ["killHeal", 15], ["resAll", 18], ["resAll", 22], "el de la muerte"),
+  RN("chaquen", "Chaquén", "alta", 83, ["crit", 8], ["dex", 15], ["thorns", 30], "el guardián de los linderos"),
+  RN("chiminigagua", "Chiminigagua", "alta", 90, ["dmgPct", 100], ["allStats", 10], ["allStats", 12], "la luz del principio"),
+];
+export const RUNA = Object.fromEntries(RUNAS.map((r) => [r.id, r]));
+// Rune sets: every one of a set's runes in the sockets of one plain item (white: normal, superior or worn),
+// in any order, and the item gets the set's bonus besides what each rune gives. Each set fits some kinds of
+// item (w weapon, a armour, o shield); bonus by kind. With the high ones, a plain item of 5 or 6 sockets can
+// be better than a legendary: few will ever see one.
+export const RUNA_SETS = [
+  { id: "cuenta", name: "La cuenta", runas: ["ata", "bosa", "mica"], kinds: ["w", "a", "o"],
+    bonus: { w: { dmgPct: 30, allStats: 4 }, a: { armorPct: 30, allStats: 4, life: 20 }, o: { armorPct: 35, allStats: 4, block: 5 } } },
+  { id: "laguna", name: "Laguna de Guatavita", runas: ["sie", "muyhica", "ta"], kinds: ["a", "o"],
+    bonus: { a: { resCold: 25, resPoison: 25, manaRegen: 3, replayCost: 20 }, o: { resAll: 15, mana: 40, replayCost: 20 } } },
+  { id: "fogon", name: "Fogón de la tribu", runas: ["gata", "mica", "cuhupcua", "hisca"], kinds: ["w"],
+    bonus: { w: { fire: 35, light: 25, dmgPct: 35, crit: 3 } } },
+  { id: "cercado", name: "Cercado del Zipa", runas: ["zipa", "quyca", "hyca", "cuhupcua"], kinds: ["a", "o"],
+    bonus: { a: { armorPct: 80, resAll: 15, life: 60, thorns: 20 }, o: { armorPct: 90, resAll: 20, block: 10, thorns: 25 } } },
+  { id: "camino", name: "Camino de Bochica", runas: ["bochica", "fiba", "sie", "suhuza", "aca"], kinds: ["w", "a"],
+    bonus: { w: { dmgDictation: 40, dmgCloze: 40, dmgPct: 80, typoTol: 1, allStats: 8 }, a: { armorPct: 100, freeReplay: 1, typoTol: 1, allStats: 10, resAll: 15 } } },
+  { id: "bachue", name: "Hijos de Bachué", runas: ["bachue", "aca", "ubchihica", "gata", "sie"], kinds: ["a"],
+    bonus: { a: { armorPct: 120, life: 120, lifeRegen: 6, resAll: 25, allStats: 10 } } },
+  { id: "solyluna", name: "El sol y la luna", runas: ["sue", "chia", "huitaca", "nencatacoa", "ubchihica"], kinds: ["w"],
+    bonus: { w: { dmgPct: 150, crit: 6, leech: 6, allStats: 12, resAll: 15 } } },
+  { id: "aliento", name: "Aliento de Chiminigagua", runas: ["chiminigagua", "sue", "chia", "bochica", "chibchacum", "chaquen"], kinds: ["w", "a"],
+    bonus: { w: { dmgPct: 160, crit: 8, leech: 8, allStats: 20, resAll: 30, freeReplay: 1 }, a: { armorPct: 160, life: 150, allStats: 20, resAll: 35, freeReplay: 1, typoTol: 1 } } },
+];
 
 // ---------- runes (removed) ----------
 // Runes and runewords are gone from the game. Their table stays only so an old save can be converted
@@ -933,6 +999,19 @@ export const SETS = [
   {id: "huitaca", tier: "ancestral", name: "La Fiesta de Huitaca", pieces: [{name: "Corona de Flores", base: "capiroteastral", props: {armorPct: 540, life: 360, resLight: 50, xp: 22}}, {name: "Vestidura de la Fiesta", base: "vestiduraastral", props: {armorPct: 590, life: 530, resAll: 50, mf: 100}}, {name: "Espada del Baile", base: "espadaastral", props: {dmgPct: 850, light: 240, crit: 16, comboStart: 9}}, {name: "Escudo de la Luna Llena", base: "escudoastral", props: {armorPct: 510, block: 19, resAll: 45, mana: 170}}, {name: "Guantes de Plumas de Búho", base: "guantesastral", props: {armorPct: 460, dex: 60, allStats: 32}}, {name: "Zapatillas de la Ronda", base: "zapatillasastral", props: {armorPct: 460, dodge: 17, dmgDictation: 120}}], bonus: {2: {resLight: 45, life: 320}, 3: {dmgDictation: 120, light: 210}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 9}, 6: {nearExact: true, comboKeep: true, allStats: 64, xp: 33}}, lvl: 196},
   {id: "canocristales", name: "El Río de los Cinco Colores", pieces: [{name: "Yelmo de Macarenia", base: "yelmosombra", props: {armorPct: 510, life: 340, resCold: 50, lifeRegen: 24}}, {name: "Coraza del Lecho de Piedra", base: "corazasombra", props: {armorPct: 560, life: 500, resAll: 50, thorns: 180}}, {name: "Lanza de la Corriente Clara", base: "lanzaastral", props: {dmgPct: 800, cold: 230, crit: 16, dmgCloze: 110}}, {name: "Cinto de las Piedras de Colores", base: "cintosombra", props: {life: 340, potion: 60, mana: 160}}, {name: "Guantes del Agua Transparente", base: "guantesastral", props: {armorPct: 430, dex: 60, manaLeech: 10}}, {name: "Botas de los Pozos", base: "zapatillasastral", props: {armorPct: 430, dodge: 17, xp: 22}}], bonus: {2: {resCold: 45, life: 300}, 3: {dmgCloze: 110, cold: 200}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 9}, 6: {nearExact: true, comboKeep: true, allStats: 60, xp: 33}}, lvl: 200},
   {id: "dzogchen", tier: "mitico", name: "La Gran Perfección", pieces: [{name: "Corona del Espacio Primordial", base: "capiroteastral", props: {armorPct: 660, life: 440, resLight: 50, hintCost: 50}}, {name: "Manto de las Cinco Luces", base: "vestiduraastral", props: {armorPct: 730, life: 650, resAll: 50, allStats: 39}}, {name: "Espada del Instante Presente", base: "espadaastral", props: {dmgPct: 1040, light: 300, crit: 16, dmgCloze: 140}}, {name: "Espejo del Estado Natural", base: "escudoastral", props: {armorPct: 620, block: 19, resAll: 45, replayCost: 45}}, {name: "Guantes de la Presencia", base: "guantesastral", props: {armorPct: 560, dex: 60, typoTol: 1}}, {name: "Zapatillas sin Esfuerzo", base: "zapatillasastral", props: {armorPct: 560, dodge: 17, mf: 120}}], bonus: {2: {resLight: 45, life: 390}, 3: {dmgCloze: 140, light: 260}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 9}, 6: {nearExact: true, comboKeep: true, allStats: 78, xp: 33, mf: 120}}, lvl: 200},
+  // the three ways of the bodhisattva (the shepherd crosses last, the boatman with everyone, the king first to open the way)
+  // and the eight manifestations of Guru Rinpoche
+  {id: "pastor", name: "El Bodisatva Pastor", pieces: [{name: "Capucha del Pastor", base: "yelmotumbaga", props: {armorPct: 220, life: 150, resLight: 50, hintCost: 50}}, {name: "Manto de Lana del Rebaño", base: "corazatumbaga", props: {armorPct: 250, life: 220, resAll: 35, lifeRegen: 11}}, {name: "Cayado que Va Detrás", base: "baculotumbaga", props: {dmgPct: 350, light: 100, crit: 12, killHeal: 20}}, {name: "Cinto del que Espera", base: "cintotumbaga", props: {life: 150, potion: 60, mf: 40}}, {name: "Sandalias del Último en Cruzar", base: "grebastumbaga", props: {armorPct: 190, dodge: 13, xp: 10}}], bonus: {2: {resLight: 45, life: 130}, 3: {dmgDictation: 50, light: 90}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 4, nearExact: true, comboKeep: true, allStats: 26, xp: 15}}, lvl: 88},
+  {id: "barquero", tier: "ancestral", name: "El Bodisatva Barquero", pieces: [{name: "Sombrero de Paja del Barquero", base: "yelmoluna", props: {armorPct: 280, life: 180, resCold: 50, replayCost: 45}}, {name: "Ropa de la Travesía", base: "mantoluna", props: {armorPct: 300, life: 270, resAll: 40, vit: 25}}, {name: "Pértiga de la Otra Orilla", base: "tridenteluna", props: {dmgPct: 430, cold: 120, crit: 12, dmgCloze: 60}}, {name: "Faja de la Barca", base: "cordonluna", props: {life: 180, potion: 60, mana: 90}}, {name: "Pies Mojados del Río", base: "zapatosluna", props: {armorPct: 230, dodge: 13, xp: 11}}], bonus: {2: {resCold: 45, life: 160}, 3: {dmgCloze: 60, cold: 110}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 5, nearExact: true, comboKeep: true, allStats: 32, xp: 17}}, lvl: 100},
+  {id: "rey", tier: "legendario", name: "El Bodisatva Rey", pieces: [{name: "Corona del que Abre Camino", base: "yelmosombra", props: {armorPct: 330, life: 220, resLight: 50, allStats: 19}}, {name: "Armadura del Reino", base: "corazasombra", props: {armorPct: 360, life: 320, resAll: 40, thorns: 120}}, {name: "Espada del Buen Gobierno", base: "mandoblesombra", props: {dmgPct: 520, light: 150, crit: 12, leech: 6}}, {name: "Escudo del Pueblo", base: "escudosombra", props: {armorPct: 310, block: 16, resAll: 35, life: 150}}, {name: "Guantes de la Mano Abierta", base: "guantessombra", props: {armorPct: 280, dex: 35, mf: 60}}, {name: "Cinto del Rey", base: "cintosombra", props: {life: 220, potion: 60, str: 35}}], bonus: {2: {resLight: 45, life: 190}, 3: {dmgDictation: 70, light: 130}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 5}, 6: {nearExact: true, comboKeep: true, allStats: 39, xp: 19}}, lvl: 112},
+  {id: "shakya", name: "Shakya Senge, el León de los Shakya", pieces: [{name: "Hábito Azafrán", base: "corazasombra", props: {armorPct: 330, life: 300, resAll: 40, ene: 30}}, {name: "Bastón del Monje", base: "varasombra", props: {dmgPct: 470, light: 140, crit: 13, dmgCloze: 60}}, {name: "Cinto de la Renuncia", base: "cintosombra", props: {life: 200, potion: 60, manaLeech: 6}}, {name: "Pies Descalzos del Camino", base: "pezunassombra", props: {armorPct: 250, dodge: 14, xp: 13}}, {name: "Cuenco de Limosna", base: "amuleto", props: {allStats: 18, resAll: 30, mf: 50}}], bonus: {2: {resLight: 45, life: 180}, 3: {dmgCloze: 60, light: 120}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 5, nearExact: true, comboKeep: true, allStats: 35, xp: 20}}, lvl: 118},
+  {id: "tsokye", tier: "ancestral", name: "Tsokye Dorje, el Vajra Nacido del Lago", pieces: [{name: "Corona del Niño del Lago", base: "capiroteastral", props: {armorPct: 350, life: 240, resCold: 50, mana: 110}}, {name: "Manto Azul del Loto", base: "vestiduraastral", props: {armorPct: 390, life: 350, resAll: 40, lifeRegen: 17}}, {name: "Vajra del Lago", base: "espadaastral", props: {dmgPct: 550, cold: 160, crit: 13, dmgDictation: 80}}, {name: "Guantes de la Flor Abierta", base: "guantesastral", props: {armorPct: 300, dex: 65}}, {name: "Zapatillas sobre el Agua", base: "zapatillasastral", props: {armorPct: 300, dodge: 18}}, {name: "Fajín del Tallo", base: "fajinastral", props: {life: 240, potion: 60, mf: 60}}], bonus: {2: {resCold: 45, life: 210}, 3: {dmgDictation: 80, cold: 140}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 6}, 6: {nearExact: true, comboKeep: true, allStats: 41, xp: 21}}, lvl: 128},
+  {id: "loden", name: "Loden Chokse, el que Busca el Saber", pieces: [{name: "Diadema del Príncipe Sabio", base: "capiroteastral", props: {armorPct: 340, life: 230, resLight: 50, hintCost: 50}}, {name: "Túnica Blanca del Estudio", base: "vestiduraastral", props: {armorPct: 380, life: 340, resAll: 40, ene: 35}}, {name: "Cetro del Saber Supremo", base: "espadaastral", props: {dmgPct: 540, light: 150, crit: 13, dmgCloze: 70}}, {name: "Guantes del Copista", base: "guantesastral", props: {armorPct: 290, dex: 40, replayCost: 45}}, {name: "Zapatillas del Peregrino Sabio", base: "zapatillasastral", props: {armorPct: 290, dodge: 14, xp: 15}}, {name: "Fajín de los Textos", base: "fajinastral", props: {life: 230, potion: 60, mana: 110}}], bonus: {2: {resLight: 45, life: 200}, 3: {dmgCloze: 70, light: 130}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 6}, 6: {nearExact: true, comboKeep: true, allStats: 40, xp: 22}}, lvl: 134},
+  {id: "pemagyalpo", tier: "legendario", name: "Pema Gyalpo, el Rey Loto", pieces: [{name: "Corona del Rey Loto", base: "capiroteastral", props: {armorPct: 420, life: 280, resFire: 50, allStats: 25}}, {name: "Manto Real de Oddiyana", base: "vestiduraastral", props: {armorPct: 460, life: 410, resAll: 45, mf: 70}}, {name: "Cetro del Rey Loto", base: "espadaastral", props: {dmgPct: 660, fire: 190, crit: 14, dmgDictation: 90}}, {name: "Espejo del Rey Loto", base: "escudoastral", props: {armorPct: 400, block: 17, resAll: 40, mana: 130}}, {name: "Guantes de Seda Real", base: "guantesastral", props: {armorPct: 360, dex: 45, leech: 7}}, {name: "Zapatillas del Palacio", base: "zapatillasastral", props: {armorPct: 360, dodge: 15, xp: 16}}], bonus: {2: {resFire: 45, life: 250}, 3: {dmgDictation: 90, fire: 170}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 7}, 6: {nearExact: true, comboKeep: true, allStats: 50, xp: 24}}, lvl: 144},
+  {id: "pandita", tier: "ancestral", name: "Padmasambhava, el Pandita Nacido del Loto", pieces: [{name: "Gorro de Pandita", base: "capiroteastral", props: {armorPct: 430, life: 290, resLight: 50, hintCost: 50}}, {name: "Manto del Maestro", base: "vestiduraastral", props: {armorPct: 470, life: 420, resAll: 45, ene: 40}}, {name: "Khatvanga del Pandita", base: "lanzaastral", props: {dmgPct: 670, light: 190, crit: 14, dmgCloze: 90}}, {name: "Guantes del Debate", base: "guantesastral", props: {armorPct: 360, dex: 45, typoTol: 1}}, {name: "Zapatillas de Nalanda", base: "zapatillasastral", props: {armorPct: 360, dodge: 15, xp: 17}}, {name: "Fajín del Comentario", base: "fajinastral", props: {life: 290, potion: 60, replayCost: 45}}], bonus: {2: {resLight: 45, life: 250}, 3: {dmgCloze: 90, light: 170}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 7}, 6: {nearExact: true, comboKeep: true, allStats: 51, xp: 26}}, lvl: 156},
+  {id: "nyima", tier: "legendario", name: "Nyima Özer, Rayos de Sol", pieces: [{name: "Moño del Yogui del Sol", base: "capiroteastral", props: {armorPct: 490, life: 330, resFire: 50, mana: 150}}, {name: "Falda de Piel de Tigre", base: "vestiduraastral", props: {armorPct: 540, life: 480, resAll: 45, vit: 40}}, {name: "Khatvanga que Detiene el Sol", base: "lanzaastral", props: {dmgPct: 770, fire: 220, crit: 15, dmgDictation: 110}}, {name: "Brazaletes de Hueso", base: "guantesastral", props: {armorPct: 420, dex: 50, killHeal: 45}}, {name: "Pies del Cementerio", base: "zapatillasastral", props: {armorPct: 420, dodge: 20}}, {name: "Fajín de Rayos", base: "fajinastral", props: {life: 330, potion: 60, lifeRegen: 23}}], bonus: {2: {resFire: 45, life: 290}, 3: {dmgDictation: 110, fire: 190}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 8}, 6: {nearExact: true, comboKeep: true, allStats: 58, xp: 28}}, lvl: 168},
+  {id: "sengedradrok", tier: "mitico", name: "Senge Dradrok, el Rugido del León", pieces: [{name: "Corona de Cinco Calaveras", base: "capiroteastral", props: {armorPct: 620, life: 410, resFire: 50, allStats: 36}}, {name: "Manto de Llamas", base: "vestiduraastral", props: {armorPct: 680, life: 600, resAll: 50, thorns: 220}}, {name: "Vajra del Rugido", base: "espadaastral", props: {dmgPct: 970, fire: 280, crit: 15, dmgDictation: 130}}, {name: "Mano del Escorpión", base: "guantesastral", props: {armorPct: 520, dex: 55, leech: 9}}, {name: "Pies que Pisan el Orgullo", base: "zapatillasastral", props: {armorPct: 520, dodge: 16, mf: 110}}, {name: "Fajín del León", base: "fajinastral", props: {life: 410, potion: 60, str: 55}}], bonus: {2: {resFire: 45, life: 360}, 3: {dmgDictation: 130, fire: 240}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 8}, 6: {nearExact: true, comboKeep: true, allStats: 73, xp: 31, mf: 110}}, lvl: 186},
+  {id: "drollo", tier: "mitico", name: "Dorje Drolö, el de la Tigresa", pieces: [{name: "Corona Iracunda", base: "capiroteastral", props: {armorPct: 660, life: 440, resFire: 50, allStats: 39}}, {name: "Piel de Tigre en Llamas", base: "vestiduraastral", props: {armorPct: 720, life: 640, resAll: 50, thorns: 230}}, {name: "Purba del Tigre", base: "espadaastral", props: {dmgPct: 1030, fire: 300, crit: 16, dmgDictation: 140}}, {name: "Mano del Vajra", base: "guantesastral", props: {armorPct: 550, dex: 60, killHeal: 60}}, {name: "Pies sobre la Tigresa", base: "zapatillasastral", props: {armorPct: 550, dodge: 21}}, {name: "Fajín de Piel de Tigre", base: "fajinastral", props: {life: 440, potion: 60, leech: 10}}], bonus: {2: {resFire: 45, life: 390}, 3: {dmgDictation: 140, fire: 260}, 4: {replayCost: 55, slowFree: true}, 5: {freeReplay: 1, comboStart: 9}, 6: {nearExact: true, comboKeep: true, allStats: 77, xp: 33, mf: 120}}, lvl: 198},
 ];
 
 // ---------- gems ----------
@@ -978,6 +1057,23 @@ export const CLASSES = {
     blurb: "Lanza hechizos con varitas y bastones: fuego, escarcha, rayo y un escudo. Cada hechizo cuesta maná y lo potencia tu acierto en la frase.",
     stats: { str: 10, dex: 15, vit: 10, ene: 35 }, passive: { spellDmg: 10, manaRegen: 1 }, start: ["varita", "tunica"], spells: true,
   },
+};
+
+// ---------- class abilities ----------
+// One per class, used in a fight with F (Alt+F while typing) or its button. Costs `cost` of your maximum
+// mana. arm: waits for your next hit that lands (a hit with no word right doesn't use it up).
+// volley: that hit lands whole on every monster. double: that hit does twice the damage.
+// roar: for `turns` monster turns, the damage you take is halved. heal: that share of your maximum life,
+// now, and it puts out a boss's fire.
+export const POWERS = {
+  cazadora: { id: "lluvia", name: "Lluvia de flechas", icon: "arrow-cluster", color: "#9fd66b", cost: 0.4, arm: true, volley: true,
+    desc: "Tu próximo golpe cae entero sobre todos los monstruos, no solo sobre el objetivo." },
+  guerrero: { id: "grito", name: "Grito de guerra", icon: "shouting", color: "#e8884a", cost: 0.4, roar: true, turns: 3,
+    desc: "Los monstruos se encogen: durante sus próximos 3 turnos te hacen la mitad de daño." },
+  chaman: { id: "sanar", name: "Sanación", icon: "healing", color: "#6fd0a8", cost: 0.4, heal: 0.4,
+    desc: "Recuperas al momento el 40% de tu vida máxima, y se apaga el fuego que te quema." },
+  brujo: { id: "sobrecarga", name: "Sobrecarga", icon: "magic-swirl", color: "#c48cff", cost: 0.4, arm: true, double: true,
+    desc: "Tu próximo golpe, con hechizo o sin él, hace el doble de daño." },
 };
 
 // ---------- the brujo's spells ----------

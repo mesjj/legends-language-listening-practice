@@ -5207,6 +5207,48 @@ hat/headband/hairtie/adult/walk.png
   
   https://opengameart.org/content/lpc-relm-hair-xlong-ponytail,https://opengameart.org/content/lpc-expanded-hats-facial-helmets
 
+hat/headband/thick/adult/hurt.png
+  by JaidynReiman
+  licence: OGA-BY 3.0+,CC-BY 3.0+,GPL 3.0
+  
+  https://opengameart.org/content/lpc-relm-hair-xlong-ponytail,https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+
+hat/headband/thick/adult/shoot.png
+  by JaidynReiman
+  licence: OGA-BY 3.0+,CC-BY 3.0+,GPL 3.0
+  
+  https://opengameart.org/content/lpc-relm-hair-xlong-ponytail,https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+
+hat/headband/thick/adult/sit.png
+  by JaidynReiman
+  licence: OGA-BY 3.0+,CC-BY 3.0+,GPL 3.0
+  
+  https://opengameart.org/content/lpc-relm-hair-xlong-ponytail,https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+
+hat/headband/thick/adult/slash.png
+  by JaidynReiman
+  licence: OGA-BY 3.0+,CC-BY 3.0+,GPL 3.0
+  
+  https://opengameart.org/content/lpc-relm-hair-xlong-ponytail,https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+
+hat/headband/thick/adult/spellcast.png
+  by JaidynReiman
+  licence: OGA-BY 3.0+,CC-BY 3.0+,GPL 3.0
+  
+  https://opengameart.org/content/lpc-relm-hair-xlong-ponytail,https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+
+hat/headband/thick/adult/thrust.png
+  by JaidynReiman
+  licence: OGA-BY 3.0+,CC-BY 3.0+,GPL 3.0
+  
+  https://opengameart.org/content/lpc-relm-hair-xlong-ponytail,https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+
+hat/headband/thick/adult/walk.png
+  by JaidynReiman
+  licence: OGA-BY 3.0+,CC-BY 3.0+,GPL 3.0
+  
+  https://opengameart.org/content/lpc-relm-hair-xlong-ponytail,https://opengameart.org/content/lpc-expanded-hats-facial-helmets
+
 hat/headband/thick/rune/adult/hurt.png
   by JaidynReiman
   licence: OGA-BY 3.0+,CC-BY 3.0+,GPL 3.0

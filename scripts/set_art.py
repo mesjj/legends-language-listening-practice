@@ -143,6 +143,92 @@ RECIPES = {
 }
 
 
+RECIPES.update({  # the three bodhisattvas and the eight manifestations of Guru Rinpoche
+    "pastor": {  # the shepherd who walks behind the flock: undyed wool, a crook
+        "yelmotumbaga": [("hat_hood_cloth", None)],
+        "corazatumbaga": [("legs_pants", None), ("torso_clothes_longsleeve", A), ("cape_solid", None)],
+        "baculotumbaga": [("weapon_polearm_cane", None)],
+        "cintotumbaga": [("belt_leather", A)],
+        "grebastumbaga": [("feet_sandals", None)],
+    },
+    "barquero": {  # the boatman who crosses with everyone: river blue, a straw hat drawn here, a punting pole
+        "yelmoluna": [("hat_headband_tied", None)],  # stand-in for the hat
+        "mantoluna": [("legs_pantaloons", None), ("torso_clothes_shortsleeve", None), ("neck_scarf", A)],
+        "tridenteluna": [("weapon_polearm_longspear", A)],
+        "cordonluna": [("belt_sash", A)],
+        "zapatosluna": [("feet_sandals", A)],
+    },
+    "rey": {  # the king who goes first to open the way: purple and gold
+        "yelmosombra": [("hat_formal_crown", A)],
+        "corazasombra": [("legs_armour", None), ("torso_armour_plate", None), ("cape_trim", A), ("shoulders_mantal", A)],
+        "mandoblesombra": [("weapon_sword_longsword", A)],
+        "escudosombra": [("shield_kite", None)],
+        "guantessombra": [("arms_gloves", A)],
+        "cintosombra": [("belt_formal", A)],
+    },
+    "shakya": {  # the monk: a saffron robe over maroon, a staff
+        "corazasombra": [("legs_skirts_plain", None), ("torso_clothes_longsleeve2", None), ("shoulders_mantal", A)],
+        "varasombra": [("weapon_magic_simple", A)],
+        "cintosombra": [("belt_robe", A)],
+        "pezunassombra": [("feet_sandals", A)],
+    },
+    "tsokye": {  # born in a lotus on the lake: deep blue, lotus pink, a vajra
+        "capiroteastral": [("hat_formal_tiara", A)],
+        "vestiduraastral": [("legs_skirts_plain", None), ("torso_clothes_longsleeve2_vneck", None), ("shoulders_mantal", A), ("neck_necklace_beaded_large", A)],
+        "espadaastral": [("weapon_magic_diamond", A)],
+        "guantesastral": [("arms_gloves", A), ("wrists_cuffs", None)],
+        "zapatillasastral": [("feet_slippers", A)],
+        "fajinastral": [("belt_sash", A)],
+    },
+    "loden": {  # the young prince of learning: white and pale blue
+        "capiroteastral": [("hat_formal_tiara", A)],
+        "vestiduraastral": [("legs_formal", None), ("torso_clothes_longsleeve2", None), ("shoulders_mantal", A)],
+        "espadaastral": [("weapon_magic_crystal", A)],
+        "guantesastral": [("arms_gloves", None), ("wrists_cuffs_lace", A)],
+        "zapatillasastral": [("feet_shoes_revised", None)],
+        "fajinastral": [("belt_sash", A)],
+    },
+    "pemagyalpo": {  # the lotus king: red robes, gold crown, a mirror
+        "capiroteastral": [("hat_formal_crown", A)],
+        "vestiduraastral": [("legs_skirts_plain", None), ("torso_clothes_longsleeve2", None), ("torso_jacket_tabard", None), ("cape_trim", A), ("neck_necklace_chain", A)],
+        "espadaastral": [("weapon_magic_loop", A)],
+        "escudoastral": [("shield_round", A)],
+        "guantesastral": [("arms_gloves", A)],
+        "zapatillasastral": [("feet_slippers", A)],
+    },
+    "pandita": {  # the scholar: maroon robes, the pointed pandita hat drawn here, the khatvanga
+        "capiroteastral": [("hat_headband_tied", None)],  # stand-in for the hat
+        "vestiduraastral": [("legs_skirts_plain", None), ("torso_clothes_longsleeve2", None), ("shoulders_mantal", A)],
+        "lanzaastral": [("weapon_polearm_trident", A)],
+        "guantesastral": [("arms_gloves", None), ("wrists_cuffs", A)],
+        "zapatillasastral": [("feet_boots_fold", None)],
+        "fajinastral": [("belt_sash", A)],
+    },
+    "nyima": {  # the yogi of the sun: gold, a tiger-skin skirt, bone ornaments
+        "capiroteastral": [("hat_headband_tied", A)],
+        "vestiduraastral": [("legs_skirts_slit", A), ("neck_necklace_beaded_large", "light")],  # nearly bare, as the yogi is
+        "lanzaastral": [("weapon_polearm_trident", None)],
+        "guantesastral": [("arms_bracers", "light")],
+        "zapatillasastral": [("feet_sandals", None)],
+        "fajinastral": [("belt_obi", A)],
+    },
+    "sengedradrok": {  # the lion's roar: wrathful dark blue in a blaze
+        "capiroteastral": [("hat_formal_crown", A)],
+        "vestiduraastral": [("legs_skirts_legion", A), ("torso_clothes_sleeveless2", None), ("cape_tattered", A)],
+        "espadaastral": [("weapon_magic_diamond", A)],
+        "guantesastral": [("arms_bracers", A)],
+        "zapatillasastral": [("feet_boots_rim", None)],
+        "fajinastral": [("belt_obi", A)],
+    },
+    "drollo": {  # Dorje Drolö: dark red-brown, tiger skin, a phurba, everything ablaze
+        "capiroteastral": [("hat_formal_crown", A)],
+        "vestiduraastral": [("legs_skirts_slit", A), ("torso_clothes_sleeveless2", None), ("cape_tattered", A), ("neck_necklace_beaded_large", "light")],
+        "espadaastral": [("weapon_sword_dagger", A)],
+        "guantesastral": [("arms_bracers", A)],
+        "zapatillasastral": [("feet_boots_rim", A)],
+        "fajinastral": [("belt_obi", A)],
+    },
+})
 RECIPES.update({  # the older sets on band pieces (68-130), reworked the same way
     "osario": {  # the Day of the Dead's dancing skeleton: a catrín in a top hat, marigolds
         "yelmohueso": [("hat_formal_tophat", None), ("facial_mask_plain", "light")],
@@ -417,6 +503,28 @@ FX = {  # (set, base) or set -> effects, in order; "big": (scale, anchor)
     ("andes", "vestiduraastral"): [("specks", (("#ffffff", "#eef2f8"), 6, 1))],
     ("andes", "capiroteastral"): [("big", (1.2, "bottom")), ("specks", (("#ffffff",), 7, 1))],
     ("caiman", "yelmosombra"): [("big", (1.4, "bottom"))],
+    # the bodhisattvas and Guru Rinpoche's manifestations: the two wrathful ones are mythic and blaze
+    "sengedradrok": [("glow", ("#f06a10", "#1a3a90"))],
+    ("sengedradrok", "capiroteastral"): [("flames", (("#fff0a0", "#ffb040", "#f06a10", "#a82a04"), 8, 1.0))],
+    ("sengedradrok", "espadaastral"): [("big", (1.15, "center")), ("flames", (("#ffffff", "#8ab8ff", "#1a3a90"), 8, 1.0))],
+    ("sengedradrok", "vestiduraastral"): [("flames", (("#ffb040", "#f06a10", "#a82a04"), 6, 0.8))],
+    ("sengedradrok", "zapatillasastral"): [("flames", (("#ffb040", "#f06a10"), 6, 1.0))],
+    ("sengedradrok", "guantesastral"): [("flames", (("#ffb040", "#f06a10"), 4, 1.0))],
+    "drollo": [("glow", ("#ff7a1a", "#8e2a14"))],
+    ("drollo", "capiroteastral"): [("flames", (("#fff0a0", "#ffb040", "#e8401a", "#8e1a0a"), 9, 1.0))],
+    ("drollo", "espadaastral"): [("big", (1.15, "center")), ("flames", (("#fff4d0", "#ffc060", "#e8801a", "#8e2a14"), 9, 1.0))],
+    ("drollo", "vestiduraastral"): [("flames", (("#ffc060", "#e8401a", "#8e1a0a"), 7, 1.0))],
+    ("drollo", "zapatillasastral"): [("flames", (("#ffc060", "#e8401a"), 6, 1.0))],
+    ("drollo", "guantesastral"): [("flames", (("#ffc060", "#e8401a"), 4, 1.0))],
+    ("rey", "yelmosombra"): [("glow", ("#ffe07a",))],
+    ("pemagyalpo", "escudoastral"): [("glow", ("#ffffff", "#ffe07a"))],
+    ("pemagyalpo", "capiroteastral"): [("big", (1.2, "bottom"))],
+    ("nyima", "lanzaastral"): [("glow", ("#fff07a", "#ffa040"))],
+    ("nyima", "capiroteastral"): [("specks", (("#fff07a", "#ffffff"), 4, 0))],
+    ("barquero", "tridenteluna"): [("specks", (("#8ab8e0", "#e8f6ff"), 4, 1))],
+    ("tsokye", "espadaastral"): [("glow", ("#8ab8ff", "#ffb0d4"))],
+    ("pandita", "capiroteastral"): [("big", (1.15, "bottom"))],
+    ("loden", "espadaastral"): [("glow", ("#a8d8f8",))],
 }
 
 
@@ -545,6 +653,38 @@ CHULLO = """
 """
 
 
+CONE_HAT = """
+...........HH...........
+.........HHhhHH.........
+.......HHhhkhhhHH.......
+.....HHhhhhhhhkhhHH.....
+...HHhkhhhhhhhhhhhhHH...
+.HHhhhhhhhkhhhhhkhhhhHH.
+HhhhhhhhhhhhhhhhhhhhhhhH
+.HHHHHHHHHHHHHHHHHHHHHH.
+"""
+PANDITA_HAT = """
+...........HH...........
+..........HrrH..........
+..........HrrH..........
+.........HrrrrH.........
+.........HrrrrH.........
+........HrrrrrrH........
+........HrryyrrH........
+.......HrrrrrrrrH.......
+......HrrrrrrrrrrH......
+.....HrrrrrrrrrrrrH.....
+....HyyyyyyyyyyyyyyH....
+...HrrrrrrrrrrrrrrrrH...
+..HrrrHHHHHHHHHHHHrrrH..
+..Hrrr............rrrH..
+..Hrrr............rrrH..
+..Hrrr............rrrH..
+..Hyyy............yyyH..
+...HH..............HH...
+"""
+
+
 def _hat(grid, pal, lift=0):
     """The picture, and where: centred on the stand-in headband, its lower edge `lift` rows below the band's top."""
     pic = paint(grid, pal)
@@ -567,6 +707,10 @@ def custom_head(sid, main, acc):
         return _hat(CAIMAN_JAWS, {"H": main[0], "g": main[2], "G": main[3], "l": main[4], "Y": acc[3], "k": "#000000", "t": "#fffbe8"}, 5)
     if sid == "andes":
         return _hat(CHULLO, {"H": main[0], "r": main[3], "w": acc[4], "W": acc[5]}, 9)
+    if sid == "barquero":
+        return _hat(CONE_HAT, {"H": acc[1], "h": acc[3], "k": acc[2]}, 3)
+    if sid == "pandita":
+        return _hat(PANDITA_HAT, {"H": main[0], "r": main[3], "y": acc[4]}, 8)
     if sid == "marimba":
         return _hat(HEADWRAP, {"W": main[1], "w": main[3], "y": acc[3], "r": "#d83a2a"}, 3)
     return None
@@ -575,9 +719,9 @@ def custom_head(sid, main, acc):
 HEAD_BASES = {"capiroteastral", "yelmosombra", "yelmoluna", "yelmohueso", "yelmoesmeralda", "yelmotumbaga", "yelmocatatumbo"}
 
 
-def piece(sid, base, layers, alayers, main, acc):
+def piece(sid, base, layers, alayers, main, acc, hat=True):
     """build_lpc.py: the set's drawn hat and effects over the generator's layers, frame by frame."""
-    if base in HEAD_BASES:
+    if hat and base in HEAD_BASES:
         h = custom_head(sid, main, acc)
         if h:
             pic, at = h
@@ -899,6 +1043,21 @@ ICONS = {  # (set, base): (shape, motif)
     ("andes", "guantesastral"): ("mitt", "flower"), ("andes", "zapatillasastral"): ("sandal", "dot"),
     ("andes", "fajinastral"): ("sash", "five"),
 }
+
+
+ICONS.update({
+    ("pastor", "cintotumbaga"): ("rope", "leaf"), ("pastor", "grebastumbaga"): ("sandal", "dot"),
+    ("barquero", "cordonluna"): ("sash", "wave"), ("barquero", "zapatosluna"): ("sandal", "drop"),
+    ("rey", "guantessombra"): ("gauntlet", "sun"), ("rey", "cintosombra"): ("buckle", "star"),
+    ("shakya", "cintosombra"): ("cord", "sun"), ("shakya", "pezunassombra"): ("sandal", "dot"), ("shakya", "amuleto"): ("pendant", "drop"),
+    ("tsokye", "guantesastral"): ("glove", "flower"), ("tsokye", "zapatillasastral"): ("slipper", "wave"), ("tsokye", "fajinastral"): ("sash", "flower"),
+    ("loden", "guantesastral"): ("glove", "star"), ("loden", "zapatillasastral"): ("slipper", "dot"), ("loden", "fajinastral"): ("sash", "spiral"),
+    ("pemagyalpo", "guantesastral"): ("glove", "flower"), ("pemagyalpo", "zapatillasastral"): ("slipper", "sun"),
+    ("pandita", "guantesastral"): ("bracer", "spiral"), ("pandita", "zapatillasastral"): ("tallboot", "dot"), ("pandita", "fajinastral"): ("sash", "flower"),
+    ("nyima", "guantesastral"): ("bracer", "bone"), ("nyima", "zapatillasastral"): ("sandal", "sun"), ("nyima", "fajinastral"): ("sash", "sun"),
+    ("sengedradrok", "guantesastral"): ("claw", "flame"), ("sengedradrok", "zapatillasastral"): ("sabaton", "flame"), ("sengedradrok", "fajinastral"): ("sash", "skull"),
+    ("drollo", "guantesastral"): ("claw", "flame"), ("drollo", "zapatillasastral"): ("sabaton", "ember"), ("drollo", "fajinastral"): ("sash", "flame"),
+})
 
 
 def draw_icon(shape, motif, main, acc):

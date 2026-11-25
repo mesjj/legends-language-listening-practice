@@ -2,7 +2,7 @@
 import {
   RARITY, PROPS, BASES, BASE, BANDS, PREFIXES, SUFFIXES, RARE_A, RARE_B, UNIQUES, SETS, GEMS, GEM_GRADES,
   POTIONS, POTION_TIER_NAMES, CLASSES, MONSTERS, BOSSES, MONSTER_MODS, RANDOM_MODS, UNIQUE_MONSTER_NAMES, ZONES,
-  DIFFICULTY, EASY_ROSTER, LISTENING_MODS, MONSTER_RES, CRAFT, RUNE, UNIQUE_OWNERS, UNIQUE_TITLES, UNIQUE_FLAVORS, TOP_NAMES, TOP_FLAVORS, TIERS, SPELLS, PETS, MOUNTS, MOUNT_PROPS,
+  DIFFICULTY, EASY_ROSTER, LISTENING_MODS, MONSTER_RES, CRAFT, RUNE, UNIQUE_OWNERS, UNIQUE_TITLES, UNIQUE_FLAVORS, TOP_NAMES, TOP_FLAVORS, TIERS, SPELLS, PETS, MOUNTS, MOUNT_PROPS, POWERS, RUNAS, RUNA, RUNA_TIERS, RUNA_SETS,
 } from "./data.js";
 export { DIFFICULTY };
 export const diffOf = (ch) => DIFFICULTY[ch.difficulty || "medio"];
@@ -63,6 +63,15 @@ const SOCK = {
   magic: [0.25, 1, 1, 0.4], rare: [0.15, 1, 1, 0.3], unique: [0.15, 1, 1, 0.25], set: [0.15, 1, 1, 0.25],
   ancestral: [0.5, 1, 1, 0.25], legendario: [1, 1, 1, 0.2], mitico: [1, 1, 2, 0.12],
 };
+// A plain (white) item's sockets: from 1 to its base's most; at that most, now and then one more, and
+// rarely two (never past 6): a base of 4 gets 5 about 3% and 6 about 0.4% of the time, a base of 5 gets 6 about 2%.
+export function plainSockets(base) {
+  const cap = base.sockets || 0;
+  if (!cap) return 0;
+  let n = rnd(1, cap);
+  if (n === cap && cap >= 4 && n < 6 && chance(0.12)) { n++; if (n < 6 && chance(0.12)) n++; }
+  return n;
+}
 function sockRoll(rarity, base) {
   const S = SOCK[rarity], cap = Math.min(5, base.sockets || 0);
   if (!S || !cap || !chance(S[0])) return 0;
@@ -79,7 +88,7 @@ export function makeItem(baseId, rarity, ilvl, extra = {}, { fullRare = false } 
   if (rarity === "normal" && chance(0.18)) it.quality = rnd(10, 25); // superior
   // sockets: plain items often, magic ones sometimes, rares rarely
   if (base.sockets) {
-    if ((rarity === "normal" || rarity === "low") && chance(0.5)) it.sockets = rnd(1, base.sockets);
+    if ((rarity === "normal" || rarity === "low") && chance(0.5)) it.sockets = plainSockets(base);
     else it.sockets = sockRoll(rarity, base);
   }
   if (rarity === "magic") {
@@ -297,6 +306,7 @@ export function randomItem(ilvl, mf = 0, bonus = 1, slot = null, D = null, good 
 
 // ---------- item display ----------
 export function itemName(it) {
+  if (it.kind === "runa") return `Runa ${RUNA[it.runa].name}`;
   if (it.kind === "gem") {
     const g = GEMS[it.gem];
     return it.grade === 0 ? `${GEM_GRADES[0]} ${g.name}` : it.grade === 1 ? g.fname : `${g.fname} ${["esmeralda", "amatista"].includes(it.gem) ? "perfecta" : "perfecto"}`;
@@ -315,18 +325,22 @@ export function itemName(it) {
   return base.name;
 }
 export function itemColor(it) {
+  if (it.kind === "runa") return RUNA_TIERS[RUNA[it.runa].tier].color;
   if (it.kind === "gem") return GEMS[it.gem].shades?.[it.grade] || GEMS[it.gem].color;
   if (it.kind === "potion") return POTIONS[it.potion].color;
   return RARITY[it.rarity].color;
 }
 export function itemIcon(it) {
   if (it.kind === "gem") return "cut-diamond";
+  if (it.kind === "runa") return "rune-stone";
   if (it.kind === "relic") return "crystal-growth";
   if (it.kind === "potion") return POTIONS[it.potion].icon;
   return BASE[it.base].icon;
 }
 // What one socketed gem gives in an item of this slot (or a rune, in an old save being converted).
+export const runaKind = (slot) => (slot === "weapon" ? "w" : slot === "off" ? "o" : "a");
 export function socketEffect(s, slot) {
+  if (s.runa) { const [prop, value] = RUNA[s.runa][runaKind(slot)]; return { prop, value }; }
   if (s.rune) {
     const r = RUNE[s.rune];
     const [prop, value] = r[slot === "weapon" ? "weapon" : slot === "off" ? "off" : "armor"];
@@ -355,7 +369,36 @@ export function itemProps(it) {
     const e = socketEffect(g, slot);
     out[e.prop] = (out[e.prop] || 0) + e.value;
   }
+  const rs = runaSetOf(it);
+  if (rs) for (const [k, v] of Object.entries(rs.bonus[runaKind(slot)])) out[k] = (out[k] || 0) + v;
   return out;
+}
+// Plain items (white) are the ones a rune set wakes up in.
+export const isPlain = (it) => !it.kind && (it.rarity === "normal" || it.rarity === "low");
+// The rune set complete in this item's sockets, if any (every rune of it, in any order, in a plain item of a kind it fits).
+export function runaSetOf(it) {
+  if (!isPlain(it) || !it.gems?.length) return null;
+  const kind = runaKind(BASE[it.base]?.slot), have = it.gems.filter((g) => g.runa).map((g) => g.runa);
+  if (have.length < 2) return null;
+  let best = null;
+  for (const rs of RUNA_SETS) {
+    if (!rs.kinds.includes(kind)) continue;
+    const left = [...have];
+    if (rs.runas.every((r) => { const i = left.indexOf(r); if (i < 0) return false; left.splice(i, 1); return true; }) && (!best || rs.runas.length > best.runas.length)) best = rs;
+  }
+  return best;
+}
+export function makeRuna(id) {
+  return { id: uid(), kind: "runa", runa: id, rarity: "runa" };
+}
+// Runes from monsters: rarely, and which one weighed by tier (RUNA_TIERS.weight), only up to a little above
+// the monster's level. A specific high rune is about one in hundreds of thousands of kills.
+export const RUNA_CHANCE = { normal: 0.004, minion: 0.002, champion: 0.02, unique: 0.05, boss: 0.35 };
+export function pickRuna(lvl) {
+  const pool = RUNAS.filter((r) => r.lvl <= lvl + 5);
+  let t = Math.random() * pool.reduce((a, r) => a + RUNA_TIERS[r.tier].weight, 0);
+  for (const r of pool) if ((t -= RUNA_TIERS[r.tier].weight) <= 0) return r.id;
+  return pool[0].id;
 }
 // Weapon damage and defence after the item's own quality and +% rolls.
 export function itemDamage(it) {
@@ -372,6 +415,7 @@ export function itemDefense(it) {
 }
 export function itemValue(it) {
   if (it.kind === "gem") return [20, 80, 300][it.grade];
+  if (it.kind === "runa") { const r = RUNA[it.runa]; return { comun: 40, media: 400, alta: 4000 }[r.tier] + r.lvl * 10; }
   if (it.kind === "potion") return 5;
   if (it.kind === "relic") return 0; // not for sale
   // (runes are gone: only to sell an old save's)
@@ -390,7 +434,14 @@ export function canEquip(ch, it) {
   const lvlReq = itemLevelReq(it);
   return ch.level >= lvlReq && st.str >= (req.str || 0) && st.dex >= (req.dex || 0);
 }
+// an item asks at least the level of each rune set in it
 export function itemLevelReq(it) {
+  const own = itemLevelReq0(it);
+  let r = 0;
+  for (const g of it.gems || []) if (g.runa) r = Math.max(r, RUNA[g.runa].lvl);
+  return Math.max(own, r);
+}
+function itemLevelReq0(it) {
   if (it.lreq) return it.lreq;
   if (it.rarity === "unique") return UNIQUES.find((u) => u.name === it.name)?.lvl ?? it.ilvl;
   if (it.rarity === "runeword") return BASE[it.base].lvl; // from an old save (runes are gone)
@@ -425,7 +476,10 @@ export function newCharacter(name, cls) {
   return ch;
 }
 
-export const xpToNext = (lvl) => Math.round(40 * Math.pow(lvl, 1.8));
+// Experience for the next level. Up to level 40 a level is about 50 kills of monsters your level (with
+// main.js's XP_RATE); past it, the curve steepens (× levelSlope), more with every level (see README).
+export const levelSlope = (lvl) => (lvl <= 40 ? 1 : 1 + 1.5 * Math.pow((lvl - 40) / 50, 3));
+export const xpToNext = (lvl) => Math.round(40 * Math.pow(lvl, 1.8) * levelSlope(lvl));
 
 export function activeSlots(ch) {
   return ["head", "neck", "shirt", "body", `weapon${ch.swap}`, `off${ch.swap}`, "hands", "ring1", "ring2", "belt", "feet"];
@@ -508,6 +562,8 @@ export function costs(ch, st, maldito = false) {
 }
 
 // ---------- spells (the brujo) ----------
+export const powerOf = (ch) => POWERS[ch.cls] || null;
+export const powerCost = (ch, st) => Math.max(1, Math.round(st.maxMana * (powerOf(ch)?.cost || 0)));
 export const canCast = (ch, st) => !!CLASSES[ch.cls]?.spells && st.magicWeapon;
 export const spellsFor = (ch) => (CLASSES[ch.cls]?.spells ? SPELLS : []);
 export function spellCost(ch, sp) {
@@ -536,7 +592,7 @@ export const xpFor = (l) => Math.round(5 + 5 * Math.pow(l, 1.5));
 
 function monster(kind, lvl, tier, extra = {}, D = DIFFICULTY.medio) {
   const def = kind in BOSSES && tier === "boss" ? BOSSES[kind] : MONSTERS[kind];
-  const T = { normal: [1, 1, 1], minion: [0.8, 0.9, 0.6], champion: [2, 1.4, 3], unique: [3, 1.6, 5], boss: [5, 1.8, 18] }[tier];
+  const T = { normal: [1, 1, 1], minion: [0.8, 0.9, 0.6], champion: [2, 1.4, 3], unique: [3, 1.6, 5], boss: [9, 2.3, 18] }[tier]; // bosses: 9× the life, 2.3× the blow
   const hp = Math.max(1, Math.round(hpCurve(lvl) * def.hp * T[0] * D.hp * (0.88 + Math.random() * 0.24)));
   let mods = extra.mods || def.mods || [];
   if (D === DIFFICULTY.facil) mods = mods.filter((m) => !LISTENING_MODS.includes(m));
@@ -629,13 +685,14 @@ export function monsterAttack(ch, st, m, acc, level, D = DIFFICULTY.medio) {
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 // A boss's signature blow: like a normal one (armour, resistance; what you got right still softens it),
 // times its weight, with no dodge or block by chance: only the line itself gets you out of the way. It
-// never takes more than half your life at once.
+// never takes more than BLOW_CAP of your life at once.
+export const BLOW_CAP = 0.65;
 export function heavyBlow(st, m, acc, mult, D = DIFFICULTY.medio) {
   const raw = m.dmg * D.dmgTaken * (1 - 0.5 * acc) * mult * (0.9 + Math.random() * 0.2);
   const dr = Math.min(0.75, st.armor / (st.armor + 25 + 12 * m.lvl));
   let phys = m.el ? raw * 0.5 * (1 - dr) : raw * (1 - dr);
   let elDmg = m.el ? raw * 0.5 * (1 - st[`res${cap(m.el)}`] / 100) : 0;
-  const cap50 = st.maxLife * 0.5, total = phys + elDmg;
+  const cap50 = st.maxLife * BLOW_CAP, total = phys + elDmg;
   if (total > cap50) { phys *= cap50 / total; elDmg *= cap50 / total; }
   return { dmg: Math.max(1, Math.round(phys + elDmg)), phys, el: m.el || null, elDmg };
 }
@@ -690,6 +747,7 @@ export function lootFor(m, ch, st, D = DIFFICULTY.medio, good = 1, luck = 1) {
   if (chance(GEM_CHANCE[m.tier])) {
     out.push(makeGem(pick(Object.keys(GEMS)), gemGrade(m.lvl)));
   }
+  if (chance(RUNA_CHANCE[m.tier])) out.push(makeRuna(pickRuna(m.lvl)));
   return { gold: chance(0.7) || m.tier !== "normal" ? gold : 0, items: out };
 }
 
@@ -732,6 +790,13 @@ export function alembic(items) {
   return alembicRecipe(items) || melt;
 }
 function alembicRecipe(items) {
+  // 3 of the same rune: the next one up (not into the last, Chiminigagua: that one only falls)
+  const runas = items.filter((i) => i.kind === "runa");
+  if (items.length === 3 && runas.length === 3 && runas.every((r) => r.runa === runas[0].runa)) {
+    const k = RUNAS.findIndex((r) => r.id === runas[0].runa), next = RUNAS[k + 1];
+    if (!next || k + 1 === RUNAS.length - 1) return { result: null, text: "Esas runas ya no suben más: la última solo cae de los monstruos." };
+    return { result: makeRuna(next.id), text: `Las tres runas se funden en una runa ${next.name}.` };
+  }
   const gems = items.filter((i) => i.kind === "gem");
   if (items.length === 3 && gems.length === 3 && gems.every((g) => g.gem === gems[0].gem && g.grade === gems[0].grade) && gems[0].grade < 2) {
     return { result: makeGem(gems[0].gem, gems[0].grade + 1), text: "Las gemas se funden en una mejor." };
@@ -748,8 +813,8 @@ function alembicRecipe(items) {
     const it = plain[0], max = BASE[it.base].sockets || 0;
     if (!max) return { result: null, text: "Ese objeto no admite engastes." };
     if (it.gems.length) return { result: null, text: "Solo sirve con un objeto que no tenga nada engastado." };
-    let n = rnd(1, max);
-    while (max > 1 && n === it.sockets) n = rnd(1, max);
+    let n = plainSockets(BASE[it.base]);
+    while (max > 1 && n === it.sockets) n = plainSockets(BASE[it.base]);
     return { result: { ...it, sockets: n, gems: [], runeword: undefined }, text: `${n === 1 ? "Se abre un engaste" : `Se abren ${n} engastes`} en el objeto.` };
   }
   const potions = items.filter((i) => i.kind === "potion");
@@ -777,6 +842,7 @@ function alembicRecipe(items) {
 export const RECIPES = [
   "Un conjunto completo (una pieza de cada, nada más) → la camiseta encantada del conjunto: todas las bonificaciones del conjunto y la mitad de las propiedades de sus piezas (sin su defensa ni su daño; las gemas engastadas se pierden). Se lleva debajo de todo, en un sitio propio; mientras la llevas, se te ve con el conjunto entero (tú eliges qué piezas). Va a tus camisetas, una por conjunto",
   "3 gemas iguales → la gema del grado siguiente",
+  "3 runas iguales → la runa siguiente (Ata → Bosa → … ; la última, Chiminigagua, solo cae)",
   "3 gemas perfectas + 1 objeto mágico → objeto raro del mismo tipo",
   "3 objetos raros → un objeto de nivel más alto que el mejor de los tres: único o de conjunto la mitad de las veces; si no, un raro con el máximo de propiedades",
   "3 objetos ancestrales (rosas) → un objeto de nivel más alto que el mejor de los tres: legendario la mitad de las veces; si no, otro ancestral",

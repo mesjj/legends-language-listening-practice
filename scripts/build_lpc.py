@@ -541,6 +541,17 @@ SETS = {  # each set has its own colours
     "huitaca": {"metal": "gold", "cloth": "purple", "wood": "gold"},
     "canocristales": {"metal": "gold", "cloth": "red", "wood": "medium"},
     "dzogchen": {"metal": "gold", "cloth": "blue", "wood": "gold"},
+    "pastor": {"metal": "bronze", "cloth": "tan", "wood": "light"},
+    "barquero": {"metal": "silver", "cloth": "blue", "wood": "light"},
+    "rey": {"metal": "gold", "cloth": "purple", "wood": "gold"},
+    "shakya": {"metal": "gold", "cloth": "orange", "wood": "medium"},
+    "tsokye": {"metal": "silver", "cloth": "blue", "wood": "light"},
+    "loden": {"metal": "silver", "cloth": "white", "wood": "light"},
+    "pemagyalpo": {"metal": "gold", "cloth": "red", "wood": "gold"},
+    "pandita": {"metal": "gold", "cloth": "maroon", "wood": "medium"},
+    "nyima": {"metal": "gold", "cloth": "yellow", "wood": "gold"},
+    "sengedradrok": {"metal": "iron", "cloth": "navy", "wood": "dark"},
+    "drollo": {"metal": "copper", "cloth": "red", "wood": "dark"},
 }
 
 
@@ -946,6 +957,17 @@ SET_BAND_STOPS = {
     "huitaca": (["#0e0414", "#34104a", "#6a2a8e", "#b05ad0", "#e8a8f8", "#fff0ff"], ["#1a1402", "#4a3c08", "#a08a18", "#e8d040", "#fff48a", "#ffffff"]),  # festival purple, moonlight gold
     "canocristales": (["#140204", "#4a0a12", "#a01a24", "#e0403a", "#ff9a7a", "#fff0e8"], ["#02100e", "#0a3a30", "#1a7a5a", "#3ac08a", "#f0e040", "#fffbe0"]),  # macarenia red, green and yellow water
     "dzogchen": (["#02040e", "#0a1840", "#1e3a8e", "#4a7ae0", "#b8d0ff", "#ffffff"], ["#140a02", "#4a1a08", "#a8301a", "#f0b030", "#7ae07a", "#ffffff"]),  # space blue, five lights
+    "pastor": (["#140e08", "#3e3020", "#7a6650", "#b8a48a", "#e8dcc6", "#fffaf0"], ["#06140a", "#123a18", "#2a6a2a", "#5aa040", "#a8d878", "#effce0"]),  # undyed wool, pasture
+    "barquero": (["#020a14", "#0a2440", "#1a4a7a", "#3a7ab0", "#8ab8e0", "#e8f6ff"], ["#140e02", "#4a3a10", "#8e7428", "#c8a850", "#f0dc98", "#fffbe8"]),  # river, straw
+    "rey": (["#0c0414", "#2e0e4a", "#5a1e8a", "#8a4ac0", "#c8a0ec", "#f6ecff"], ["#1a1002", "#5a3808", "#a8701a", "#e8b030", "#ffe07a", "#fffbe0"]),  # royal purple, gold
+    "shakya": (["#1a0a00", "#5a2a04", "#a85a0a", "#e8961a", "#ffc860", "#fff2d0"], ["#140204", "#3e0a12", "#6e1424", "#a02a3a", "#d86a74", "#ffd8dc"]),  # saffron, maroon
+    "tsokye": (["#020814", "#06204a", "#0e3e8a", "#2a6ad0", "#8ab8ff", "#eef6ff"], ["#14040a", "#4a1028", "#8e2a52", "#e0609a", "#ffb0d4", "#fff0f6"]),  # lake blue, lotus pink
+    "loden": (["#14161a", "#4a5058", "#8e96a0", "#d0d6de", "#f4f6f8", "#ffffff"], ["#020a14", "#0a2a4a", "#1a5a8a", "#4a96c8", "#a8d8f8", "#eaf8ff"]),  # white, pale blue
+    "pemagyalpo": (["#140202", "#4a0a0a", "#8e1a1a", "#d83a3a", "#ff8a7a", "#ffe4dc"], ["#1a1002", "#5a3808", "#a8701a", "#e8b030", "#ffe07a", "#fffbe0"]),  # royal red, gold
+    "pandita": (["#120404", "#3e0e0a", "#7a1e14", "#b8402a", "#e88a5a", "#ffe0c8"], ["#140e02", "#4a3a08", "#8e7414", "#d8b030", "#f8e070", "#fffbe0"]),  # maroon and red, ochre
+    "nyima": (["#1a1202", "#4a3a06", "#8e7410", "#e0c020", "#fff07a", "#fffce0"], ["#140600", "#4a1a02", "#8e3a06", "#e06a10", "#ffa040", "#ffe0c0"]),  # sun gold, tiger orange
+    "sengedradrok": (["#000208", "#020a24", "#0a1a50", "#1a3a90", "#5a7ad0", "#c0d0ff"], ["#1a0200", "#5a0a00", "#a82a04", "#f06a10", "#ffb040", "#fff0a0"]),  # wrathful blue, flame
+    "drollo": (["#0a0000", "#2a0604", "#5a120a", "#8e2a14", "#c85a2a", "#f0b080"], ["#140600", "#4a1a02", "#8e3a06", "#e8801a", "#ffc060", "#fff4d0"]),  # dark red-brown, tiger
 }
 # a set on band pieces that doesn't take the band's shapes: its own layers (None: main colours, A_: accent)
 SET_BAND_LOOKS = {
@@ -958,6 +980,7 @@ SET_BAND_LOOKS = {
 }
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import set_art as SET_ART  # noqa: E402  the sets from 138 to 200: a look of its own for every piece
+import orig_art as ORIG  # noqa: E402  the eleven bodhisattva and Guru Rinpoche sets, drawn frame by frame
 SET_BAND_LOOKS.update({sid: {b: [(n, "light" if c == "light" else A_ if c else None) for n, c in parts] for b, parts in r.items()} for sid, r in SET_ART.RECIPES.items()})
 HEAD_BASES = {"capucha", "sombrero", "casco", "mascara", "yelmo", "corona"}
 BODY_BASES = {"tunica", "jubon", "cota", "coraza"}
@@ -1326,7 +1349,10 @@ def build():
             main_, acc_ = SET_BAND_STOPS.get(style, (BAND_STOPS[band], BAND_ACCENT[band]))
             for body in ("male", "female"):
                 layers, alayers = [], []
-                for name, acc in SET_BAND_LOOKS.get(style, {}).get(base, parts):
+                orig = ORIG.has_art(style, base)  # the bodhisattva and Guru Rinpoche sets: all drawn in scripts/orig_art.py
+                if orig:
+                    layers, alayers = ORIG.piece(sys.modules[__name__], style, base, body, main_, acc_)
+                for name, acc in ([] if orig else SET_BAND_LOOKS.get(style, {}).get(base, parts)):
                     lf, af = layer_frames(name, body), anim_layers(name, body)
                     stops = acc_ if acc else main_
                     layers += gmap_layers(lf, stops)
@@ -1334,7 +1360,7 @@ def build():
                 if style in TOP_STYLES:  # the tier's colours over the band's shapes (the accents stay brighter)
                     layers, alayers = gmap_layers(layers, TOP_STYLES[style]), gmap_anim(alayers, TOP_STYLES[style])
                 if style in SET_ART.RECIPES:  # the sets from 138 up: drawn hats and effects (scripts/set_art.py)
-                    layers, alayers = SET_ART.piece(style, base, layers, alayers, main_, acc_)
+                    layers, alayers = SET_ART.piece(style, base, layers, alayers, main_, acc_, hat=not orig)
                 if style == "arhuaco":  # the tutusoma and the mochila, drawn in scripts/custom_art.py
                     sys.path.insert(0, os.path.join(ROOT, "scripts"))
                     from custom_art import arhuaco_piece
