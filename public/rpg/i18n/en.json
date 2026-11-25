@@ -2683,4 +2683,12 @@
 "Purba del Tigre":"Phurba of the Tiger",
 "Mano del Vajra":"Hand of the Vajra",
 "Pies sobre la Tigresa":"Feet upon the Tigress",
-"Fajín de Piel de Tigre":"Tiger-Skin Sash"}
+"Fajín de Piel de Tigre":"Tiger-Skin Sash",
+"dx:{0}px;--dy:{1}px;--r:{2}deg;--c:{3};animation-delay:{4}s":"dx:{0}px;--dy:{1}px;--r:{2}deg;--c:{3};animation-delay:{4}s",
+"¡Premio!":"Prize!",
+"¡Jackpot!":"Jackpot!",
+"left:{0}%;--dx:{1}px;--r:{2}deg;--c:{3};--t:{4}s;animation-delay:{5}s":"left:{0}%;--dx:{1}px;--r:{2}deg;--c:{3};--t:{4}s;animation-delay:{5}s",
+"¡Victoria!":"Victory!",
+"¡Grupo derrotado!":"Group defeated!",
+"de oro":"gold",
+"Nada en el suelo esta vez.":"Nothing on the ground this time."}

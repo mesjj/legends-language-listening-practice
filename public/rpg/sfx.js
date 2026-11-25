@@ -173,6 +173,20 @@ export const sfx = {
     [0, 4, 7, 12, 16].forEach((n) => tone("triangle", 392 * Math.pow(2, n / 12), 0.62, 1.1, 0.12));
     noise(0.62, 0.5, 0.18, 6000, 2);
   },
+  // a group beaten: a trumpet call and coins; a boss: twice as long, an octave up at the end, a drum roll
+  groupWin(boss = false) {
+    const call = [[0, 0], [0, 0.1], [0, 0.2], [4, 0.3], [7, 0.45], [12, 0.6]];
+    call.forEach(([n, t]) => { tone("square", 392 * Math.pow(2, n / 12), t, t >= 0.6 ? 0.7 : 0.1, 0.11); tone("triangle", 392 * Math.pow(2, n / 12), t, t >= 0.6 ? 0.7 : 0.1, 0.14); });
+    [0, 4, 7, 12].forEach((n) => voice("sawtooth", 392 * Math.pow(2, n / 12), 392 * Math.pow(2, n / 12), 0.6, 0.9, 0.05, { band: 1600, q: 1, vib: 3, attack: 0.02 }));
+    noise(0.6, 0.45, 0.22, 6000, 0.6);
+    for (let i = 0; i < 12; i++) { const t = 0.55 + i * 0.06 + Math.random() * 0.03; tone("square", 2400 + Math.random() * 1600, t, 0.04, 0.045); }
+    if (!boss) return;
+    for (let i = 0; i < 14; i++) noise(1.2 + i * 0.045, 0.05, 0.3, 300 + i * 20, 1.5);  // drum roll
+    [[7, 1.85], [9, 2.0], [11, 2.15], [12, 2.3]].forEach(([n, t]) => tone("square", 392 * Math.pow(2, n / 12), t, t >= 2.3 ? 1.2 : 0.13, 0.12));
+    [12, 16, 19, 24].forEach((n) => { voice("sawtooth", 392 * Math.pow(2, n / 12), 392 * Math.pow(2, n / 12), 2.3, 1.4, 0.05, { band: 2000, q: 1, vib: 5, attack: 0.02 }); tone("triangle", 392 * Math.pow(2, n / 12), 2.3, 1.4, 0.1); });
+    noise(2.3, 0.8, 0.3, 5000, 0.5);
+    for (let i = 0; i < 24; i++) { const t = 2.3 + i * 0.05 + Math.random() * 0.03; tone("square", 2400 + Math.random() * 1600, t, 0.04, 0.045); }
+  },
   levelup() { [0, 4, 7, 12].forEach((s, i) => tone("square", 392 * Math.pow(2, s / 12), i * 0.1, 0.3, 0.12)); },
   // bosses: their entrance, the note the Silbón has reached (fainter as it climbs), their big blow
   bossIntro(kind) { BOSS_SOUND[kind]?.(); },
@@ -183,7 +197,29 @@ export const sfx = {
   bossDeath() { rumble(0, 2.2, 0.8, 500, 35); tone("sawtooth", [220, 40], 0.1, 1.8, 0.12); noise(0.3, 1.4, 0.2, 1200, 0.5); },
   // dice clattering on wood; a win: a bright little run
   dice() { for (let i = 0; i < 7; i++) { const t = i * 0.07 + Math.random() * 0.04; noise(t, 0.025, 0.35 * (1 - i / 9), 2600 + Math.random() * 1800, 4); tone("square", 900 + Math.random() * 500, t, 0.02, 0.04); } },
-  diceWin() { [0, 4, 7, 12].forEach((s, i) => tone("triangle", 659 * Math.pow(2, s / 12), i * 0.06, 0.3, 0.26)); },
+  // the dice hitting the table
+  diceLand() { noise(0, 0.06, 0.5, 900, 2); tone("sine", 180, 0, 0.12, 0.3); },
+  // the slot-machine payout: a fast run of bells, longer and higher for a jackpot
+  jackpot(big) {
+    // coins pouring into the tray
+    for (let i = 0; i < (big ? 34 : 16); i++) { const t = 0.1 + i * 0.045 + Math.random() * 0.03; tone("square", 2400 + Math.random() * 1600, t, 0.04, 0.05); tone("sine", 3200 + Math.random() * 1500, t + 0.01, 0.06, 0.04); } const n = big ? 16 : 8; for (let i = 0; i < n; i++) tone("square", 988 * Math.pow(2, ([0, 4, 7, 12][i % 4] + (big ? 12 * Math.floor(i / 8) : 0)) / 12), 0.15 + i * 0.075, 0.07, 0.09); },
+  // a win: the casino alarm bell ringing, a fanfare up to a held major chord, and coins pouring out
+  diceWin() {
+    // the bell: a fast ring, 10 strokes
+    for (let i = 0; i < 10; i++) { const t = i * 0.075; tone("sine", 2093, t, 0.3, 0.2); tone("sine", 2093 * 2.76, t, 0.14, 0.07); tone("square", 1046, t, 0.05, 0.05); }
+    // the fanfare: a run up two octaves
+    [0, 4, 7, 12, 16, 19, 24].forEach((s, i) => { tone("square", 523 * Math.pow(2, s / 12), 0.2 + i * 0.07, 0.16, 0.12); tone("triangle", 523 * Math.pow(2, s / 12), 0.2 + i * 0.07, 0.2, 0.18); });
+    // and the chord held over it, brass-like
+    [523, 659, 784, 1046].forEach((f) => { voice("sawtooth", f, f, 0.72, 1.1, 0.07, { band: 1800, q: 1, vib: 4, vibHz: 6, attack: 0.02 }); tone("triangle", f, 0.72, 1.1, 0.1, { attack: 0.02 }); });
+    noise(0.72, 0.5, 0.25, 6000, 0.6);  // a cymbal
+    for (let i = 0; i < 22; i++) { const t = 0.3 + i * 0.05 + Math.random() * 0.03; tone("square", 2400 + Math.random() * 1600, t, 0.04, 0.05); tone("sine", 3200 + Math.random() * 1500, t + 0.01, 0.06, 0.04); }
+  },
+  // a miss: the sad trombone, wah wah wah waaah
+  diceLose() {
+    const notes = [[392, 370], [370, 349], [349, 330]];
+    notes.forEach(([a, b], i) => voice("sawtooth", a, b, i * 0.3, 0.27, 0.16, { band: 900, q: 2, attack: 0.03 }));
+    voice("sawtooth", 330, 294, 0.9, 0.9, 0.16, { band: 800, q: 2, vib: 9, vibHz: 6, attack: 0.03 });
+  },
   coin() { tone("square", 1318, 0, 0.06, 0.12); tone("square", 1760, 0.05, 0.12, 0.12); },
 };
 

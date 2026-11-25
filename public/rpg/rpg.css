@@ -1431,42 +1431,124 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .die-ico { display: inline-block; width: 11px; height: 11px; vertical-align: -1px; border-radius: 2.5px; background: #f2ead6;
   box-shadow: inset 0 0 0 1px #8a7a5a; background-image: radial-gradient(circle at 30% 30%, #2a2218 1.2px, transparent 1.6px), radial-gradient(circle at 70% 70%, #2a2218 1.2px, transparent 1.6px), radial-gradient(circle at 50% 50%, #2a2218 1.2px, transparent 1.6px); }
 .fighthead .combo .luck { color: #f0e2b0; }
-.dicestack { position: absolute; left: 12px; top: 12px; right: 12px; z-index: 5; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; pointer-events: none; }
-.dicebox { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 8px;
-  background: rgba(10, 8, 6, .78); border: 1px solid rgba(240, 226, 176, .25); box-shadow: 0 4px 16px rgba(0,0,0,.5); pointer-events: none;
-  animation: dice-in .25s ease-out; font-family: var(--serif); }
-.dicebox.out { animation: dice-out .45s ease-in forwards; }
-@keyframes dice-in { from { opacity: 0; transform: translateY(-8px); } }
-@keyframes dice-out { to { opacity: 0; transform: translateY(-6px); } }
-.dice-row { display: flex; align-items: center; gap: 6px; }
-.die { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 3px; border-radius: 7px; font: 700 17px/1 var(--serif); color: #2a2218;
-  background: linear-gradient(145deg, #fffaf0, #e2d6b8); box-shadow: inset 0 -3px 0 rgba(0,0,0,.18), 0 2px 4px rgba(0,0,0,.5); }
-.die.rolling { animation: tumble .16s linear infinite; }
-.die.landed { animation: land .3s cubic-bezier(.3, 1.6, .5, 1); }
-@keyframes tumble { 0% { transform: rotate(0) translateY(0); } 25% { transform: rotate(14deg) translateY(-4px); } 50% { transform: rotate(-8deg) translateY(-1px); } 75% { transform: rotate(10deg) translateY(-3px); } 100% { transform: rotate(0); } }
-@keyframes land { from { transform: scale(1.25); } }
-.die.d20 { min-width: 40px; height: 40px; border-radius: 0; color: #3a2400; clip-path: polygon(50% 0, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%);
-  background: linear-gradient(145deg, #fff3b0, #e0a828); font-size: 16px; }
-.dice-need { font-size: 12.5px; color: #cfc6b2; margin-left: 2px; }
-.dice-bonus { font: 700 15px var(--serif); color: #f0d25c; } .dice-bonus small { font-size: 11px; font-weight: 400; color: #cfc6b2; }
-.dice-res { font-size: 14px; color: #ece6d8; min-height: 18px; }
-.dice-res .dice-total { font-size: 17px; color: #f0d25c; margin-right: 3px; }
-.dicebox.win { border-color: rgba(240, 210, 92, .7); box-shadow: 0 0 18px rgba(240, 210, 92, .35), 0 4px 16px rgba(0,0,0,.5); }
+/* the roll takes over the screen: a dim backdrop with turning light rays, the box in the middle ringed by
+   blinking bulbs, huge dice thrown in and tumbling; a win flashes a banner and bursts coins. Clicks and
+   typing go through (pointer-events: none), so the fight carries on underneath. */
+.diceshow { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(20, 12, 2, .55), rgba(0, 0, 0, .82)); animation: dshow-in .25s ease-out; }
+.diceshow.out { animation: dshow-out .5s ease-in forwards; }
+@keyframes dshow-in { from { opacity: 0; } }
+@keyframes dshow-out { to { opacity: 0; } }
+.dice-rays { position: absolute; left: 50%; top: 50%; width: 220vmax; height: 220vmax; margin: -110vmax 0 0 -110vmax; opacity: .22;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 220, 120, .55) 0 7deg, transparent 7deg 18deg);
+  -webkit-mask: radial-gradient(circle, #000 10%, transparent 45%); mask: radial-gradient(circle, #000 10%, transparent 45%);
+  animation: rays 9s linear infinite; }
+.diceshow.won .dice-rays { opacity: .45; animation-duration: 4s; }
+.diceshow.jackpot .dice-rays { opacity: .7; animation-duration: 2s; background: repeating-conic-gradient(from 0deg, var(--pc) 0 7deg, transparent 7deg 12deg, rgba(255, 230, 140, .8) 12deg 18deg, transparent 18deg 24deg); }
+.diceshow.jackpot { animation: dshow-in .25s ease-out, flash .35s steps(2) 6; }
+@keyframes rays { to { transform: rotate(360deg); } }
+@keyframes flash { 50% { background-color: color-mix(in srgb, var(--pc) 22%, transparent); } }
+.dicestack { position: relative; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 28px; padding: 16px; }
+.dicebox { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 26px 34px 22px; border-radius: 22px;
+  background: radial-gradient(ellipse at 50% 0%, #4a1a12, #1e0906 70%); border: 3px solid #f0d25c;
+  box-shadow: 0 0 0 4px #5a1a0a, 0 0 40px rgba(240, 210, 92, .35), 0 20px 60px rgba(0,0,0,.7);
+  animation: dice-in .45s cubic-bezier(.2, 1.5, .4, 1); font-family: var(--serif); text-align: center; }
+.dicebox.out, .dicebox.win.out, .dicebox.jackpot.out { animation: dice-out .45s ease-in forwards; }
+@keyframes dice-in { from { opacity: 0; transform: scale(.3) rotate(-8deg); } }
+@keyframes dice-out { from { transform: scale(var(--grow, 1)); } to { opacity: 0; transform: scale(.7) translateY(30px); } }
+/* the marquee: a ring of bulbs that chase each other round the box */
+.dice-bulbs { position: absolute; inset: 7px; border-radius: 16px; pointer-events: none;
+  border: 5px dotted #ffe68a; filter: drop-shadow(0 0 4px #ffcf40); animation: bulbs .5s steps(2) infinite; }
+.dicebox.win .dice-bulbs { animation-duration: .18s; }
+@keyframes bulbs { 50% { border-color: #ff5a3a; filter: drop-shadow(0 0 6px #ff7a3a); } }
+.dice-kind { font: 700 15px var(--serif); letter-spacing: .04em; color: #f0d25c; text-shadow: 0 2px 0 #000; }
+.dice-row { display: flex; align-items: center; justify-content: center; gap: 18px; perspective: 600px; }
+.die { display: inline-grid; place-items: center; min-width: clamp(76px, 19vw, 132px); height: clamp(76px, 19vw, 132px); padding: 0 6px; border-radius: 20%;
+  font: 700 clamp(34px, 8.5vw, 62px)/1 var(--serif); color: #2a2218;
+  background: linear-gradient(145deg, #fffaf0, #e2d6b8); box-shadow: inset 0 -8px 0 rgba(0,0,0,.18), inset 0 6px 0 rgba(255,255,255,.6), 0 10px 22px rgba(0,0,0,.6); }
+.die.rolling { animation: tumble .22s linear infinite; }
+.die.landed { animation: land .45s cubic-bezier(.3, 1.8, .5, 1); }
+@keyframes tumble { 0% { transform: rotateX(0) rotateZ(0) translateY(0); } 25% { transform: rotateX(70deg) rotateZ(25deg) translateY(-26px); }
+  50% { transform: rotateX(180deg) rotateZ(-15deg) translateY(-8px); } 75% { transform: rotateX(290deg) rotateZ(18deg) translateY(-20px); } 100% { transform: rotateX(360deg) rotateZ(0); } }
+@keyframes land { from { transform: scale(1.45); } 60% { transform: scale(.92); } }
+.die.d20 { min-width: clamp(90px, 22vw, 150px); height: clamp(90px, 22vw, 150px); border-radius: 0; color: #3a2400;
+  clip-path: polygon(50% 0, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%); background: linear-gradient(145deg, #fff3b0, #e0a828); font-size: clamp(36px, 9vw, 60px); }
+.dice-need { font-size: 16px; color: #e8dcc0; }
+.dice-bonus { font: 700 clamp(24px, 6vw, 36px) var(--serif); color: #f0d25c; text-shadow: 0 2px 0 #000; } .dice-bonus small { font-size: 15px; font-weight: 400; color: #e8dcc0; }
+.dice-res { font-size: clamp(20px, 5vw, 28px); color: #fff4dc; min-height: 32px; text-shadow: 0 2px 0 #000; }
+.dice-res .dice-total { font-size: 1.35em; color: #f0d25c; margin-right: 6px; }
+.dicebox.lost .dice-res { color: #b8ad94; }
+.dice-banner { position: absolute; top: -34px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+  font: 900 clamp(34px, 9vw, 64px)/1 var(--serif); color: #ffe68a; letter-spacing: .03em;
+  text-shadow: 0 3px 0 #7a3a00, 0 6px 0 #3a1800, 0 0 24px #ffb020; animation: banner .5s cubic-bezier(.2, 1.8, .4, 1), banner-glow .3s steps(2) infinite .5s; }
+@keyframes banner { from { transform: translateX(-50%) scale(3); opacity: 0; } }
+@keyframes banner-glow { 50% { color: #fff; } }
+.dicebox.win { animation: dice-in .45s cubic-bezier(.2, 1.5, .4, 1), win-grow .6s cubic-bezier(.2, 1.6, .4, 1) 1.05s both; box-shadow: 0 0 0 4px #5a1a0a, 0 0 70px rgba(240, 210, 92, .7), 0 20px 60px rgba(0,0,0,.7); }
 .dicebox.prized { border-color: var(--pc); }
-.dicebox.jackpot { border-color: var(--pc); animation: jackpot .6s ease-in-out infinite alternate; }
-@keyframes jackpot { from { box-shadow: 0 0 10px color-mix(in srgb, var(--pc) 50%, transparent); } to { box-shadow: 0 0 30px var(--pc), 0 0 60px color-mix(in srgb, var(--pc) 40%, transparent); } }
-.stage.bossfight .dicestack { top: 96px; }
-@media (max-width: 700px) { .die { min-width: 28px; height: 28px; font-size: 14px; } .die.d20 { min-width: 34px; height: 34px; } .stage.bossfight .dicestack { top: 104px; } }
-@media (prefers-reduced-motion: reduce) { .dicebox, .dicebox.out, .die.rolling, .die.landed, .dicebox.jackpot { animation: none; } }
+/* a win grows the box once the dice land: about a third bigger, and half again for a jackpot */
+@keyframes win-grow { from { transform: scale(1); } to { transform: scale(var(--grow, 1.3)); } }
+.dicebox.win { --grow: 1.3; }
+.dicebox.win.jackpot { --grow: 1.45; }
+@media (max-width: 700px) { .dicebox.win, .dicebox.win.jackpot { --grow: 1.08; } }
+.dicebox.jackpot { border-color: var(--pc); animation: dice-in .45s cubic-bezier(.2, 1.5, .4, 1), win-grow .6s cubic-bezier(.2, 1.6, .4, 1) 1.05s both, jackpot .4s ease-in-out infinite alternate; }
+.dicebox.jackpot .dice-banner { color: var(--pc); text-shadow: 0 3px 0 #000, 0 0 30px var(--pc), 0 0 60px #fff; }
+@keyframes jackpot { from { box-shadow: 0 0 0 4px #5a1a0a, 0 0 20px color-mix(in srgb, var(--pc) 50%, transparent); } to { box-shadow: 0 0 0 4px #5a1a0a, 0 0 60px var(--pc), 0 0 120px color-mix(in srgb, var(--pc) 50%, transparent); } }
+/* a win: a white flash as the dice land, coins raining over the whole screen, rays cycling colours, dice glowing */
+.diceshow.won .dice-rays { animation: rays 4s linear infinite, rainbow 1.2s linear infinite; }
+@keyframes rainbow { to { filter: hue-rotate(360deg); } }
+.dice-flash { position: absolute; inset: 0; background: #fff; pointer-events: none; animation: dflash .5s ease-out forwards; }
+@keyframes dflash { from { opacity: .85; } to { opacity: 0; } }
+.dice-rain { position: absolute; top: -30px; width: 22px; height: 22px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 35% 30%, #fff6c0, #f0c030 45%, #a06a08); box-shadow: 0 0 10px rgba(255, 200, 60, .9);
+  animation: rain var(--t, 1.6s) cubic-bezier(.4, 0, .9, .6) forwards; }
+.dice-rain.spark { width: 12px; height: 12px; border-radius: 2px; background: var(--c); box-shadow: 0 0 12px var(--c); }
+@keyframes rain { to { transform: translate(var(--dx), 110vh) rotate(var(--r)); } }
+.dicebox.landwin .die { box-shadow: inset 0 -8px 0 rgba(0,0,0,.18), 0 0 0 3px #ffe68a, 0 0 30px #ffcf40, 0 10px 22px rgba(0,0,0,.6); animation: land .45s cubic-bezier(.3, 1.8, .5, 1), dglow .3s steps(2) infinite .45s; }
+@keyframes dglow { 50% { box-shadow: inset 0 -8px 0 rgba(0,0,0,.18), 0 0 0 3px #fff, 0 0 50px #fff2a0, 0 10px 22px rgba(0,0,0,.6); } }
+.diceshow.won { animation: dshow-in .25s ease-out, wshake .5s ease-out 1.05s; }
+@keyframes wshake { 20% { transform: translate(-8px, 4px); } 40% { transform: translate(7px, -5px); } 60% { transform: translate(-5px, 3px); } 80% { transform: translate(3px, -2px); } }
+/* a group beaten (celebrate in main.js): the dice's show, with the title, the gold counting up and the drops */
+.wincard { min-width: min(440px, 88vw); max-width: 92vw; padding-top: 40px; }
+.wincel .dice-banner { top: -30px; }
+.wincel.boss .dice-banner { font-size: clamp(44px, 12vw, 84px); top: -48px; }
+.win-title { font: 700 clamp(20px, 5vw, 28px)/1.15 var(--serif); color: #fff4dc; text-shadow: 0 2px 0 #000; }
+.win-sub { font-size: 16px; color: #e8dcc0; }
+.win-sub b { color: #f0d25c; }
+.win-gold { display: flex; align-items: center; gap: 8px; font: 700 clamp(26px, 7vw, 40px) var(--serif); color: #f0d25c; text-shadow: 0 2px 0 #000, 0 0 18px rgba(255, 200, 60, .6); }
+.win-gold svg, .win-gold img { width: 1em; height: 1em; }
+.win-items { display: flex; flex-direction: column; align-items: stretch; gap: 6px; width: 100%; }
+.win-item { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 10px; text-align: left;
+  font: 700 clamp(15px, 4vw, 18px)/1.2 var(--serif); color: var(--c); background: rgba(0, 0, 0, .45); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  animation: win-pop .45s cubic-bezier(.2, 1.8, .4, 1) both; }
+.win-item > :first-child { width: 34px; height: 34px; flex: none; margin: 0; }
+.win-item > span:last-child { flex: 1; text-align: left; }
+.win-item.top { box-shadow: 0 0 18px var(--c), inset 0 0 12px color-mix(in srgb, var(--c) 40%, transparent); animation: win-pop .45s cubic-bezier(.2, 1.8, .4, 1) both, win-top .5s ease-in-out infinite alternate .9s; }
+@keyframes win-pop { from { opacity: 0; transform: scale(2.2) translateY(-10px); } }
+@keyframes win-top { to { box-shadow: 0 0 34px var(--c), inset 0 0 18px var(--c); } }
+.win-more { font-size: 15px; color: #e8dcc0; }
+.wincel .dicebox.win { animation: dice-in .45s cubic-bezier(.2, 1.5, .4, 1); }
+.wincel.boss .dicebox.win { animation: dice-in .45s cubic-bezier(.2, 1.5, .4, 1), jackpot .4s ease-in-out infinite alternate; border-color: var(--pc); }
+.wincel.out { animation: dshow-out .5s ease-in forwards; }
+@media (max-width: 700px) { .wincard { padding: 34px 14px 16px; } }
+/* coins and sparkles thrown out of the box */
+.dice-coin { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 35% 30%, #fff6c0, #f0c030 45%, #a06a08); box-shadow: 0 0 8px rgba(255, 200, 60, .8);
+  animation: coin 1.4s cubic-bezier(.15, .6, .4, 1) forwards; }
+.dice-coin.spark { width: 10px; height: 10px; margin: -5px; border-radius: 2px; background: var(--c); box-shadow: 0 0 10px var(--c); }
+@keyframes coin { from { transform: translate(0, 0) rotate(0) scale(.4); opacity: 1; } 70% { opacity: 1; }
+  to { transform: translate(var(--dx), calc(var(--dy) + 260px)) rotate(var(--r)) scale(1); opacity: 0; } }
+@media (max-width: 700px) { .dicebox { padding: 22px 18px 16px; } .dice-row { gap: 10px; } .dicestack { gap: 34px; } }
+@media (prefers-reduced-motion: reduce) { .dice-flash, .dice-rain { display: none; } .diceshow, .diceshow.won, .diceshow.out, .dice-rays, .dicebox, .dicebox.out, .dicebox.win, .dicebox.landwin .die, .die.rolling, .die.landed, .dicebox.jackpot, .dice-bulbs, .dice-banner { animation: none; } .diceshow.out { opacity: 0; } }
 
 /* the ear streak's dice: the same dice in deep blue, the prize die in silver-blue */
 .die-ico.ear { background-color: #5a8fe0; box-shadow: inset 0 0 0 1px #1d3d78; }
-.dicebox.ear { border-color: rgba(120, 170, 255, .35); }
-.dicebox.ear.win { border-color: rgba(130, 190, 255, .8); box-shadow: 0 0 18px rgba(110, 170, 255, .4), 0 4px 16px rgba(0,0,0,.5); }
-.dicebox.ear .die { color: #f2f7ff; background: linear-gradient(145deg, #6fa2f0, #23488f); box-shadow: inset 0 -3px 0 rgba(0,0,0,.3), 0 2px 4px rgba(0,0,0,.5); }
+.dicebox.ear { border-color: #8fb8ff; background: radial-gradient(ellipse at 50% 0%, #1a2e5a, #070e22 70%); box-shadow: 0 0 0 4px #0e1e48, 0 0 40px rgba(110, 170, 255, .35), 0 20px 60px rgba(0,0,0,.7); }
+.dicebox.ear .dice-bulbs { border-color: #cfe2ff; filter: drop-shadow(0 0 4px #7ab0ff); }
+.dicebox.ear.win { box-shadow: 0 0 0 4px #0e1e48, 0 0 70px rgba(110, 170, 255, .7), 0 20px 60px rgba(0,0,0,.7); }
+.dicebox.ear .die { color: #f2f7ff; background: linear-gradient(145deg, #6fa2f0, #23488f); box-shadow: inset 0 -8px 0 rgba(0,0,0,.3), inset 0 6px 0 rgba(255,255,255,.25), 0 10px 22px rgba(0,0,0,.6); }
 .dicebox.ear .die.d20 { color: #0e2346; background: linear-gradient(145deg, #eef6ff, #8fb8e8); }
 .dicebox.ear .dice-bonus, .dicebox.ear .dice-res .dice-total { color: #a9cdff; }
-.dice-kind { font-size: 11.5px; color: #a9cdff; margin-bottom: -2px; }
+.dicebox.ear .dice-kind { color: #a9cdff; }
 .fighthead .combo .earstreak { margin-left: 10px; color: #a9cdff; cursor: help; white-space: nowrap; }
 .fighthead .combo .earstreak b { color: #e4efff; }
 

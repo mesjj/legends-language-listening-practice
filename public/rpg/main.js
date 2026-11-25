@@ -2454,6 +2454,7 @@ function enterZone(id, mode, depth) {
 let warmed = false;
 function warmVoice() { if (!warmed && voiceOk()) { warmed = true; fetch("api/shadow/warm", { method: "POST" }).catch(() => {}); } }
 function startEncounter() {
+  endCelebration();
   warmVoice();
   const zp = ch.zones[S.zone.id], z = S.zone;
   // past the last group, a gated zone's boss only comes once you've mastered half its lines
@@ -2798,22 +2799,82 @@ function streakDice(F, kind = "racha") {
   save();
   return r;
 }
+// coins and sparks raining over a whole-screen layer (the dice and the victory celebration)
+function coinRain(layer, color, n, delay = 0.8) {
+  if (FX.reduced()) return;
+  for (let i = 0; i < n; i++) {
+    const c = h(`<i class="dice-rain${i % 3 ? "" : " spark"}"></i>`), t = 1.2 + Math.random() * 1.2;
+    c.style.cssText = `left:${Math.random() * 100}%;--dx:${Math.random() * 120 - 60}px;--r:${Math.random() * 900 - 450}deg;--c:${color};--t:${t}s;animation-delay:${Math.random() * delay}s`;
+    layer.append(c);
+    setTimeout(() => c.remove(), (t + delay + 0.2) * 1000);
+  }
+}
+// A group (or a boss) beaten: a celebration over the whole screen, like the dice's, with what dropped.
+// It lets clicks and keys through, so the loot buttons underneath work at once; it fades by itself,
+// and goes as soon as you move on.
+function endCelebration() { document.querySelector(".wincel")?.remove(); }
+function celebrateWin({ boss, title, sub, gold, items }) {
+  endCelebration();
+  const top = items.filter((it) => BEAM_RANK[it.rarity]);
+  const best = top.length ? E.itemColor(top.sort((a, b) => BEAM_RANK[b.rarity] - BEAM_RANK[a.rarity])[0]) : "#f0d25c";
+  const shown = items.slice(0, 8);
+  const layer = h(`<div class="diceshow wincel won${boss ? " boss" : ""}" aria-hidden="true" style="--pc:${best}"><div class="dice-rays"></div>
+    <div class="dicebox win wincard"><i class="dice-bulbs"></i>
+      <div class="dice-banner">${boss ? "¡Victoria!" : "¡Grupo derrotado!"}</div>
+      <div class="win-title">${esc(title)}</div>${sub ? `<div class="win-sub">${sub}</div>` : ""}
+      ${gold ? `<div class="win-gold">${icon("coins-pile", "#f0d25c")} +<b data-to="${gold}">0</b> de oro</div>` : ""}
+      ${shown.length ? `<div class="win-items">${shown.map((it, i) => `<div class="win-item${BEAM_RANK[it.rarity] ? " top" : ""}" style="--c:${E.itemColor(it)};animation-delay:${0.5 + i * 0.18}s">${itemIco(it)}<span>${esc(it.unid ? `${RARITY[it.rarity]?.name || ""} sin identificar` : E.itemName(it))}</span></div>`).join("")}${items.length > shown.length ? `<div class="win-more">y ${items.length - shown.length} más</div>` : ""}</div>`
+        : gold ? "" : `<div class="win-sub">Nada en el suelo esta vez.</div>`}
+    </div></div>`);
+  document.body.append(layer);
+  sfx.groupWin(boss);
+  if (!FX.reduced()) { const fl = h(`<i class="dice-flash"></i>`); layer.append(fl); setTimeout(() => fl.remove(), 600); }
+  coinRain(layer, "#f0d25c", boss ? 70 : 34);
+  if (top.length || boss) setTimeout(() => layer.isConnected && coinRain(layer, best, boss ? 60 : 30, 0.6), boss ? 2300 : 700);
+  const g = layer.querySelector(".win-gold b");
+  if (g) {
+    const to = +g.dataset.to, t0 = performance.now(), ms = FX.reduced() ? 0 : 900;
+    const step = () => { const k = ms ? Math.min(1, (performance.now() - t0) / ms) : 1; g.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1 && g.isConnected) requestAnimationFrame(step); };
+    setTimeout(step, 350);
+  }
+  const stay = (boss ? 4800 : 2600) + Math.min(8, items.length) * 180;
+  setTimeout(() => layer.classList.add("out"), stay);
+  setTimeout(() => layer.remove(), stay + 500);
+}
 const dieIco = (kind = "racha") => `<i class="die-ico${kind === "oido" ? " ear" : ""}" aria-hidden="true"></i>`;
 // Two percentile dice tumble and land; on a win, the gold prize die (a d20) rolls too, and the prize shows.
 function showDice(r) {
   const stage = $(".stage");
   if (!stage) return;
-  // both streaks can roll on the same line: their boxes stack in the corner, the ear's dice in blue
+  // the dice take over the screen (a layer over everything that lets clicks and typing through);
+  // both streaks can roll on the same line: their boxes sit side by side, the ear's dice in blue
   const kind = r.kind2 || "racha";
-  let stack = stage.querySelector(".dicestack");
-  if (!stack) stage.append((stack = h(`<div class="dicestack"></div>`)));
+  let show = document.querySelector(".diceshow");
+  if (!show) document.body.append((show = h(`<div class="diceshow" aria-live="polite"><div class="dice-rays"></div><div class="dicestack"></div></div>`)));
+  const stack = show.querySelector(".dicestack");
   stack.querySelectorAll(`.dicebox[data-kind="${kind}"]`).forEach((n) => n.remove());
+  show.classList.remove("out", "won", "jackpot");
+  if (r.win) show.classList.add("won");
+  const done = (box) => { box.remove(); if (!stack.children.length) show.remove(); };
   const tens = (v) => String(Math.floor((v % 100) / 10)) + "0", ones = (v) => String(v % 10);
-  const box = h(`<div class="dicebox${r.win ? " win" : ""}${kind === "oido" ? " ear" : ""}" data-kind="${kind}" aria-live="polite">${kind === "oido" ? `<div class="dice-kind">Oído</div>` : ""}
-      <div class="dice-row"><span class="die d10" data-v="${tens(r.roll)}">${tens(r.roll)}</span><span class="die d10" data-v="${ones(r.roll)}">${ones(r.roll)}</span>
-        <span class="dice-need">gana con ${r.need === 1 ? "un 1" : `1 a ${r.need}`}</span></div>
+  const box = h(`<div class="dicebox${r.win ? " win" : ""}${kind === "oido" ? " ear" : ""}" data-kind="${kind}"><i class="dice-bulbs" aria-hidden="true"></i>
+      <div class="dice-kind">${kind === "oido" ? "Dados de oído" : "Dados de la racha"}</div>
+      <div class="dice-row"><span class="die d10" data-v="${tens(r.roll)}">${tens(r.roll)}</span><span class="die d10" data-v="${ones(r.roll)}">${ones(r.roll)}</span></div>
+      <div class="dice-need">gana con ${r.need === 1 ? "un 1" : `1 a ${r.need}`}</div>
       <div class="dice-res"></div></div>`);
   kind === "oido" ? stack.append(box) : stack.prepend(box);
+  const rain = (color, n) => coinRain(show, color, n);
+  // a burst of coins and sparkles out of the box
+  const burst = (color, n) => {
+    if (FX.reduced()) return;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, d = 140 + Math.random() * 320;
+      const c = h(`<i class="dice-coin${i % 3 ? "" : " spark"}"></i>`);
+      c.style.cssText = `--dx:${Math.cos(a) * d}px;--dy:${Math.sin(a) * d - 120}px;--r:${Math.random() * 720 - 360}deg;--c:${color};animation-delay:${Math.random() * 0.25}s`;
+      box.append(c);
+      setTimeout(() => c.remove(), 1700);
+    }
+  };
   const tumble = (el, faces, ms) => new Promise((ok) => {
     if (FX.reduced()) return ok();
     const final = el.textContent, t0 = performance.now();
@@ -2827,19 +2888,28 @@ function showDice(r) {
   });
   const res = box.querySelector(".dice-res");
   sfx.dice();
+  setTimeout(() => sfx.dice(), 380);
   const [a, b] = box.querySelectorAll(".d10");
-  Promise.all([tumble(a, ["00", "10", "20", "30", "40", "50", "60", "70", "80", "90"], 650), tumble(b, "0123456789".split(""), 800)]).then(async () => {
+  Promise.all([tumble(a, ["00", "10", "20", "30", "40", "50", "60", "70", "80", "90"], 850), tumble(b, "0123456789".split(""), 1050)]).then(async () => {
     if (!box.isConnected) return;
+    sfx.diceLand();
     if (!r.win) {
       res.innerHTML = `Sacas <b>${r.roll}</b>`;
-      setTimeout(() => box.classList.add("out"), 1100);
-      setTimeout(() => box.remove(), 1600);
+      box.classList.add("lost");
+      sfx.diceLose();
+      setTimeout(() => { box.classList.add("out"); if (stack.children.length === 1) show.classList.add("out"); }, 1100);
+      setTimeout(() => done(box), 1600);
       return;
     }
     res.innerHTML = `<b>¡${r.roll}!</b> Premio…`;
+    box.classList.add("landwin");
+    if (!FX.reduced()) { const fl = h(`<i class="dice-flash"></i>`); show.append(fl); setTimeout(() => fl.remove(), 600); }
+    rain("#f0d25c", 40);
+    box.insertAdjacentHTML("afterbegin", `<div class="dice-banner">¡Premio!</div>`);
+    burst("#f0d25c", 18);
     sfx.diceWin();
     const d20 = h(`<span class="die d20">${r.face}</span>`);
-    box.querySelector(".dice-row").after(h(`<div class="dice-row prize"></div>`));
+    box.querySelector(".dice-need").after(h(`<div class="dice-row prize"></div>`));
     const row = box.querySelector(".dice-row.prize");
     row.append(d20);
     if (r.bonus) row.append(h(`<span class="dice-bonus">+${r.bonus} <small>${kind === "oido" ? "oído" : "racha"}</small></span>`));
@@ -2851,13 +2921,19 @@ function showDice(r) {
     res.innerHTML = `<b class="dice-total">${r.total}</b> <span style="color:${color}">${r.gold ? `${r.gold} de oro` : esc(r.label.replace(/^un[a]? /, "").replace(/^./, (c) => c.toUpperCase()))}</span>`;
     box.classList.add(top ? "jackpot" : "prized");
     box.style.setProperty("--pc", color);
+    show.style.setProperty("--pc", color);
+    if (top) { show.classList.add("jackpot"); box.querySelector(".dice-banner").textContent = "¡Jackpot!"; }
+    burst(color, top ? 60 : 30);
+    rain(color, top ? 90 : 45);
+    if (top) setTimeout(() => box.isConnected && burst("#f0d25c", 40), 500);
     if (r.gold) sfx.coin(); else sfx.drop(r.item.rarity);
+    sfx.jackpot(top);
     const me = $("#me");
     if (me && (top || r.kind === "item")) FX.beam(stage, FX.pointOn(me, stage, 0.5, 0.9), color, top ? 2600 : 1600);
     if (top) FX.shake(stage);
     renderHud(); renderPanels();
-    setTimeout(() => box.classList.add("out"), top ? 4200 : 3000);
-    setTimeout(() => box.remove(), top ? 4700 : 3500);
+    setTimeout(() => { box.classList.add("out"); if (stack.children.length === 1) show.classList.add("out"); }, top ? 4200 : 3000);
+    setTimeout(() => done(box), top ? 4700 : 3500);
   });
 }
 function renderCombo() {
@@ -4168,11 +4244,12 @@ function victory() {
       </div>
     </div>`;
   renderGround();
-  if (S.loot.gold) sfx.coin();
-  const home = () => { S.F = null; show("town"); };
+  celebrateWin({ boss: wasBoss, title: wasBoss ? `${BOSSES[S.zone.boss].name} ha caído.` : S.zone.name,
+    sub: wasBoss && !S.zone.endless && nz ? `Se abre el camino a <b>${esc(nz.name)}</b>.` : "", gold: S.loot.gold, items: S.loot.items });
+  const home = () => { endCelebration(); S.F = null; show("town"); };
   const next = wasBoss && !S.zone.endless ? home : startEncounter;
-  $("#goMain").onclick = () => collectThen(next);
-  $("#goSkip").onclick = next;
+  $("#goMain").onclick = () => { endCelebration(); collectThen(next); };
+  $("#goSkip").onclick = () => { endCelebration(); next(); };
   $("#goTown")?.addEventListener("click", () => collectThen(home));
   $("#goMain").focus();
 }
