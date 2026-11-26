@@ -186,7 +186,14 @@ export function scoreDictation(allWords, typedText, opts = {}) {
   r.typed = typedText.trim();
   return r;
 }
-function scoreWords(words, typedText, { extraTol = 0, nearIsExact = false } = {}) {
+// Non-Spanish proper names (the episode's transcript.json `names`, from scripts/find_names.mjs: Kramer,
+// Puddy, Play Now...): a learner can't be expected to spell them from hearing them, so one typed wrong (or
+// left out) counts as right. Only the word as written in the line, capitalised, is a name.
+const bare = (w) => w.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, "");
+export const nameSet = (names) => (names instanceof Set ? names : new Set(names || []));
+const isNameWord = (names, w) => names.size > 0 && /^\p{Lu}/u.test(bare(w)) && names.has(bare(w));
+function scoreWords(words, typedText, { extraTol = 0, nearIsExact = false, names } = {}) {
+  names = nameSet(names);
   const typedRaw = typedText.trim().split(/\s+/).filter(Boolean);
   const ops = alignWords(words.map((w) => norm(w.w)), typedRaw.map(norm), extraTol);
   let got = 0, strict = 0, exact = 0, near = 0, html = "", accents = true, accentMiss = 0;
@@ -196,21 +203,33 @@ function scoreWords(words, typedText, { extraTol = 0, nearIsExact = false } = {}
   ops.forEach((op, k) => { if (op.extra && (firstHit < 0 || k < firstHit || k > lastHit)) op.edge = true; });
   // per word of the line: { i, w, typed, ok, near, accent }. A missed word takes the stray typed
   // word(s) sitting in its gap, so "you wrote X, it was Y" can be shown.
+  // a name you got wrong takes whatever you typed in its place with it: that's your try at it, not an extra word
   const per = [];
-  let gap = [];
+  let gap = [], gapOps = [];
   for (const op of ops) {
     if (op.edge) continue;
-    if (op.extra) { gap.push(typedRaw[op.y]); continue; }
-    if (op.s) { gap = []; continue; }
+    if (op.extra) { gap.push(typedRaw[op.y]); gapOps.push(op); continue; }
+    if (op.s === 2 || (op.s && !isNameWord(names, words[op.t].w))) { gap = []; gapOps = []; continue; }
+    if (isNameWord(names, words[op.t].w)) { gapOps.forEach((o) => (o.nameTry = true)); op.name = true; }
+    if (op.s) { gap = []; gapOps = []; continue; }
     per.push({ t: op.t, gap });
+    if (op.name) { gap = []; gapOps = []; }
   }
   const strays = new Map(per.map((x) => [x.t, x.gap]));
   const used = new Set();
   const perWord = [];
   for (const op of ops) {
     if (op.edge) { html += `<span class="edge" title="Not part of this line (the clip can catch a bit of the line before or after). Doesn't count against you.">${esc(typedRaw[op.y])}</span> `; continue; }
+    if (op.nameTry) continue;
     if (op.extra) { html += `<span class="extra">${esc(typedRaw[op.y])}</span> `; accents = false; continue; }
     const w = words[op.t].w;
+    if (op.name) { // a name, not right: it counts as right, and shows what you typed
+      const tried = op.y != null ? typedRaw[op.y] : (strays.get(op.t) || []).join(" ") || null;
+      perWord.push({ i: op.t, w, typed: tried, ok: true, name: true });
+      got += 1; strict += 1; exact++;
+      html += `<span class="name" title="Un nombre: no cuenta si lo escribes mal${tried ? ` (escribiste ${esc(tried)})` : ""}">${esc(w)}</span> `;
+      continue;
+    }
     const badAccent = op.s === 2 && accentKey(w) !== accentKey(typedRaw[op.y] || "");
     let typedW = op.y != null ? typedRaw[op.y] : null;
     if (!op.s) { const g = strays.get(op.t) || []; typedW = g.find((x) => !used.has(x)) ?? null; if (typedW) used.add(typedW); }
@@ -234,12 +253,19 @@ function scoreWords(words, typedText, { extraTol = 0, nearIsExact = false } = {}
 }
 
 // Score "fill the gaps" inputs ({wordIndex: typed}). Same return shape.
-export function scoreCloze(words, blanks, typed, { extraTol = 0, nearIsExact = false } = {}) {
+export function scoreCloze(words, blanks, typed, { extraTol = 0, nearIsExact = false, names } = {}) {
+  names = nameSet(names);
   let got = 0, strict = 0, exact = 0, near = 0, html = "", accents = true, accentMiss = 0;
   const perWord = [];
   words.forEach((w, i) => {
     if (!blanks.includes(i)) { html += esc(w.w) + " "; return; }
     let s = sim(norm(w.w), norm(typed[i] || ""), extraTol);
+    if (s !== 2 && isNameWord(names, w.w)) {
+      perWord.push({ i, w: w.w, typed: typed[i] || null, ok: true, name: true });
+      got += 1; strict += 1; exact++;
+      html += `<span class="name" title="Un nombre: no cuenta si lo escribes mal">${esc(w.w)}</span> `;
+      return;
+    }
     const badAccent = s === 2 && accentKey(w.w) !== accentKey(typed[i] || "");
     perWord.push({ i, w: w.w, typed: typed[i] || null, ok: s === 2 && !badAccent, near: s === 1, accent: badAccent });
     if (s !== 2 || badAccent) accents = false;

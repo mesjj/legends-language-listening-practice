@@ -196,11 +196,11 @@ function check() {
   let html, pts, acc, accentMiss;
   if (st.mode === "cloze") {
     const typed = Object.fromEntries([...document.querySelectorAll("#clozeLine input")].map((x) => [x.dataset.i, x.value.trim()]));
-    const r = scoreCloze(words, st.blanks, typed);
+    const r = scoreCloze(words, st.blanks, typed, { names: st.T?.names });
     ({ html, acc, accentMiss } = r);
     pts = r.exact * 15 + r.near * 7 - r.accentMiss * 3;
   } else {
-    const r = scoreDictation(words, $("#answer").value);
+    const r = scoreDictation(words, $("#answer").value, { names: st.T?.names });
     ({ acc, accentMiss } = r);
     pts = r.exact * 10 + r.near * 5 - r.accentMiss * 2;
     html = r.html + `<span class="you">You typed: ${esc(r.typed || "(nothing)")}</span>`;

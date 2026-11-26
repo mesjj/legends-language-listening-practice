@@ -33,6 +33,7 @@ TV, film and talk-show episodes are **not** in the repo: they're copyrighted, so
 
 - `scripts/add-episode.sh <youtube-url>` runs Whisper, a Claude correction pass and forced alignment. It needs yt-dlp, ffmpeg and whisper-cpp, plus `models/ggml-large-v3.bin` and `models/ggml-silero-v5.1.2.bin`; download those two from the whisper.cpp releases.
 - `scripts/add-subtitled.sh` and `scripts/add-dubbed.sh` start from subtitle files.
+- Each episode's `transcript.json` has `names`: the non-Spanish proper names, which scoring doesn't count when wrong. The import scripts make it with `scripts/find_names.mjs`; run that by hand for an episode added another way.
 
 ## The game's code (`public/rpg/`)
 
@@ -47,6 +48,7 @@ TV, film and talk-show episodes are **not** in the repo: they're copyrighted, so
 
 Key ideas:
 - **Zones are fixed stretches of the episode.** Its lines are shared among the normal groups. The boss only appears once half of them are mastered, and brings the unheard and most-missed ones.
+- **Each zone has three bosses** (`ZONES` `bosses`). An episode meets one, picked at random and kept in `ch.bossPick` until the episode is restarted; always go through `zoneBoss(z)` in `main.js`, never `z.boss`.
 - **The Abismo's descents** carry on to the episode's end.
 - **El Remolino** is the last level. It opens when the whole episode is mastered and is rebuilt from the lines you struggled with most.
 - **Progress is per episode** (`ch.zonesByEp`), and a new episode's zone levels are shifted to the character's level.

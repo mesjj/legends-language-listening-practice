@@ -123,6 +123,30 @@ const BOSS_SOUND = {
   llorona: () => { voice("triangle", 760, 470, 0, 1.5, 0.3, { vib: 22, vibHz: 5, band: 900, q: 2.5 }); voice("sine", 1140, 700, 0.04, 1.45, 0.08, { vib: 30, vibHz: 5 }); },
   // a low laugh: ja, ja, ja
   mandingas: () => { [0, 0.2, 0.4, 0.62].forEach((t, i) => voice("sawtooth", 118 - i * 6, 96 - i * 6, t, 0.17, 0.34, { band: 650, q: 3, attack: 0.02 })); rumble(0.8, 1, 0.5, 90, 40); },
+  // a man's shout from the hills, and its echo, fainter
+  griton: () => [0, 0.55, 1.05].forEach((t, i) => voice("sawtooth", 330, 250, t, 0.7, 0.3 * (1 - i * 0.3), { vib: 8, vibHz: 6, band: 700, q: 2.5 })),
+  // teeth: a grinding, then a snap
+  muelona: () => { noise(0, 0.5, 0.25, 1800, 2); tone("square", [140, 60], 0.55, 0.08, 0.4); noise(0.55, 0.08, 0.6, 3000, 1); },
+  // something heavy surfacing, a hiss, the jaws closing
+  hombrecaiman: () => { noise(0, 0.6, 0.5, 600, 0.6); noise(0.5, 0.5, 0.2, 4200, 1.5); tone("square", [110, 50], 1.05, 0.08, 0.45); rumble(1.05, 0.5, 0.5, 120, 50); },
+  // water lapping a canoe, a candle catching
+  riviel: () => { for (let i = 0; i < 4; i++) noise(i * 0.28, 0.22, 0.2, 500, 1); noise(1.1, 0.5, 0.25, 2600, 0.7); voice("sine", 520, 780, 1.1, 0.6, 0.1); },
+  // one foot, jumping closer: tum, tum, TUM
+  patasola: () => [0, 0.42, 0.78, 1.06].forEach((t, i) => { rumble(t, 0.22, 0.4 + i * 0.18, 140, 45); noise(t, 0.06, 0.15 + i * 0.08, 500, 1); }),
+  // a sweet voice calling, gone wrong at the end
+  tunda: () => { voice("sine", 520, 620, 0, 0.45, 0.22, { vib: 6, vibHz: 5 }); voice("sine", 620, 520, 0.45, 0.5, 0.22, { vib: 6, vibHz: 5 }); voice("sawtooth", 300, 140, 1.0, 0.6, 0.16, { vib: 30, vibHz: 9, band: 500, q: 3 }); },
+  // a bellow out of the dark, from nowhere
+  bracamonte: () => { voice("sawtooth", 95, 70, 0, 1.6, 0.36, { vib: 5, vibHz: 7, band: 380, q: 2 }); rumble(0.2, 1.4, 0.6, 70, 35); },
+  // a woman's sigh, cold wind
+  sayona: () => { noise(0, 1.4, 0.18, 1400, 0.4); voice("triangle", 640, 420, 0.3, 1.1, 0.2, { vib: 10, vibHz: 4, band: 900, q: 2 }); },
+  // a cracked church bell, twice
+  curasincabeza: () => [0, 0.9].forEach((t) => { tone("sine", [392, 388], t, 1.2, 0.3); tone("sine", [1046, 1040], t, 0.8, 0.12); tone("triangle", [588, 580], t, 1, 0.1); }),
+  // fingers drumming on stone, then a grab
+  manopeluda: () => { for (let i = 0; i < 8; i++) noise(i * 0.09, 0.04, 0.3, 2200, 2); noise(0.85, 0.2, 0.5, 900, 0.8); tone("square", [160, 80], 0.85, 0.1, 0.3); },
+  // three flames lighting, one after another
+  candileja: () => { [0, 0.3, 0.6].forEach((t, i) => { noise(t, 0.5, 0.35, 1200 + i * 400, 0.6); tone("sine", [300 + i * 120, 600 + i * 160], t, 0.3, 0.12); }); rumble(0.6, 1, 0.6, 260, 1400); },
+  // chains dragging, a lament
+  anima: () => { for (let i = 0; i < 10; i++) noise(i * 0.07 + Math.random() * 0.03, 0.05, 0.3, 5000, 3); voice("triangle", 560, 380, 0.7, 1.3, 0.22, { vib: 16, vibHz: 4, band: 800, q: 2 }); },
 };
 // pentatonic steps, so a long streak keeps climbing without sounding wrong
 const STEP = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
@@ -232,17 +256,27 @@ export const sfx = {
   coin() { tone("square", 1318, 0, 0.06, 0.12); tone("square", 1760, 0.05, 0.12, 0.12); },
 };
 
-// The Llorona's cry, under the line she's about to hit you with: it plays alongside the Spanish (which
-// silences every other effect), quieter than the voice, falling «ay»s for as long as the line lasts.
-export function wailOver(seconds) {
+// A boss's cry under the line it's about to hit you with: it plays alongside the Spanish (which silences
+// every other effect), quieter than the voice, for as long as the line lasts. The Llorona's falling «ay»s
+// (llanto), the Gritón's shouts (grito), the Bracamonte's bellows (bramido).
+export function wailOver(seconds, kind = "llanto") {
   if (muted || !openCtx()) return;
   const out = ctx.createGain();
   out.gain.value = 0.16;
   out.connect(ctx.destination);
-  for (let t = 0; t < seconds; t += 1.1) {
-    const f = 620 + Math.random() * 120;
-    voice("triangle", f, f * 0.68, t, 1.2, 0.5, { vib: 20, vibHz: 5, band: 900, q: 2, dest: out });
-    voice("sine", f * 1.5, f, t + 0.05, 1.1, 0.15, { vib: 26, vibHz: 5, dest: out });
+  const gap = kind === "llanto" ? 1.1 : kind === "grito" ? 0.9 : 1.4;
+  for (let t = 0; t < seconds; t += gap) {
+    if (kind === "grito") {
+      const f = 300 + Math.random() * 60;
+      voice("sawtooth", f, f * 0.8, t, 0.6, 0.45, { vib: 8, vibHz: 6, band: 700, q: 2.5, dest: out });
+    } else if (kind === "bramido") {
+      const f = 85 + Math.random() * 20;
+      voice("sawtooth", f, f * 0.75, t, 1.3, 0.7, { vib: 5, vibHz: 7, band: 380, q: 2, dest: out });
+    } else {
+      const f = 620 + Math.random() * 120;
+      voice("triangle", f, f * 0.68, t, 1.2, 0.5, { vib: 20, vibHz: 5, band: 900, q: 2, dest: out });
+      voice("sine", f * 1.5, f, t + 0.05, 1.1, 0.15, { vib: 26, vibHz: 5, dest: out });
+    }
   }
   setTimeout(() => out.disconnect(), (seconds + 1.5) * 1000);
 }

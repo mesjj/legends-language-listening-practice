@@ -58,4 +58,6 @@ python3 -I scripts/review_chunks.py apply "$DIR" "$DIR"/review/out*.json
 # 4. align, then flag lines whose text doesn't fit the audio (they're left out of the games)
 .venv/bin/python scripts/align.py "$DIR" 2>&1 | grep -v -i warning
 .venv/bin/python scripts/check_lines.py "$DIR" --flag 0.3 2>&1 | grep -v -i warn | tail -1
+# 5. the non-Spanish proper names, which the games don't count when they're wrong
+node scripts/find_names.mjs "$DIR" || echo "(names skipped)"
 echo "== done: $DIR"

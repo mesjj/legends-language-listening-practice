@@ -21,3 +21,6 @@ scripts/i18n/strings.json
 
 # private instances (their own service, nginx and deploy files)
 deploy/private/
+
+# video files dropped in to import (copyrighted; never commit)
+episodes/

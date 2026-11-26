@@ -122,3 +122,4 @@ kbd { font: 11px var(--sans); opacity: .65; margin-left: 4px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 /* sounds (ah, ay, eh ...) in a dictation: shown, not counted */
 .diff .sound { opacity: .55; font-style: italic; }
+.diff .name { opacity: .7; border-bottom: 1px dotted currentColor; }

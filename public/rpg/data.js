@@ -1182,13 +1182,15 @@ export const DIFFICULTY = {
 // Monster modifiers that make the audio itself harder; easy-mode bosses don't use them.
 export const LISTENING_MODS = ["murmullo", "veloz", "eco", "maldito"];
 
-// Bosses: fixed, one per zone. mods are drawn from MONSTER_MODS. Each has its own art (rpg/bosses, drawn by
+// Bosses: three per zone (ZONES bosses); each episode meets one of them, picked at random and kept until the
+// episode is restarted (main.js zoneBoss). mods are drawn from MONSTER_MODS. Each has its own art (rpg/bosses, drawn by
 // scripts/build_bosses.py), an entrance, a signature attack and a second phase from half its life:
 //   special: every `every` turns it gets ready (you see it coming: a meter on its bar), and on the next line it
 //     lets go: only a perfect line gets you out of the way (on Fácil, a line good enough to dodge). mult: how
 //     hard it hits, times a normal blow. Plus what it does: steal (a potion, or gold), tangle (n lines without
 //     Despacio or Pista, and it heals), burn (n turns of fire, put out by a perfect line), wail (its cry plays
-//     over the line it's about to hit you on).
+//     over the line it's about to hit you on: its llanto, or the Gritón's grito, or the Bracamonte's bramido);
+//     tangle can say what holds you (bound, boundWarn; the Madremonte's enredaderas by default).
 //   p2: what changes at half life: step (the meter fills faster), every, summon [kind, n], dmg, deal.
 //   last: its last words.
 export const BOSSES = {
@@ -1222,7 +1224,7 @@ export const BOSSES = {
                 last: "El fuego se apaga. Queda una calavera humeando en el pasto." },
   llorona:    { name: "La Llorona", title: "La que llora junto al río", icon: "floating-ghost", color: "#cfeeff", hp: 1.6, dmg: 1.2, el: "cold", mods: ["eco", "ladron"], minions: "osamenta",
                 intro: "«¡Ay, mis hijos!». Su llanto lo tapa todo. Escucha por encima de él.",
-                special: { name: "El llanto", every: 3, mult: 2, wail: true,
+                special: { name: "El llanto", every: 3, mult: 2, wail: "llanto",
                   ready: "La Llorona va a llorar. <b>Su llanto sonará encima de la próxima frase</b>: solo una frase perfecta te protege.",
                   hit: "Su llanto te hiela la sangre.", dodge: "Oyes la frase por encima del llanto." },
                 p2: { every: 2, scream: true, text: "La Llorona se vuelve. Por fin le ves la cara." },
@@ -1234,6 +1236,91 @@ export const BOSSES = {
                   hit: "Te lanza el fuego del infierno.", dodge: "La llama revienta donde estabas hace un segundo." },
                 p2: { deal: true, text: "El Mandingas baja la llama y sonríe: «Hablemos de negocios»." },
                 last: "El Mandingas se hunde en el suelo, riéndose: «Nos volveremos a ver»." },
+  // the other two of each zone (each episode meets one of its zone's three: ZONES bosses)
+  griton:     { name: "El Gritón", title: "El que grita en los cerros", icon: "hooded-figure", color: "#e8d6a0", hp: 1.2, dmg: 1.0, el: "cold", mods: ["eco"], minions: "lobo",
+                intro: "Grita de noche en los cerros. Si le contestas, el próximo grito suena a tu lado.",
+                special: { name: "El grito", every: 5, mult: 2.2, wail: "grito",
+                  ready: "El Gritón toma aire. <b>Su grito sonará encima de la próxima frase</b>: solo una frase perfecta te protege.",
+                  hit: "El grito te revienta en los oídos.", dodge: "Oyes la frase por debajo del grito." },
+                p2: { summon: ["lobo", 2], text: "El Gritón llama a los perros del monte. Le contestan aullando." },
+                last: "El último grito rebota en los cerros y se pierde." },
+  muelona:    { name: "La Muelona", title: "La de los dientes de piedra", icon: "hooded-figure", color: "#f2e8c8", hp: 1.3, dmg: 0.95, el: "cold", mods: ["fuerte"], minions: "cuervo",
+                intro: "Una mujer hermosa en el camino del páramo. Te sonríe, y no deberías haberle visto los dientes.",
+                special: { name: "La mordida", every: 5, mult: 2.6,
+                  ready: "La Muelona abre la boca. <b>Solo una frase perfecta</b> te aparta de sus dientes.",
+                  hit: "Te muerde con sus dientes de piedra.", dodge: "Los dientes se cierran en el aire, a un palmo de ti." },
+                p2: { dmg: 1.3, text: "La Muelona abre la boca de oreja a oreja. Ahora muerde más fuerte." },
+                last: "Los dientes caen uno a uno sobre la hierba helada." },
+  hombrecaiman: { name: "El Hombre Caimán", title: "El que nada en el Magdalena", icon: "croc-jaws", color: "#8fd86a", hp: 1.4, dmg: 1.0, el: "poison", mods: ["piedra"], minions: "caiman",
+                intro: "Medio hombre, medio caimán. Lleva años en el río esperando que alguien lo vuelva a su forma.",
+                special: { name: "La dentellada", every: 4, mult: 2.2,
+                  ready: "El Hombre Caimán se hunde hasta los ojos. <b>Solo una frase perfecta</b> te saca del agua a tiempo.",
+                  hit: "Sale del agua y cierra las mandíbulas.", dodge: "Las mandíbulas se cierran sobre el agua." },
+                p2: { summon: ["caiman", 2], text: "El Hombre Caimán da un coletazo. Los caimanes del río vienen con él." },
+                last: "Se hunde despacio. Por un momento, en el agua, se ve la cara de un hombre." },
+  riviel:     { name: "El Riviel", title: "La vela que navega la ciénaga", icon: "ghost", color: "#ffe07a", hp: 1.3, dmg: 1.05, el: "fire", mods: ["murmullo", "ladron"], minions: "ahogado",
+                intro: "Una canoa sin remos y una vela encendida. Quien la sigue no vuelve a la orilla.",
+                special: { name: "La vela", every: 4, mult: 1.8, burn: 2,
+                  ready: "La vela del Riviel se inclina hacia ti. <b>Solo una frase perfecta</b> te aparta de la llama.",
+                  hit: "La llama te alcanza: <b>ardes</b> durante 2 turnos. Una frase perfecta apaga el fuego.", dodge: "La llama lame el agua donde estabas." },
+                p2: { every: 3, text: "La vela del Riviel crece. La canoa va sola, y más rápido." },
+                last: "La vela se apaga y la canoa se va al fondo, vacía." },
+  patasola:   { name: "La Patasola", title: "La de una sola pierna", icon: "hooded-figure", color: "#ff5a6a", hp: 1.4, dmg: 1.1, el: "poison", mods: ["rapido"], minions: "mico",
+                intro: "Se oye un solo pie saltando entre los árboles. Tum. Tum. Cada vez más cerca.",
+                special: { name: "El salto", every: 4, mult: 2.2,
+                  ready: "La Patasola se agacha sobre su única pierna. <b>Solo una frase perfecta</b> te aparta de su salto.",
+                  hit: "Te cae encima desde los árboles.", dodge: "Aterriza donde estabas y se le hunde el pie en el barro." },
+                p2: { step: 2, text: "La Patasola salta de árbol en árbol. Ya no sabes de dónde viene." },
+                last: "Un último salto, y la selva se queda en silencio." },
+  tunda:      { name: "La Tunda", title: "La que tiene la cara de quien quieres", icon: "hooded-figure", color: "#b98cff", hp: 1.5, dmg: 1.05, el: "poison", mods: ["vampirico", "murmullo"], minions: "duende",
+                intro: "Tiene la cara de alguien que conoces. Te llama por tu nombre desde el monte.",
+                special: { name: "El entundamiento", every: 4, mult: 1.8, steal: true,
+                  ready: "La Tunda te llama con una voz que conoces. <b>Solo una frase perfecta</b> te deja ver quién es.",
+                  hit: "Te entunda", dodge: "No le contestas. La voz se pierde en el monte." },
+                p2: { dmg: 1.25, text: "La Tunda deja de fingir. Por fin le ves la pata de molinillo." },
+                last: "La Tunda se mete en el monte. La cara que llevaba se le cae como una hoja." },
+  bracamonte: { name: "El Bracamonte", title: "La bestia que nadie ha visto", icon: "charging-bull", color: "#d89a58", hp: 1.4, dmg: 1.2, mods: ["fuerte", "murmullo"], minions: "toro",
+                intro: "Nadie lo ha visto. Solo se oye su bramido, y por la mañana faltan reses.",
+                special: { name: "El bramido", every: 4, mult: 2.2, wail: "bramido",
+                  ready: "El Bracamonte se llena de aire. <b>Su bramido sonará encima de la próxima frase</b>: solo una frase perfecta te protege.",
+                  hit: "El bramido te tumba en el pasto.", dodge: "Oyes la frase por debajo del bramido." },
+                p2: { summon: ["toro", 2], text: "El Bracamonte brama y el ganado sale en estampida." },
+                last: "El bramido se apaga. Por fin lo ves: una sombra que se va con el viento." },
+  sayona:     { name: "La Sayona", title: "La mujer de blanco del camino", icon: "ghost", color: "#f0ecff", hp: 1.3, dmg: 1.2, el: "cold", mods: ["veloz", "ladron"], minions: "chulo",
+                intro: "Una mujer de blanco te pide que la lleves al pueblo. Huele a velas apagadas.",
+                special: { name: "El abrazo", every: 3, mult: 2.1,
+                  ready: "La Sayona abre los brazos. <b>Solo una frase perfecta</b> te libra de su abrazo.",
+                  hit: "Te abraza, y el frío te llega a los huesos.", dodge: "Se abraza a sí misma: tú ya no estás ahí." },
+                p2: { every: 2, scream: true, text: "La Sayona se levanta el velo. Detrás no hay cara: hay una calavera." },
+                last: "El vestido blanco cae vacío sobre el camino." },
+  curasincabeza: { name: "El Cura sin Cabeza", title: "El que reza sin boca", icon: "cloaked-figure-on-horseback", color: "#a898ff", hp: 1.6, dmg: 1.2, el: "cold", mods: ["maldito", "piedra"], minions: "osamenta",
+                intro: "Pasea por las ruinas con la sotana negra, rezando. Pero no tiene con qué rezar.",
+                special: { name: "La campana", every: 4, mult: 2.4,
+                  ready: "El Cura levanta su campana. <b>Solo una frase perfecta</b> te aparta antes de que suene.",
+                  hit: "La campana suena dentro de tu cabeza.", dodge: "La campana suena lejos, en la torre vacía." },
+                p2: { summon: ["osamenta", 2], text: "Suenan las campanas de la iglesia en ruinas. Los muertos se levantan a misa." },
+                last: "La sotana se desploma. En algún sitio, por fin, una campana deja de sonar." },
+  manopeluda: { name: "La Mano Peluda", title: "La que sale de las grietas", icon: "rock-golem", color: "#c8875a", hp: 1.5, dmg: 1.2, mods: ["ladron", "vampirico"], minions: "vampiro",
+                intro: "Sale de las grietas de las piedras, sola, sin brazo ni dueño. Y busca tus bolsillos.",
+                special: { name: "El agarrón", every: 4, mult: 2, steal: true,
+                  ready: "La Mano Peluda se arrastra hacia ti. <b>Solo una frase perfecta</b> te la quita de encima.",
+                  hit: "Te agarra", dodge: "Los dedos se cierran en el aire." },
+                p2: { every: 3, text: "Le crecen las uñas. La Mano Peluda agarra más rápido." },
+                last: "La mano se cierra despacio y se queda quieta entre las piedras." },
+  candileja:  { name: "La Candileja", title: "La vieja de las tres llamas", icon: "burning-skull", color: "#ffb02a", hp: 1.8, dmg: 1.3, el: "fire", mods: ["rapido", "maldito"], minions: "diablillo",
+                intro: "Tres llamas que corren juntas por el monte: una vieja que nunca encontró descanso.",
+                special: { name: "Las tres llamas", every: 4, mult: 2.4, burn: 3,
+                  ready: "Las tres llamas de la Candileja se juntan. <b>Solo una frase perfecta</b> te aparta.",
+                  hit: "Las llamas te envuelven: <b>ardes</b> durante 3 turnos. Una frase perfecta apaga el fuego.", dodge: "Las llamas se cruzan donde estabas y se separan otra vez." },
+                p2: { every: 3, text: "La Candileja se parte en tres y las llamas te rodean." },
+                last: "Las tres llamas se apagan una tras otra. Queda humo y olor a vela." },
+  anima:      { name: "El Ánima Sola", title: "La que pide en las encrucijadas", icon: "ghost", color: "#8affd8", hp: 1.8, dmg: 1.3, el: "cold", mods: ["eco", "murmullo", "regenera"], minions: "espanto",
+                intro: "Una mujer entre llamas, con cadenas en las muñecas. Pide oraciones, y cobra a quien no se las da.",
+                special: { name: "Las cadenas", every: 4, mult: 2, tangle: 2, heal: 0.08, bound: "Las cadenas no te dejan", boundWarn: "Encadenado",
+                  ready: "Las cadenas del Ánima se levantan del suelo. <b>Solo una frase perfecta</b> te deja apartarte.",
+                  hit: "Las cadenas te atan: <b>2 frases sin Despacio ni Pista</b>, y ella se cura.", dodge: "Las cadenas caen sobre la piedra, vacías." },
+                p2: { summon: ["espanto", 2], text: "El Ánima Sola llama a las otras almas. Vienen arrastrando cadenas." },
+                last: "Las cadenas se rompen. El Ánima sube despacio, y por fin se va." },
 };
 
 // Champion / unique monster modifiers. Some change the listening itself.
@@ -1278,6 +1365,18 @@ export const MONSTER_RES = {
   bolafuego:   { fire: 100, cold: -75 },
   llorona:     { cold: 100, poison: 100, light: -50, fire: -25 },
   mandingas:   { fire: 100, poison: 50, cold: -50 },
+  griton:      { cold: 75, light: -50 },
+  muelona:     { cold: 50, poison: 50, fire: -50 },
+  hombrecaiman: { poison: 50, cold: -50 },
+  riviel:      { fire: 100, cold: 25, light: -50 },
+  patasola:    { poison: 75, fire: -50 },
+  tunda:       { poison: 75, light: -50 },
+  bracamonte:  { fire: 25, light: -50 },
+  sayona:      { cold: 100, poison: 100, light: -50, fire: -25 },
+  curasincabeza: { poison: 100, cold: 50, fire: -50 },
+  manopeluda:  { poison: 50, fire: -50 },
+  candileja:   { fire: 100, cold: -50 },
+  anima:       { cold: 100, poison: 100, light: -50, fire: -25 },
 };
 
 export const MONSTER_MODS = {
@@ -1302,18 +1401,19 @@ export const UNIQUE_MONSTER_NAMES = [
 ];
 
 // ---------- zones ----------
+// boss: the zone's first boss; bosses: the three it can have (each episode meets one, main.js zoneBoss)
 export const ZONES = [
-  { id: "paramo", name: "Páramo de la Niebla", lvl: [1, 5], monsters: ["espanto", "cuervo", "frailejon", "lobo"], boss: "silbon", packs: 6,
+  { id: "paramo", name: "Páramo de la Niebla", lvl: [1, 5], monsters: ["espanto", "cuervo", "frailejon", "lobo"], boss: "silbon", bosses: ["silbon", "griton", "muelona"], packs: 6,
     blurb: "Frailejones, frío y una niebla en la que se oye un silbido." },
-  { id: "cienaga", name: "Ciénaga del Mohán", lvl: [6, 11], monsters: ["sapo", "caiman", "sanguijuela", "ahogado", "baba"], boss: "mohan", packs: 7,
+  { id: "cienaga", name: "Ciénaga del Mohán", lvl: [6, 11], monsters: ["sapo", "caiman", "sanguijuela", "ahogado", "baba"], boss: "mohan", bosses: ["mohan", "hombrecaiman", "riviel"], packs: 7,
     blurb: "Agua quieta, caimanes y pescadores que nunca volvieron." },
-  { id: "selva", name: "Selva del Chocó", lvl: [12, 18], monsters: ["arana", "coral", "mico", "avispa", "duende"], boss: "madremonte", packs: 7,
+  { id: "selva", name: "Selva del Chocó", lvl: [12, 18], monsters: ["arana", "coral", "mico", "avispa", "duende"], boss: "madremonte", bosses: ["madremonte", "patasola", "tunda"], packs: 7,
     blurb: "Llueve siempre. Algo se mueve entre las hojas." },
-  { id: "llano", name: "Llanos en Llamas", lvl: [19, 26], monsters: ["toro", "jinete", "alacran", "chulo", "zaino"], boss: "bolafuego", packs: 8,
+  { id: "llano", name: "Llanos en Llamas", lvl: [19, 26], monsters: ["toro", "jinete", "alacran", "chulo", "zaino"], boss: "bolafuego", bosses: ["bolafuego", "bracamonte", "sayona"], packs: 8,
     blurb: "La sabana arde de noche y nadie sabe por qué." },
-  { id: "ruinas", name: "Ruinas de Piedra", lvl: [27, 34], monsters: ["guardian", "osamenta", "momia", "vampiro", "oso"], boss: "llorona", packs: 8,
+  { id: "ruinas", name: "Ruinas de Piedra", lvl: [27, 34], monsters: ["guardian", "osamenta", "momia", "vampiro", "oso"], boss: "llorona", bosses: ["llorona", "curasincabeza", "manopeluda"], packs: 8,
     blurb: "Estatuas antiguas que vigilan, y un llanto junto al río." },
-  { id: "abismo", name: "El Abismo", lvl: [35, 99], monsters: Object.keys(MONSTERS), boss: "mandingas", packs: 8, endless: true,
+  { id: "abismo", name: "El Abismo", lvl: [35, 99], monsters: Object.keys(MONSTERS), boss: "mandingas", bosses: ["mandingas", "candileja", "anima"], packs: 8, endless: true,
     blurb: "Sin fondo. Cada descenso es más duro, y el botín, mejor." },
 ];
 

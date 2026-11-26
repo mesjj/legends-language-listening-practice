@@ -55,4 +55,6 @@ fi
 
 echo "== aligning words to audio"
 .venv/bin/python scripts/align.py "$DIR" 2>&1 | grep -v -i warning
+# 5. the non-Spanish proper names, which the games don't count when they're wrong
+node scripts/find_names.mjs "$DIR" || echo "(names skipped)"
 echo "== done: open the app and pick \"$TITLE\""

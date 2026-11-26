@@ -190,6 +190,7 @@ const epShift = () => ch?.epShift?.[S.ep] || 0;
 function restartEpisode() {
   ch.zonesByEp[S.ep] = { paramo: { pack: 0, cleared: false, depth: 0 } };
   ch.epShift[S.ep] = Math.max(0, (ch.level || 1) - 1);
+  if (ch.bossPick) delete ch.bossPick[S.ep]; // and maybe other bosses this time
   ch.zones = ch.zonesByEp[S.ep];
   save();
 }
@@ -301,7 +302,7 @@ function remolinoZone() {
   // its boss is the one of the stretch your worst line comes from
   const worst = zp.lines?.at(-1), home = worst == null ? ab : ZONES.find((z) => !z.endless && zoneLines(z).includes(worst)) || ab;
   const lvl = Math.max(ch.level, atLevel(ab).lvl[0] + 2 * descentsOf(ab));
-  return { ...ab, id: REMOLINO, scene: "abismo", dynamic: true, endless: false, name: "El Remolino", boss: home.boss, lvl: [lvl, lvl + 4],
+  return { ...ab, id: REMOLINO, scene: "abismo", dynamic: true, endless: false, name: "El Remolino", boss: zoneBoss(home), lvl: [lvl, lvl + 4],
     packs: Math.max(0, Math.ceil((n - PER_BOSS) / PER_PACK)), blurb: "Todo lo que te ha costado de este episodio, girando junto." };
 }
 function remolinoCard() {
@@ -471,7 +472,7 @@ function playSeg(si, rate = 1) {
   hush();
   audio.play();
   const b = bossOf(F);
-  if (b && bossRules(F) && F.boss.armed && !F.checked && BOSSES[b.kind].special.wail && !isEasy()) wailOver((s.end - s.start + 0.4) / audio.playbackRate);
+  if (b && bossRules(F) && F.boss.armed && !F.checked && BOSSES[b.kind].special.wail && !isEasy()) wailOver((s.end - s.start + 0.4) / audio.playbackRate, BOSSES[b.kind].special.wail);
 }
 // Any stretch of the episode (trials, casetes, the grimoire), with no monster effects.
 function playRange(start, end, rate = 1) {
@@ -2118,7 +2119,7 @@ function cardFight(name) {
   const home = reached[reached.length - 1] || ZONES[0];
   const lvl = Math.max(home.lvl[0], Math.min(ch.level, home.lvl[1]));
   // flat: it stays at this level however many cards you do (a long review shouldn't get deadlier)
-  S.zone = { id: "repaso", name, review: true, lvl: [lvl, lvl], monsters: home.monsters, easy: EASY_ROSTER[home.id], boss: home.boss, packs: 9999, endless: true, flat: true };
+  S.zone = { id: "repaso", name, review: true, lvl: [lvl, lvl], monsters: home.monsters, easy: EASY_ROSTER[home.id], boss: zoneBoss(home), packs: 9999, endless: true, flat: true };
   ch.zones.repaso = { pack: 0, cleared: false, depth: 0 };
   try { startEncounter(); }
   catch (e) { console.error(e); S.F = null; S.review = null; show("map"); toast(`No se pudo abrir el repaso: ${e.message}`, "", 5000); }
@@ -2427,7 +2428,17 @@ function showSubjResult(r) {
   $("#nextBtn").focus();
 }
 
-const BOSSNAME = (z) => BOSSES[z.boss].name;
+// Each zone has three bosses (data.js ZONES bosses). An episode meets one of them, picked at random the
+// first time it's needed and kept (ch.bossPick, per episode) until the episode is restarted.
+function zoneBoss(z) {
+  if (!z) return null;
+  const list = z.bosses || [z.boss];
+  if (z.id === REMOLINO || z.review || list.length < 2 || !ch) return z.boss;
+  const picks = ((ch.bossPick ||= {})[S.ep || "-"] ||= {});
+  if (!list.includes(picks[z.id])) { picks[z.id] = list[Math.floor(Math.random() * list.length)]; save(); }
+  return picks[z.id];
+}
+const BOSSNAME = (z) => BOSSES[zoneBoss(z)].name;
 const fmtTime = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
 
 // ---------- fighting ----------
@@ -2460,7 +2471,7 @@ function startEncounter() {
   // past the last group, a gated zone's boss only comes once you've mastered half its lines
   const late = zp.pack >= z.packs, held = late && gated(z) && !bossReady(z, zp.depth || 0);
   const slot = { boss: late && !held, group: held ? extraGroup(z, zp) : null };
-  const enc = E.makeEncounter(atLevel(z), held ? z.packs - 1 : zp.pack, zp.depth || 0, E.diffOf(ch));
+  const enc = E.makeEncounter({ ...atLevel(z), boss: zoneBoss(z) }, held ? z.packs - 1 : zp.pack, zp.depth || 0, E.diffOf(ch));
   const queue = S.zone.review ? [] : buildQueue(slot);
   S.F = { enc, monsters: enc.monsters, target: 0, combo: Math.max(stats().comboStart, ch.streak || 0), ear: ch.earStreak || 0, log: [], si: null, ground: { gold: 0, items: [] }, queue, qi: 0, review: !!S.zone.review };
   if (held) S.F.extra = true;
@@ -2472,9 +2483,9 @@ function startEncounter() {
   if (enc.intro) addLog(enc.intro, "intro");
   if (foe) addLog(foe.lore, "weak");
   if ((ch.streak || 0) >= 2 && !S.F.review) addLog(`Sigues con tu racha de <b>${ch.streak}</b> (×${(1 + 0.1 * Math.min(ch.streak, 10)).toFixed(1)}).`, "good");
-  if (held) addLog(`${esc(BOSSES[z.boss].name)} no aparece hasta que domines la mitad de las frases de esta zona (llevas ${bossNeed(z, zp.depth || 0)}). Otro grupo, con las frases que menos dominas.`, "intro");
-  if (enc.boss && gated(z)) addLog(`<b>${esc(BOSSES[z.boss].name)}</b> trae ${queue.fresh === 1 ? "1 frase nueva" : `${queue.fresh} frases nuevas`} y ${queue.misses === 1 ? "1 de las que más te cuestan" : `${queue.misses} de las que más te cuestan`}. Y lo que falles aquí te lo devuelve enseguida.`, "intro");
-  else if (queue.misses) addLog(`<b>${esc(BOSSES[S.zone.boss].name)}</b> conoce tus fallos: trae ${queue.misses} ${queue.misses === 1 ? "frase que aún no dominas" : "frases que aún no dominas"}. Y lo que falles aquí te lo devuelve enseguida.`, "intro");
+  if (held) addLog(`${esc(BOSSNAME(z))} no aparece hasta que domines la mitad de las frases de esta zona (llevas ${bossNeed(z, zp.depth || 0)}). Otro grupo, con las frases que menos dominas.`, "intro");
+  if (enc.boss && gated(z)) addLog(`<b>${esc(BOSSNAME(z))}</b> trae ${queue.fresh === 1 ? "1 frase nueva" : `${queue.fresh} frases nuevas`} y ${queue.misses === 1 ? "1 de las que más te cuestan" : `${queue.misses} de las que más te cuestan`}. Y lo que falles aquí te lo devuelve enseguida.`, "intro");
+  else if (queue.misses) addLog(`<b>${esc(BOSSNAME(S.zone))}</b> conoce tus fallos: trae ${queue.misses} ${queue.misses === 1 ? "frase que aún no dominas" : "frases que aún no dominas"}. Y lo que falles aquí te lo devuelve enseguida.`, "intro");
   const boss = bossOf(S.F);
   if (boss && hasBossArt(boss.kind)) {
     if (bossRules(S.F)) addLog(`<b>${esc(BOSSES[boss.kind].special.name)}</b>: lo verás venir en su barra. Cuando se llene, <b>solo una frase perfecta</b> lo esquiva. A la mitad de su vida, cambia.`, "boss");
@@ -2489,9 +2500,12 @@ function startEncounter() {
 // attacks and phases belong to the zones' bosses: not in a course or a review.
 const bossOf = (F) => F?.monsters?.find((m) => m.tier === "boss" && m.kind in BOSSES) || null;
 const bossRules = (F) => !!(F?.boss && !F.review && !S.zone?.fights);
+// what holds you when its signature attack tangles you (the Madremonte's vines, the Ánima's chains)
+const bound = (F) => BOSSES[bossOf(F)?.kind]?.special.bound || "Las enredaderas no te dejan";
 const isEasy = () => (ch.difficulty || "medio") === "facil";
 // the signature attack: one turn sooner than its card says (never more often than every 2 turns), except on Fácil
 const bossEvery = (F, m) => { const n = (F.boss.p2 && BOSSES[m.kind].p2.every) || BOSSES[m.kind].special.every; return isEasy() ? n : Math.max(2, n - 1); };
+const WAIL_WARN = { llanto: "Su llanto suena encima de esta frase.", grito: "Su grito suena encima de esta frase.", bramido: "Su bramido suena encima de esta frase." };
 const PRICE = 0.15; // the Mandingas's deal: what each line short of perfect costs, of your life
 // Its turn: let go of the signature attack if it was ready (it hits instead of its normal blow), or charge it.
 function bossTurn(F, m, acc, st, D, unleash, wasFrozen) {
@@ -2590,8 +2604,8 @@ function renderBossWarn() {
   const m = bossOf(F);
   if (!bossRules(F) || !m || m.hp <= 0) return;
   const B = F.boss, sp = BOSSES[m.kind].special, out = [];
-  if (B.armed) out.push(`<div class="bosswarn armed"><b>${esc(sp.name)}</b> ${sp.wail && !isEasy() ? "Su llanto suena encima de esta frase." : "Viene con esta frase."} ${isEasy() ? "Entiéndela bien" : "Solo una frase <b>perfecta</b>"} para esquivarlo.</div>`);
-  if (B.tangle > 0) out.push(`<div class="bosswarn tangle">Enredado: sin Despacio ni Pista${B.tangle > 1 ? " en esta frase y la siguiente" : " en esta frase"}.</div>`);
+  if (B.armed) out.push(`<div class="bosswarn armed"><b>${esc(sp.name)}</b> ${sp.wail && !isEasy() ? WAIL_WARN[sp.wail] || WAIL_WARN.llanto : "Viene con esta frase."} ${isEasy() ? "Entiéndela bien" : "Solo una frase <b>perfecta</b>"} para esquivarlo.</div>`);
+  if (B.tangle > 0) out.push(`<div class="bosswarn tangle">${sp.boundWarn || "Enredado"}: sin Despacio ni Pista${B.tangle > 1 ? " en esta frase y la siguiente" : " en esta frase"}.</div>`);
   if (B.burn > 0) out.push(`<div class="bosswarn burn">Ardes: una frase perfecta apaga el fuego.</div>`);
   if (B.deal === "signed") out.push(`<div class="bosswarn deal">El trato: si no es perfecta, te cuesta un ${PRICE * 100}% de tu vida.</div>`);
   if (out.length) ex.prepend(h(`<div class="bosswarns" style="--bc:${BOSSES[m.kind].color}">${out.join("")}</div>`));
@@ -2632,7 +2646,7 @@ function trackWords(r) {
   const W = weakBook();
   for (const x of r.words) {
     const k = norm(x.w);
-    if (k.length < 2 || isSound(x.w)) continue;
+    if (k.length < 2 || isSound(x.w) || x.name) continue; // a name you got wrong isn't a weak word
     if (x.ok) { if (W[k]) W[k].hit++; continue; }
     const e = (W[k] = W[k] || { w: bare(x.w).toLowerCase(), miss: 0, hit: 0, si: [] });
     e.miss++;
@@ -2928,6 +2942,11 @@ function showDice(r) {
     const top = r.kind === "mitico" || r.kind === "legendario" || r.kind === "ancestral";
     const color = r.gold ? "#f0d25c" : E.itemColor(r.item);
     res.innerHTML = `<b class="dice-total">${r.total}</b> <span style="color:${color}">${r.gold ? `${r.gold} de oro` : esc(r.label.replace(/^un[a]? /, "").replace(/^./, (c) => c.toUpperCase()))}</span>`;
+    // the thing itself: its icon, its name, where it went (the label alone just said «objeto raro»)
+    if (r.item) {
+      const name = r.item.unid ? `${RARITY[r.item.rarity]?.name || ""} sin identificar` : E.itemName(r.item);
+      res.after(h(`<div class="win-item dice-got${BEAM_RANK[r.item.rarity] ? " top" : ""}" style="--c:${color}">${itemIco(r.item)}<span>${esc(name)}${r.where ? `<small>va ${esc(r.where)}</small>` : ""}</span></div>`));
+    }
     box.classList.add(top ? "jackpot" : "prized");
     box.style.setProperty("--pc", color);
     show.style.setProperty("--pc", color);
@@ -2942,11 +2961,12 @@ function showDice(r) {
     if (top) FX.shake(stage);
     renderHud(); renderPanels();
     // the prize stays a while; less if a victory is waiting to be celebrated (it marks the show "hurry")
-    const t0 = Date.now(), hold = top ? 4200 : 3000;
+    // (an item stays longer, so its name can be read)
+    const t0 = Date.now(), hold = top ? 4800 : r.item ? 4200 : 3000, quick = r.item ? 2800 : 1500;
     const wait = () => {
       if (!box.isConnected) return;
       const t = Date.now() - t0;
-      if (t < hold && !(show.classList.contains("hurry") && t > 1500)) return void setTimeout(wait, 100);
+      if (t < hold && !(show.classList.contains("hurry") && t > quick)) return void setTimeout(wait, 100);
       box.classList.add("out"); if (stack.children.length === 1) show.classList.add("out");
       setTimeout(() => done(box), 500);
     };
@@ -3217,7 +3237,7 @@ function nextExercise() {
     // a boss throws a phrase you just missed straight back, three phrases later (once each)
     F.turn = (F.turn || 0) + 1;
     const back = F.enc.boss && (F.comeback || []).find((c) => c.at <= F.turn && open(c.e));
-    if (back) { F.comeback.splice(F.comeback.indexOf(back), 1); addLog(`<b>${esc(BOSSES[S.zone.boss]?.name || "El jefe")}</b> te devuelve una frase que fallaste.`, "weak"); }
+    if (back) { F.comeback.splice(F.comeback.indexOf(back), 1); addLog(`<b>${esc(BOSSES[zoneBoss(S.zone)]?.name || "El jefe")}</b> te devuelve una frase que fallaste.`, "weak"); }
     const due = back ? back.e : F.queue.find((e) => open(e) && A[exKey(e)] && !resting(e));
     let pick = due;
     // in a boss fight, what you already know waits until nothing else is left, resting or not
@@ -3262,8 +3282,8 @@ function setupExercise(keep) {
     <div class="ex">
       <div class="excontrols">
         <button id="playBtn" class="playbtn" title="Escuchar (Tab)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-        <button id="slowBtn" ${eco ? "disabled title='El eco no te deja escuchar despacio'" : F.boss?.tangle > 0 ? "disabled title='Las enredaderas no te dejan'" : `title="Escuchar despacio (Mayús+Tab)"`}>Despacio <span class="cost">${C.slow ? C.slow + " maná" : "gratis"}</span></button>
-        <button id="hintBtn" ${F.boss?.tangle > 0 ? "disabled title='Las enredaderas no te dejan'" : `title="Primera letra de cada palabra (Alt+H)"`}>Pista <span class="cost">${C.hint} maná</span></button>${E.powerOf(ch) ? `<button id="powBtn" class="powbtn${powerOn(F) ? " on" : ""}" style="--sc:${E.powerOf(ch).color}" title="${esc(E.powerOf(ch).desc)}">${icon(E.powerOf(ch).icon, E.powerOf(ch).color)} ${esc(E.powerOf(ch).name)} <span class="cost">${E.powerCost(ch, stats())} maná</span></button>` : ""}
+        <button id="slowBtn" ${eco ? "disabled title='El eco no te deja escuchar despacio'" : F.boss?.tangle > 0 ? `disabled title="${bound(F)}"` : `title="Escuchar despacio (Mayús+Tab)"`}>Despacio <span class="cost">${C.slow ? C.slow + " maná" : "gratis"}</span></button>
+        <button id="hintBtn" ${F.boss?.tangle > 0 ? `disabled title="${bound(F)}"` : `title="Primera letra de cada palabra (Alt+H)"`}>Pista <span class="cost">${C.hint} maná</span></button>${E.powerOf(ch) ? `<button id="powBtn" class="powbtn${powerOn(F) ? " on" : ""}" style="--sc:${E.powerOf(ch).color}" title="${esc(E.powerOf(ch).desc)}">${icon(E.powerOf(ch).icon, E.powerOf(ch).color)} ${esc(E.powerOf(ch).name)} <span class="cost">${E.powerCost(ch, stats())} maná</span></button>` : ""}
         <span class="dim exinfo" id="exinfo"></span>
         ${F.review ? `<span class="deckname">${esc(F.ex.card.deckName)}</span>` : `<button class="flagBtn ghost" title="El texto no coincide con el audio (palabras equivocadas o el corte suena mal). Quita la frase de los juegos y deshace sus efectos.">No coincide</button>`}
       </div>
@@ -3402,7 +3422,7 @@ function doPlay(slow) {
   };
   if (slow) {
     if (alive(F).some((m) => m.mods.includes("eco"))) return toast("El eco no te deja escuchar despacio");
-    if (F.boss?.tangle > 0) return toast("Las enredaderas no te dejan: sin Despacio");
+    if (F.boss?.tangle > 0) return toast(`${bound(F)}: sin Despacio`);
     if (!pay(C.slow)) return;
     F.slows++;
   } else {
@@ -3423,7 +3443,7 @@ function hint(free) {
     $("#skeleton").hidden = false;
     return focusInput();
   }
-  if (!free && F.boss?.tangle > 0) return toast("Las enredaderas no te dejan: sin Pista");
+  if (!free && F.boss?.tangle > 0) return toast(`${bound(F)}: sin Pista`);
   if (!free) {
     const C = E.costs(ch, stats(), alive(F).some((m) => m.mods.includes("maldito")));
     if (!spend(C.hint)) return;
@@ -3449,7 +3469,7 @@ function attack() {
   const after = earOnlyAfter();
   if (F.plays + F.slows === 0 && !after) return toast("Escucha primero (Tab)");
   const st = stats(), D = E.diffOf(ch), words = exWords();
-  const opts = { extraTol: st.typoTol, nearIsExact: st.nearExact };
+  const opts = { extraTol: st.typoTol, nearIsExact: st.nearExact, names: S.T?.names };
   let r;
   if (F.mode === "cloze") {
     const typed = Object.fromEntries([...document.querySelectorAll("#cloze input")].map((x) => [x.dataset.i, x.value.trim()]));
@@ -4278,7 +4298,7 @@ function victory() {
   const nz = E.nextZone(S.zone.id);
   $("#arena").innerHTML = `
     <div class="victory">
-      <h3>${wasBoss ? `${esc(BOSSES[S.zone.boss].name)} ha caído.` : "Grupo derrotado."}</h3>
+      <h3>${wasBoss ? `${esc(BOSSNAME(S.zone))} ha caído.` : "Grupo derrotado."}</h3>
       ${wasBoss && !S.zone.endless && nz ? `<p>Se abre el camino a <b>${esc(nz.name)}</b>.</p>` : ""}
       ${S.loot.gold ? `<p class="gold">${icon("coins-pile", "#e2b84a")} +${S.loot.gold} de oro</p>` : ""}
       <div class="ground" id="ground"></div>
@@ -4289,7 +4309,7 @@ function victory() {
       </div>
     </div>`;
   renderGround();
-  celebrateWin({ boss: wasBoss, title: wasBoss ? `${BOSSES[S.zone.boss].name} ha caído.` : S.zone.name,
+  celebrateWin({ boss: wasBoss, title: wasBoss ? `${BOSSNAME(S.zone)} ha caído.` : S.zone.name,
     sub: wasBoss && !S.zone.endless && nz ? `Se abre el camino a <b>${esc(nz.name)}</b>.` : "", gold: S.loot.gold, items: S.loot.items });
   const home = () => { endCelebration(); S.F = null; show("town"); };
   const next = wasBoss && !S.zone.endless ? home : startEncounter;
@@ -4656,7 +4676,7 @@ function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays
   const check = () => {
     if (T.done) return;
     if (!ans.value.trim()) return toast("Escribe lo que oíste");
-    const r = scoreDictation(clip.words, ans.value, { extraTol: stats().typoTol });
+    const r = scoreDictation(clip.words, ans.value, { extraTol: stats().typoTol, names: S.T?.names });
     const out = onResult(r, T);
     const pct = r.acc < 1 ? Math.min(99, Math.round(r.acc * 100)) : 100;
     const html = typeof out === "string" ? out : out.html;
@@ -4914,7 +4934,7 @@ async function shadow(words, btn, { maxSec }) {
   btn.disabled = true;
   try {
     const text = await transcribeVoice(blob);
-    return { text, r: scoreDictation(words, text, { extraTol: 1 }) };
+    return { text, r: scoreDictation(words, text, { extraTol: 1, names: S.T?.names }) };
   } catch (e) {
     toast(e.message);
     btn.disabled = false; btn.innerHTML = label;
@@ -5159,4 +5179,4 @@ async function quickStart() {
 }
 
 // for debugging in the console
-window.leyendas = { S, get ch() { return ch; }, E, socket, toAlembic, tooltipHtml2: (it) => tooltipHtml(it), showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats };
+window.leyendas = { S, get ch() { return ch; }, E, socket, toAlembic, tooltipHtml2: (it) => tooltipHtml(it), showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats, zoneBoss, restartEpisode };

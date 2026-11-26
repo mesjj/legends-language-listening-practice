@@ -706,6 +706,7 @@ button.cast.rec { background: #3a1f2a; border-color: var(--miss); color: #ffd9d6
 }
 /* sounds (ah, ay, eh ...) in a dictation: shown, not counted */
 .diff .sound { color: var(--dim); font-style: italic; opacity: .75; }
+.diff .name { color: var(--dim); border-bottom: 1px dotted var(--dim); }
 
 /* Online version: what needs the owner's computer (Anki, Claude, whisper.cpp, Netflix subtitles) is hidden */
 .online .brand nav, .online .srcBtn, .online #explainBtn, .online #ankiBtn, .online .flagBtn,
@@ -1486,6 +1487,9 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .dice-res { font-size: clamp(20px, 5vw, 28px); color: #fff4dc; min-height: 32px; text-shadow: 0 2px 0 #000; }
 .dice-res .dice-total { font-size: 1.35em; color: #f0d25c; margin-right: 6px; }
 .dicebox.lost .dice-res { color: #b8ad94; }
+.dice-got { margin: 8px auto 0; max-width: min(92vw, 420px); font-size: clamp(15px, 3.6vw, 19px); color: var(--c); background: rgba(0, 0, 0, .55);
+  border: 1px solid var(--c); animation: win-pop .45s cubic-bezier(.2, 1.8, .4, 1) both; }
+.dice-got small { display: block; font-size: .7em; color: #c8bea8; }
 .dice-banner { position: absolute; top: -34px; left: 50%; transform: translateX(-50%); white-space: nowrap;
   font: 900 clamp(34px, 9vw, 64px)/1 var(--serif); color: #ffe68a; letter-spacing: .03em;
   text-shadow: 0 3px 0 #7a3a00, 0 6px 0 #3a1800, 0 0 24px #ffb020; animation: banner .5s cubic-bezier(.2, 1.8, .4, 1), banner-glow .3s steps(2) infinite .5s; }
