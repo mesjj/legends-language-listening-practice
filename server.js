@@ -38,7 +38,7 @@ const SAVED_FILE = path.join(DATA_DIR, "saved.json");
 const LOOKUPS_FILE = path.join(DATA_DIR, "explanations.json");
 const auth = ONLINE ? makeAuth(DATA_DIR) : null;
 // online, the only API the game may use; the rest needs things that live on the owner's computer
-const ONLINE_API = new Set(["/api/episodes", "/api/config", "/api/state", "/api/login", "/api/logout"]);
+const ONLINE_API = new Set(["/api/episodes", "/api/config", "/api/state", "/api/login", "/api/logout", "/api/lines"]);
 // pages anyone may load before logging in
 const OPEN_FILES = new Set(["/login.html", "/favicon.png", "/apple-touch-icon.png"]);
 
@@ -74,6 +74,25 @@ async function readBody(req, limit = 1e6) {
   }
   const raw = Buffer.concat(chunks).toString("utf8");
   return raw ? JSON.parse(raw) : {};
+}
+
+// The line log (rpg main.js lineLog): every line the game shows and every answer to it, one JSON object
+// per line of data/lines.jsonl (online: data/lines/<user>.jsonl). POST appends a batch; GET downloads it.
+const linesFile = (user) => (user ? path.join(DATA_DIR, "lines", `${String(user).replace(/[^\w-]/g, "_")}.jsonl`) : path.join(DATA_DIR, "lines.jsonl"));
+async function handleLines(req, res, user) {
+  const file = linesFile(user);
+  if (req.method === "GET") {
+    const body = await fsp.readFile(file, "utf8").catch(() => "");
+    return send(res, 200, body, { "Content-Type": "application/x-ndjson; charset=utf-8", "Content-Disposition": `attachment; filename="leyendas-frases.jsonl"` });
+  }
+  if (req.method !== "POST") return send(res, 405, { error: "GET or POST" });
+  const b = await readBody(req, 2e6);
+  const events = Array.isArray(b?.events) ? b.events.slice(0, 2000) : null;
+  if (!events) return send(res, 400, { error: "events required" });
+  const lines = events.filter((e) => e && typeof e === "object" && !Array.isArray(e)).map((e) => JSON.stringify(e)).filter((l) => l.length < 8000);
+  await fsp.mkdir(path.dirname(file), { recursive: true });
+  if (lines.length) await fsp.appendFile(file, lines.join("\n") + "\n");
+  return send(res, 200, { ok: true, n: lines.length });
 }
 
 // Resolve a path inside a base directory, refusing traversal.
@@ -550,10 +569,12 @@ const server = http.createServer(async (req, res) => {
           return send(res, 200, { ok: true });
         }
       }
+      if (p === "/api/lines") return handleLines(req, res, user.id);
       if (p.startsWith("/api/") && !ONLINE_API.has(p)) return send(res, 404, { error: "No disponible en la versión en línea" });
       // only the game: the listening and dictation pages need the owner's tools
       if (p === "/" || (p.endsWith(".html") && p !== "/rpg.html")) return send(res, 302, "", { Location: "rpg.html" });
     }
+    if (p === "/api/lines") return handleLines(req, res, null);
     if (p === "/api/episodes" && req.method === "GET") {
       return send(res, 200, await listEpisodes());
     }

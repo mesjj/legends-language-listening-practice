@@ -471,6 +471,7 @@ function playSeg(si, rate = 1) {
   stopAt = s.end + 0.2;
   hush();
   audio.play();
+  markPlaying(audio, audio.currentTime, stopAt, rate < 1);
   const b = bossOf(F);
   if (b && bossRules(F) && F.boss.armed && !F.checked && BOSSES[b.kind].special.wail && !isEasy()) wailOver((s.end - s.start + 0.4) / audio.playbackRate, BOSSES[b.kind].special.wail);
 }
@@ -492,13 +493,50 @@ function playCard(card, rate = 1) {
   cardAudio.playbackRate = rate;
   cardAudio.currentTime = 0;
   hush();
-  cardAudio.play().catch(() => {});
+  cardAudio.play().catch(() => markDone());
+  markPlaying(cardAudio, 0, null, rate < 1);
 }
 // checked every frame, and on the audio's own progress events: frames stop in a background tab,
 // where without them a line would play on into the rest of the episode
 function checkStop() { if (stopAt != null && !audio.paused && audio.currentTime >= stopAt) { audio.pause(); stopAt = null; } }
-(function watch() { checkStop(); requestAnimationFrame(watch); })();
+requestAnimationFrame(function watch() { checkStop(); showPlaying(); requestAnimationFrame(watch); }); // from the next frame: what it reads is declared below
 audio.addEventListener("timeupdate", checkStop);
+
+// ---------- is it playing? The button you pressed shows it ----------
+// While the line plays, the play button (or Despacio) lights up, bars bounce in it and a ring (a bar on
+// Despacio) fills as the line goes; when it stops, a green flash and a tick, and the tick stays small
+// on the button until the next line.
+let playing = null; // { el: the <audio>, start, end (null: to its end), slow }
+const playBtns = () => [$("#playBtn"), $("#slowBtn")].filter(Boolean);
+const EQ = `<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>`;
+function markPlaying(el, start, end, slow) {
+  playing = { el, start, end, slow };
+  if (S.F?.shown && !S.F.checked) (S.F.listens ||= []).push([Date.now() - S.F.shown.t, slow ? "slow" : "normal"]);
+  for (const b of playBtns()) b.classList.remove("playing", "done", "heard");
+  showPlaying();
+}
+function markDone() {
+  if (!playing) return;
+  const slow = playing.slow;
+  playing = null;
+  for (const b of playBtns()) { b.classList.remove("playing"); b.querySelector(".eq")?.remove(); b.style.removeProperty("--p"); }
+  const b = slow ? $("#slowBtn") : $("#playBtn");
+  if (!b) return;
+  b.classList.add("done", "heard");
+  setTimeout(() => b.classList.remove("done"), 900);
+}
+// every frame: the progress, and the state put back if the buttons were redrawn while it played
+function showPlaying() {
+  if (!playing) return;
+  const { el, start, end, slow } = playing;
+  const b = slow ? $("#slowBtn") : $("#playBtn");
+  if (!b) return;
+  if (!b.classList.contains("playing")) { b.classList.add("playing"); if (!b.querySelector(".eq")) b.insertAdjacentHTML("beforeend", EQ); }
+  const stop = end ?? el.duration;
+  const p = stop > start ? Math.min(1, Math.max(0, (el.currentTime - start) / (stop - start))) : 0;
+  b.style.setProperty("--p", p.toFixed(3));
+}
+for (const el of [audio, cardAudio]) for (const ev of ["pause", "ended", "error"]) el.addEventListener(ev, () => { if (playing?.el === el) markDone(); });
 
 // ---------- HUD ----------
 function renderHud() {
@@ -1332,6 +1370,7 @@ function renderChar() {
     <h3>Historial</h3>
     ${row("Frases", ch.stats.lines)}${row("Perfectas", ch.stats.perfect)}${row("Enemigos abatidos", ch.stats.kills)}${row("Mejor racha", ch.stats.bestCombo)}${row("Muertes", ch.stats.deaths)}
     ${dropTally()}
+    <div class="row"><button id="linesExport" class="ghost" title="Cada frase que te salió, cuándo y qué respondiste, y tus sesiones y combates: un archivo con una línea por evento">Descargar registro de frases</button></div>
     <div class="row"><button id="debugExport" class="ghost" title="Descarga un archivo con tu personaje, tus estadísticas, las probabilidades de botín y los últimos objetos y errores, para revisar qué pasa">Exportar datos de depuración</button></div>`;
   // with a pet or a horse along, the character stands here with them
   const port = $("#charPort"), fig = companionsHtml() && fightFigure(ch, { centered: true });
@@ -1394,6 +1433,7 @@ $("#charPanel").addEventListener("click", (e) => {
   if (e.target.closest("#classBtn")) return openClassDialog();
   if (e.target.closest("#logoutBtn")) return logout();
   if (e.target.closest("#debugExport")) return exportDebug();
+  if (e.target.closest("#linesExport")) return flushLines().then(() => (location.href = "api/lines"));
   const cb = e.target.closest("[data-comp]");
   if (cb) {
     const [type, id] = cb.dataset.comp.split(":"), on = COMPANION[type].on;
@@ -2013,6 +2053,7 @@ function renderMap() {
       <div class="diffpick" role="radiogroup" aria-label="Dificultad">
         ${Object.entries(E.DIFFICULTY).map(([id, d]) => `<button role="radio" aria-checked="${(ch.difficulty || "medio") === id}" data-diff="${id}"><b>${d.name}</b><span>${esc(d.desc)}</span></button>`).join("")}
       </div>
+      <div class="today onmap">${todayHtml()}</div>
       ${companionProgressHtml()}
       <section class="repaso" id="repaso"><p class="dim">Buscando tus mazos de Anki…</p></section>
       <section class="repaso encruc" id="encruc"></section>
@@ -2181,6 +2222,7 @@ function reviewNextPack() {
   renderHud(); renderPanels();
 }
 function repasoDone() {
+  logFightEnd("done");
   const F = S.F, R = S.review;
   stopAll();
   F.over = true;
@@ -2714,7 +2756,7 @@ function renderFight() {
     <section class="fight">
       <div class="fighthead">
         <div><b>${esc(S.zone.name)}</b> <span class="dim">${F.review ? `${S.review?.source === "subj" ? "Subjuntivo o no" : "Repaso de Anki"} · grupo ${zp.pack + 1}` : S.zone.fights ? `${LEVEL_NAME[courseFight(S.zone, zp.pack).mode]}${F.enc.boss ? " · jefe" : ` · combate ${zp.pack + 1} de ${S.zone.packs}`}` : F.enc.boss ? "Jefe" : F.extra ? `${S.zone.endless ? `Descenso ${(zp.depth || 0) + 1} · ` : ""}grupo extra · ${bossNeed(S.zone, zp.depth || 0)} frases para el jefe` : S.zone.endless ? `Descenso ${(zp.depth || 0) + 1} · grupo ${zp.pack + 1}` : `Grupo ${zp.pack + 1} de ${S.zone.packs}`} · nivel ${F.enc.lvl} · ${E.diffOf(ch).name}</span>
-          <div class="dim small" id="groupMastery"></div></div>
+          <div class="dim small" id="groupMastery"></div><div class="today" id="today">${todayHtml()}</div></div>
         <div class="combo" id="combo"></div>
         <button id="portal" class="ghost" title="${F.review ? "Vuelves a la aldea con el oro que llevas ganado." : "Vuelves a la aldea. El grupo actual se reinicia."}">Volver a la aldea</button>
       </div>
@@ -2731,7 +2773,7 @@ function renderFight() {
   $("#logbox").ontoggle = (e) => localStorage.setItem("rpgLogOpen", e.target.open ? "1" : "0");
   // a card fight has no end of its own (La encrucijada) or none you must reach: leaving keeps the gold of
   // what you've already beaten in this group
-  $("#portal").onclick = () => { stopAll(); if (F.review && !F.over) { ch.gold += F.ground.gold; F.ground.gold = 0; S.review = null; save(); } S.F = null; show("town"); };
+  $("#portal").onclick = () => { logFightEnd("left"); stopAll(); if (F.review && !F.over) { ch.gold += F.ground.gold; F.ground.gold = 0; S.review = null; save(); } S.F = null; show("town"); };
   renderMe(); renderFoes(); renderCombo(); addLog("", "");
   S.F.log = S.F.log.filter((l) => l.text);
   $("#log").innerHTML = S.F.log.map((l) => `<li class="${l.cls}">${l.text}</li>`).join("");
@@ -2787,6 +2829,132 @@ function companionsHtml(riding = false) {
 }
 const REGAIN = 3; // perfect lines in a row that bring a broken streak back
 const REGAIN_FROM = 10; // only a streak at least this long can be got back
+// ---------- the event log ----------
+// What happens in the game, for looking back and for features to come (spaced review of lines and
+// words, daily goals, streaks of days, stats): every line shown and every answer, and the sessions,
+// fights, dice, goals and levels around them. Each event goes to the server (server.js handleLines),
+// one JSON object per line of a JSONL file, ready to load into a database. Kept in localStorage until
+// sent (15 s after the last event, and when the page is hidden). Every event has t (epoch ms), ev, sid
+// (this page load). The README's "Event log" lists the fields of each kind.
+const LINE_LOG = "leyendasLineLog";
+const SID = Math.random().toString(36).slice(2, 10);
+let lineTimer = null, sessionLogged = false;
+const rid = () => Math.random().toString(36).slice(2, 10);
+function lineLog(e) {
+  let buf = [];
+  try { buf = JSON.parse(localStorage.getItem(LINE_LOG)) || []; } catch { /* a broken buffer starts again */ }
+  if (!sessionLogged) {
+    sessionLogged = true;
+    buf.push({ t: Date.now(), ev: "session", sid: SID, dev: matchMedia("(max-width: 600px)").matches ? "phone" : "desktop", vw: innerWidth, vh: innerHeight,
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone, tzOff: new Date().getTimezoneOffset(), lang: CFG?.lang, user: CFG?.user?.id ?? null,
+      ch: ch ? { cls: ch.cls, level: ch.level, diff: ch.difficulty || "medio", lines: ch.stats?.lines } : null, muted: isMuted() });
+  }
+  buf.push({ t: Date.now(), sid: SID, ...e });
+  localStorage.setItem(LINE_LOG, JSON.stringify(buf.slice(-5000)));
+  clearTimeout(lineTimer);
+  lineTimer = setTimeout(flushLines, 15000);
+}
+async function flushLines(beacon = false) {
+  clearTimeout(lineTimer); lineTimer = null;
+  const raw = localStorage.getItem(LINE_LOG);
+  if (!raw || raw === "[]") return;
+  const body = `{"events":${raw}}`, n = JSON.parse(raw).length;
+  const sent = () => { // drop only what was sent: more may have come in meanwhile
+    try { const now = JSON.parse(localStorage.getItem(LINE_LOG)) || []; localStorage.setItem(LINE_LOG, JSON.stringify(now.slice(n))); } catch { localStorage.removeItem(LINE_LOG); }
+  };
+  if (beacon && navigator.sendBeacon) { if (navigator.sendBeacon("api/lines", new Blob([body], { type: "application/json" }))) sent(); return; }
+  try { const r = await fetch("api/lines", { method: "POST", headers: { "Content-Type": "application/json" }, body }); if (r.ok) sent(); }
+  catch { /* offline: try again with the next line */ }
+}
+addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushLines(true); });
+addEventListener("pagehide", () => flushLines(true));
+function logShown() {
+  const F = S.F;
+  if (!F.fid) {
+    F.fid = rid(); F.t0 = Date.now(); F.answers = 0; F.rights = 0;
+    lineLog({ ev: "fight", fid: F.fid, ep: S.ep, zone: S.zone?.id, boss: F.enc?.boss ? zoneBoss(S.zone) : null, review: F.review ? S.review?.source || "anki" : null,
+      lvl: F.enc?.lvl, monsters: F.monsters?.map((m) => ({ tier: m.tier, mods: m.mods })), diff: ch.difficulty || "medio", charLvl: ch.level });
+  }
+  F.shown = { id: rid(), t: Date.now() };
+  F.listens = []; F.keys = 0; F.firstKey = null;
+  const card = F.ex?.card;
+  const words = card ? [] : exWords();
+  lineLog({
+    ev: "show", id: F.shown.id, fid: F.fid, ep: S.ep, si: F.si ?? null, part: F.ex?.k ?? null,
+    words: card ? null : words.length, text: card ? null : words.map((w) => w.w).join(" "),
+    start: words[0]?.s ?? null, end: words[words.length - 1]?.e ?? null,
+    combo: F.combo, ear: F.ear || 0, life: Math.round((ch.life / stats().maxLife) * 100), mana: ch.mana, today: ch.days?.[dayKey()] || 0,
+    mode: F.lesson?.mode || F.mode, zone: S.zone?.id, boss: F.enc?.boss ? zoneBoss(S.zone) : null, review: F.review ? S.review?.source || "anki" : null,
+    card: card ? { id: card.id ?? card.cardId ?? null, deck: card.deckName || card.deck || null, text: card.es || card.front || null } : null,
+    diff: ch.difficulty || "medio", lvl: F.enc?.lvl,
+  });
+}
+function logAnswer(r, acc, perfectFirst) {
+  const F = S.F;
+  let typed = null;
+  if (F.mode === "cloze") typed = [...document.querySelectorAll("#cloze input")].map((x) => x.value.trim());
+  else if ($("#answer")) typed = $("#answer").value;
+  lineLog({
+    ev: "answer", id: F.shown?.id, fid: F.fid, ep: S.ep, si: F.si ?? null, ms: F.shown ? Date.now() - F.shown.t : null,
+    firstKey: F.firstKey, keys: F.keys || 0, listens: F.listens || [],
+    acc: +(+acc || 0).toFixed(3), strict: r?.strictAcc != null ? +r.strictAcc.toFixed(3) : null, right: acc >= 1, perfect: !!perfectFirst,
+    plays: F.plays || 0, slows: F.slows || 0, paid: F.paidCount || 0, hinted: !!F.hinted, ease: F.ease ?? null, typed, kind: r?.kind || null,
+    // every word: [word, what you typed, 2 right | 1 near | "a" accent | 0 missed | "n" a name that doesn't count]
+    w: (r?.words || []).map((x) => [x.w, x.typed ?? null, x.name ? "n" : x.ok ? 2 : x.accent ? "a" : x.near ? 1 : 0]),
+  });
+  F.answers = (F.answers || 0) + 1; if (acc >= 1) F.rights = (F.rights || 0) + 1;
+}
+function logFightEnd(how) {
+  const F = S.F;
+  if (!F?.fid || F.ended) return;
+  F.ended = true;
+  lineLog({ ev: "fightEnd", fid: F.fid, how, ms: Date.now() - F.t0, answers: F.answers || 0, right: F.rights || 0, combo: F.combo, life: Math.round((ch.life / stats().maxLife) * 100), gold: ch.gold, xp: ch.xp, level: ch.level });
+}
+// keystrokes in the answer: when the first came, and how many
+document.addEventListener("keydown", (e) => {
+  const F = S.F;
+  if (!F?.shown || F.checked || !e.target.closest?.("#answer, #cloze input")) return;
+  F.keys = (F.keys || 0) + 1;
+  if (F.firstKey == null) F.firstKey = Date.now() - F.shown.t;
+}, true);
+// ---------- today's goal ----------
+// A little more than you played last time: the lines you answered on the last day you played (in the
+// past week) plus a tenth (at least 3 more), or 20 the first time. Reaching it once a day
+// gives a bag of gold. Lines are counted per local day in ch.days (the last two weeks).
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function todayGoal() {
+  const today = dayKey();
+  if (ch.dayGoal?.date === today) return ch.dayGoal;
+  const days = (ch.days ||= {});
+  let prev = 0, prevDate = null;
+  for (let i = 1; i <= 7 && !prev; i++) { const d = new Date(); d.setDate(d.getDate() - i); const k = dayKey(d); if (days[k] > 0) { prev = days[k]; prevDate = k; } }
+  const goal = prev ? Math.max(prev + 3, Math.ceil(prev * 1.1)) : 20;
+  for (const k of Object.keys(days)) if (k < dayKey(new Date(Date.now() - 14 * 864e5))) delete days[k];
+  return (ch.dayGoal = { date: today, goal, prev, prevDate, paid: false });
+}
+function todayHtml() {
+  if (!ch) return "";
+  const g = todayGoal(), n = ch.days?.[dayKey()] || 0;
+  const was = !g.prev ? "tu primera meta" : g.prevDate === dayKey(new Date(Date.now() - 864e5)) ? `ayer, ${g.prev}` : `la última vez, ${g.prev}`;
+  return g.paid || n >= g.goal
+    ? `<span class="tbar done"><i style="width:100%"></i></span> <span>Hoy: ${n} frases. Meta cumplida ✓</span>`
+    : `<span class="tbar" title="Meta de hoy: un poco más que ${was}"><i style="width:${(n / g.goal) * 100}%"></i></span> <span>Hoy: ${n} de ${g.goal} frases <span class="dim">(${was})</span></span>`;
+}
+function countToday() {
+  const k = dayKey(), g = todayGoal();
+  ch.days[k] = (ch.days[k] || 0) + 1;
+  if (!g.paid && ch.days[k] >= g.goal) {
+    g.paid = true;
+    const gold = Math.round((40 + ch.level * 12) * (E.diffOf(ch).gold || 1));
+    lineLog({ ev: "goal", goal: g.goal, prev: g.prev, prevDate: g.prevDate, gold });
+    ch.gold += gold;
+    addLog(`<b>¡Meta de hoy!</b> ${g.goal} frases${g.prev ? `, más que las ${g.prev} de ${g.prevDate === dayKey(new Date(Date.now() - 864e5)) ? "ayer" : "la última vez"}` : ""}. Ganas <b>${gold} de oro</b>. Mañana la meta sale de lo que juegues hoy.`, "good");
+    toast(`¡Meta de hoy cumplida! +${gold} de oro`, "good", 3200);
+    sfx.coin?.();
+  }
+  const el = $("#today");
+  if (el) el.innerHTML = todayHtml();
+}
 // ---------- the streak dice (E.streakRoll) ----------
 // Rolled when the line is answered; the prize goes straight to you (gold to your purse, the thing to your
 // bag, or the stash, or the ground); the dice play out over the stage a moment later.
@@ -2798,6 +2966,7 @@ function streakDice(F, kind = "racha") {
   if (!r) return null;
   r.kind2 = kind;
   ch.stats.diceRolls = (ch.stats.diceRolls || 0) + 1;
+  lineLog({ ev: "dice", kind, streak: K.n(F), roll: r.roll, need: r.need, win: !!r.win, prize: r.win ? (r.gold ? { gold: r.gold } : { rarity: r.item?.rarity, name: r.item ? E.itemName(r.item) : null }) : null });
   if (!r.win) return addLog(`${dieIco(kind)} ${K.name}: sale <b>${r.roll}</b>; ganabas con ${r.need === 1 ? "un 1" : `1 a ${r.need}`} (${r.need}% de probabilidad). Sin premio.`, "dice"), r;
   ch.stats.diceWins = (ch.stats.diceWins || 0) + 1;
   let where = "";
@@ -3254,9 +3423,10 @@ function nextExercise() {
   if (F.boss?.tangle > 0) F.boss.tangle--;
   F.plays = 0; F.slows = 0; F.paid = 0; F.paidCount = 0; F.freeListening = false; F.hinted = false; F.checked = false; F.explanation = "";
   // how things stood before this line, in case it gets flagged as not matching the audio
-  F.before = { life: ch.life, mana: ch.mana, combo: F.combo, ear: F.ear || 0, streakLost: ch.streakLost || 0, lines: ch.stats.lines, perfect: ch.stats.perfect, boss: F.boss ? JSON.parse(JSON.stringify(F.boss)) : null };
+  F.before = { life: ch.life, mana: ch.mana, combo: F.combo, ear: F.ear || 0, streakLost: ch.streakLost || 0, lines: ch.stats.lines, today: ch.days?.[dayKey()] ?? 0, perfect: ch.stats.perfect, boss: F.boss ? JSON.parse(JSON.stringify(F.boss)) : null };
   save();
   setupExercise(false);
+  logShown();
   renderBossWarn();
   renderGroupMastery();
   // let the last round's sounds finish first, so the line isn't heard over them
@@ -3488,6 +3658,7 @@ function attack() {
 function resolveAttack(r, acc, perfectFirst) {
   const F = S.F, st = stats(), D = E.diffOf(ch), words = F.lesson || !(F.mode === "recall" || F.mode === "subj") ? exWords() : [];
   F.checked = true;
+  logAnswer(r, acc, perfectFirst);
   // every word right with every accent: kills from this attack roll good loot at double the odds
   F.goodLoot = r.accentsPerfect ? 2 : 1;
   // gaps filled with words you've already got right in a gap again and again: less rare loot
@@ -3495,6 +3666,7 @@ function resolveAttack(r, acc, perfectFirst) {
   // the streak counting this answer (kills land before the streak is updated below): its loot luck
   F.luckCombo = acc >= 1 ? F.combo + 1 : st.comboKeep && acc >= 0.85 ? F.combo : 0;
   ch.stats.lines++;
+  countToday();
   // an item that counts near misses as right helps in the fight (damage, streak, dodging), but what
   // you really wrote is what counts for mastery and your record
   const wrote = r.strictAcc ?? acc;
@@ -3632,22 +3804,22 @@ function resolveAttack(r, acc, perfectFirst) {
   ch.stats.bestCombo = Math.max(ch.stats.bestCombo, F.combo);
   ch.streak = F.combo; // the streak goes on into the next group, until you miss or fall
   // the streak dice: from a streak of 5, every perfect line rolls for a prize
-  const dice = acc >= 1 && !F.review ? streakDice(F) : null;
+  const dice = acc >= 1 ? streakDice(F) : null; // in reviews too
   // the ear streak: only lines you listen to count; heard once and perfect, it grows; anything else ends it
   let earDice = null;
   if (!(F.mode === "recall" || F.mode === "subj")) {
     if (acc >= 1 && perfectFirst) {
       F.ear = (F.ear || 0) + 1;
       ch.stats.bestEar = Math.max(ch.stats.bestEar || 0, F.ear);
-      if (!F.review) earDice = streakDice(F, "oido");
-      if (F.ear === E.DICE_FROM && !F.review) addLog(`<b>¡Racha de oído de ${E.DICE_FROM}!</b> ${E.DICE_FROM} frases perfectas seguidas escuchándolas una sola vez. Desde ahora esta racha tira sus propios dados, los azules, igual que la otra.`, "good");
+      earDice = streakDice(F, "oido");
+      if (F.ear === E.DICE_FROM) addLog(`<b>¡Racha de oído de ${E.DICE_FROM}!</b> ${E.DICE_FROM} frases perfectas seguidas escuchándolas una sola vez. Desde ahora esta racha tira sus propios dados, los azules, igual que la otra.`, "good");
     } else {
       if (F.ear >= 3) addLog(`Se acaba tu racha de oído de ${F.ear}.`, "bad");
       F.ear = 0;
     }
     ch.earStreak = F.ear;
   }
-  if (F.combo === E.DICE_FROM && acc >= 1 && !F.review) addLog(`<b>¡Racha de ${E.DICE_FROM}!</b> Desde ahora cada frase perfecta tira los dados: sale un número del 1 al 100, y si es igual o menor que tu probabilidad de premio, ganas algo. Ahora es un ${E.diceChance(E.DICE_FROM)}% (solo gana un 1); sube 1 punto cada 2 frases perfectas, hasta un 15%, y con la racha mejora también el premio.`, "good");
+  if (F.combo === E.DICE_FROM && acc >= 1) addLog(`<b>¡Racha de ${E.DICE_FROM}!</b> Desde ahora cada frase perfecta tira los dados: sale un número del 1 al 100, y si es igual o menor que tu probabilidad de premio, ganas algo. Ahora es un ${E.diceChance(E.DICE_FROM)}% (solo gana un 1); sube 1 punto cada 2 frases perfectas, hasta un 15%, y con la racha mejora también el premio.`, "good");
 
   // their turn
   let taken = 0;
@@ -4115,6 +4287,7 @@ function gainXp(n) {
   while (ch.xp >= E.xpToNext(ch.level)) {
     ch.xp -= E.xpToNext(ch.level);
     ch.level++;
+    lineLog({ ev: "level", level: ch.level });
     attuneTunjo();
     ch.points += 5;
     const st = stats();
@@ -4207,6 +4380,7 @@ async function flagCurrent() {
   try { await flagLine(S.ep, si); }
   catch (e) { document.querySelectorAll(".flagBtn").forEach((b) => (b.disabled = false)); return toast(e.message); }
   stopAll();
+  lineLog({ ev: "flag", id: F.shown?.id, ep: S.ep, si });
   const b = F.before, st = stats();
   ch.life = Math.min(st.maxLife, Math.max(ch.life, b.life));
   ch.mana = Math.min(st.maxMana, Math.max(ch.mana, b.mana));
@@ -4214,6 +4388,7 @@ async function flagCurrent() {
   F.ear = Math.max(F.ear || 0, b.ear || 0); ch.earStreak = F.ear;
   if (b.combo >= F.combo) ch.streakLost = b.streakLost; // a flagged line didn't break anything
   ch.stats.lines = b.lines; ch.stats.perfect = b.perfect;
+  if (b.today != null && ch.days) ch.days[dayKey()] = b.today;
   if (b.boss && F.boss) {
     const now = F.boss, kept = b.boss.stolen.length;
     now.stolen.slice(kept).forEach(giveBack);
@@ -4276,6 +4451,7 @@ function anki() { const F = S.F, P = currentPhrase(); ankiPhrase(P, () => S.F ==
 // All foes down: loot on the ground, then onwards.
 function victory() {
   const F = S.F, zp = ch.zones[S.zone.id];
+  logFightEnd("won");
   stopAll();
   F.over = true;
   const wasBoss = F.enc.boss;
@@ -4484,6 +4660,7 @@ function pickUp(id, quiet) {
 }
 
 function die(r, acc) {
+  logFightEnd("died");
   ch.streak = 0; ch.streakLost = 0; ch.earStreak = 0;
   stopAll();
   // keep the phrase that finished you off, to look at on the death screen
@@ -5179,4 +5356,4 @@ async function quickStart() {
 }
 
 // for debugging in the console
-window.leyendas = { S, get ch() { return ch; }, E, socket, toAlembic, tooltipHtml2: (it) => tooltipHtml(it), showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats, zoneBoss, restartEpisode };
+window.leyendas = { S, get ch() { return ch; }, E, socket, toAlembic, tooltipHtml2: (it) => tooltipHtml(it), showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats, zoneBoss, restartEpisode, enterEncrucijada };

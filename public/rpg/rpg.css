@@ -144,6 +144,26 @@ main { max-width: 960px; margin: 0 auto; padding: 22px 20px; }
 .excontrols { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
 .playbtn { width: 54px; height: 54px; border-radius: 50%; padding: 0; display: grid; place-items: center; background: var(--gold); border: none; }
 .playbtn svg { width: 22px; height: 22px; fill: #2a1d0b; }
+/* playing: the button lights up, bars bounce where the triangle was, a ring fills round it as the line goes;
+   done: a green flash and a tick, then a small tick stays on it (main.js markPlaying / markDone) */
+.playbtn { position: relative; }
+.playbtn.playing { background: radial-gradient(circle, var(--gold) 58%, transparent 60%), conic-gradient(#fff6d0 calc(var(--p, 0) * 1turn), rgba(240, 210, 92, .25) 0);
+  box-shadow: 0 0 0 3px rgba(240, 210, 92, .25), 0 0 20px rgba(240, 210, 92, .7); }
+.playbtn.playing svg { display: none; }
+.eq { display: flex; align-items: flex-end; gap: 3px; height: 20px; }
+.eq i { width: 4px; height: 100%; background: #2a1d0b; border-radius: 2px; transform-origin: bottom; animation: eq .7s ease-in-out infinite alternate; }
+.eq i:nth-child(2) { animation-delay: -.25s; } .eq i:nth-child(3) { animation-delay: -.5s; } .eq i:nth-child(4) { animation-delay: -.12s; }
+@keyframes eq { from { transform: scaleY(.25); } to { transform: scaleY(1); } }
+.playbtn.done { background: #6fd07a; box-shadow: 0 0 22px rgba(111, 208, 122, .8); animation: playdone .5s cubic-bezier(.2, 1.8, .4, 1); }
+.playbtn.heard::after { content: "✓"; position: absolute; right: -3px; bottom: -3px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  font: 700 12px/1 system-ui, sans-serif; color: #10240f; background: #6fd07a; border: 2px solid #1a140c; }
+@keyframes playdone { from { transform: scale(1.18); } to { transform: scale(1); } }
+#slowBtn { position: relative; }
+#slowBtn.playing { background: linear-gradient(90deg, rgba(240, 210, 92, .45) calc(var(--p, 0) * 100%), transparent 0); border-color: var(--gold); box-shadow: 0 0 14px rgba(240, 210, 92, .5); }
+#slowBtn .eq { display: inline-flex; height: 12px; margin-left: 6px; vertical-align: -1px; }
+#slowBtn .eq i { width: 3px; background: var(--gold); }
+#slowBtn.done { border-color: #6fd07a; box-shadow: 0 0 14px rgba(111, 208, 122, .7); }
+#slowBtn.heard::after { content: "✓"; margin-left: 6px; color: #6fd07a; font-weight: 700; }
 .cost { font-size: 12.5px; color: #8fa6ff; margin-left: 4px; }
 .exinfo { margin-left: auto; font-size: 14px; }
 .flagBtn { font-size: 14px; color: var(--dim); }
@@ -1693,3 +1713,11 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 @keyframes bl-glass { from { width: 0; } }
 @media (max-width: 700px) { .bl-name.final, .bl-name.crit { top: 96px; } }
 @media (prefers-reduced-motion: reduce) { .bossleap { display: none; } }
+
+/* today's goal (main.js todayHtml): a thin bar and the count, under the group's line in a fight and on the map */
+.today { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text, #e8dcc4); margin-top: 3px; }
+.today.onmap { margin: 0 0 12px; font-size: 14px; }
+.tbar { display: inline-block; flex: none; width: 90px; height: 6px; background: #2a241b; border-radius: 3px; overflow: hidden; }
+.tbar i { display: block; height: 100%; background: var(--gold); transition: width .4s; }
+.tbar.done i { background: #6fd07a; }
+@media (max-width: 500px) { .tbar { width: 60px; } .today { font-size: 12px; } }
