@@ -1030,27 +1030,90 @@ NECKLACES = {
     "nyima": ("#e0c020", "#e06a10", "#fffce0"),
     "sengedradrok": ("#1a3a90", "#f06a10", "#fff0a0"),
     "drollo": ("#8e2a14", "#e8801a", "#ffc060"),
+    "teyuna": ("#3a5a2a", "#8ab45a", "#e0f0b0"),
+    "tatacoa": ("#8a3a1a", "#e07a3a", "#ffd0a0"),
+    "sanagustin": ("#5a5a4a", "#c8c0a0", "#fff8e0"),
+    "tierradentro": ("#2a1a1a", "#c83a2a", "#f0e0d0"),
+    "taraverde": ("#1a6a3a", "#3ac870", "#d0ffe0"),
+    "chia": ("#5a6a8a", "#e0e8f8", "#ffffff"),
+    "sue": ("#a8701a", "#ffcf3a", "#fff8d0"),
+    "catedralsal": ("#6a7a8a", "#d8e8f0", "#ffffff"),
+    "choco": ("#1a4a4a", "#3aa8a0", "#c0f0e8"),
+    "milarepa": ("#a8a8b0", "#f4f4f0", "#ffffff"),
+    "yurupari": ("#3a2a1a", "#e05a1a", "#ffd060"),
+    "pulowi": ("#8a2a5a", "#f070a0", "#ffe0f0"),
+    "juya": ("#2a3a6a", "#7fc4ff", "#fffbd0"),
+    "quimbaya": ("#8a5a0a", "#f0c040", "#fff8d0"),
+    "zenu": ("#6a5a2a", "#d8c070", "#fff0b0"),
+    "manjushri": ("#c8701a", "#f0a020", "#fff0c0"),
+    "mompox": ("#5a3a2a", "#e8b060", "#fff0c0"),
+    "nevadoruiz": ("#3a2a2a", "#ff5a1a", "#ffd27a"),
+    "chingaza": ("#3a5a6a", "#8ac8d8", "#e8ffff"),
+    "chenrezig": ("#e8e8f0", "#ffffff", "#c8e0ff"),
+    "magdalena": ("#5a4a2a", "#a8803a", "#e8d0a0"),
+    "karagabi": ("#1a1a2a", "#e0d040", "#ffffff"),
+    "tutruica": ("#1a2a2a", "#3a8a6a", "#a0e0c0"),
+    "naropa": ("#7a1a1a", "#e04a2a", "#ffc0a0"),
+    "serankua": ("#a8a090", "#f4f0e6", "#ffffff"),
+    "aluna": ("#0e2a4a", "#4a8ad0", "#d0f0ff"),
+    "murallas": ("#7a5a3a", "#e8c890", "#fff4d8"),
+    "tilopa": ("#8a6a3a", "#f0d080", "#fffae0"),
+    "chiminigagua": ("#0e0e1e", "#ffe070", "#ffffff"),
+    "nencatacoa": ("#5a3a1a", "#d07a3a", "#ffd0a0"),
+    "marpa": ("#3a4a7a", "#c8d0e8", "#ffffff"),
+    "zaque": ("#6a2a0a", "#e0802a", "#ffd090"),
+    "zipa": ("#1e4a3a", "#4ac08a", "#e0ffd0"),
+    "cauca": ("#4a3a2a", "#8a7a4a", "#d8c890"),
+    "yeshe": ("#8a1a3a", "#e05a7a", "#ffd0e0"),
+    "orinoco": ("#2a3a4a", "#5a9ac8", "#d0f0ff"),
+    "machig": ("#2a2a3a", "#e8e0d8", "#ffffff"),
+    "calima": ("#7a5a1a", "#e8b040", "#fff4c0"),
+    "barnizpasto": ("#3a1a4a", "#e04ac0", "#ffd0f0"),
+    "medicina": ("#0e2a8a", "#3a6ae0", "#c0d8ff"),
+    "gampopa": ("#c8a030", "#f0e0a0", "#ffffff"),
+    "sanandres": ("#0e5a7a", "#3ad0e0", "#e0ffff"),
+    "coronanegra": ("#0e0e12", "#d8a030", "#ffe8a0"),
+    "malpelo": ("#1a2a3a", "#6a8aa8", "#d0e8ff"),
+    "nagarjuna": ("#2a5a5a", "#80e0d0", "#ffffff"),
+    "selva": ("#1a4a1a", "#4ab03a", "#d0ffb0"),
+    "vajrasattva": ("#d8e0ec", "#ffffff", "#e0f0ff"),
+    "llorona": ("#2a2a3a", "#a8b8d0", "#ffffff"),
+    "shantideva": ("#8a6a1a", "#f0c860", "#fff8e0"),
+    "mulatrespatas": ("#2a1a14", "#e0401a", "#ffb060"),
+    "vajrayogini": ("#8a0e1a", "#ff3a2a", "#ffc0a0"),
+    "mahakala": ("#0e0e1a", "#3a5ad0", "#ff8a2a"),
+    "sayona": ("#3a3a3a", "#f0f0f0", "#ffffff"),
+    "amitabha": ("#a01a1a", "#ff7a3a", "#fff0c0"),
+    "prajna": ("#c8a020", "#ffe080", "#ffffff"),
+    "bardo": ("#1a1a3a", "#8a8ae0", "#e0e0ff"),
+    "samantabhadra": ("#0e1a5a", "#4a7ae8", "#ffffff"),
+    "cincobudas": ("#a01a24", "#3ac08a", "#f0e040"),
+    "ruedadharma": ("#c8a020", "#ffffff", "#ffe070"),
 }
 # hung by tier (plain sets, then ancestral, legendary, mythic), each tier by level, as the Collares cards are
-NECK_ORDER = ["arriero", "cacique", "patasola", "centinela", "cienaga", "mohan", "yogui", "jaguar", "vajra", "averno", "trueno", "sol", "guardian",
-              "tairona", "dorado", "pastor", "relampago", "vigilia", "shakya", "andes", "loden",
-              "frailejon", "llanero", "silbon", "candileja", "marimba", "canocristales",
-              "laguna", "bachue", "nevado", "osario", "madreagua", "barquero", "caiman", "tsokye", "bochica", "pandita", "tunda", "huitaca",
-              "condor", "vientos", "montana", "arhuaco", "rey", "pacto", "galeon", "pemagyalpo", "madremonte", "nyima", "sombreron",
-              "origen", "kalachakra", "luzclara", "firmamento", "bufeo", "mahamudra", "sengedradrok", "drollo", "dzogchen"]
+NECK_ORDER = ["arriero", "cacique", "patasola", "centinela", "cienaga", "mohan", "yogui", "jaguar", "vajra", "averno", "trueno", "sol",
+              "guardian", "tairona", "dorado", "pastor", "relampago", "vigilia", "shakya", "andes", "loden", "frailejon", "llanero", "silbon",
+              "candileja", "marimba", "canocristales", "teyuna", "tatacoa", "tierradentro", "chia", "catedralsal", "choco", "yurupari", "juya", "zenu",
+              "mompox", "chingaza", "magdalena", "tutruica", "serankua", "murallas", "nencatacoa", "zaque", "cauca", "orinoco", "calima", "barnizpasto",
+              "sanandres", "malpelo", "selva", "llorona", "mulatrespatas", "sayona", "laguna", "bachue", "nevado", "osario", "madreagua", "barquero",
+              "caiman", "tsokye", "bochica", "pandita", "tunda", "huitaca", "sanagustin", "sue", "pulowi", "nevadoruiz", "karagabi", "aluna",
+              "marpa", "yeshe", "gampopa", "nagarjuna", "shantideva", "bardo", "condor", "vientos", "montana", "arhuaco", "rey", "pacto",
+              "galeon", "pemagyalpo", "madremonte", "nyima", "sombreron", "taraverde", "milarepa", "manjushri", "naropa", "tilopa", "zipa", "machig",
+              "coronanegra", "vajrasattva", "mahakala", "prajna", "origen", "kalachakra", "luzclara", "firmamento", "bufeo", "mahamudra", "sengedradrok", "drollo",
+              "dzogchen", "quimbaya", "chenrezig", "chiminigagua", "medicina", "vajrayogini", "amitabha", "samantabhadra", "cincobudas", "ruedadharma"]
 assert sorted(NECK_ORDER) == sorted(NECKLACES)
 NECKLACES = {k: NECKLACES[k] for k in NECK_ORDER}
 NECK_CELL = (16, 40)  # each necklace's own picture, hung from the top centre
 
 
-RACK_Y = (16, 44)  # two rails: the first half of the necklaces hangs on the upper one
-PER_RACK = (len(NECKLACES) + 1) // 2
+RACK_Y = (10, 34, 58)  # three rails, a third of the shirts on each, top first
+PER_RACK = -(-len(NECKLACES) // len(RACK_Y))
 
 
 def neck_x(i, n=len(NECKLACES)):
     row, k = divmod(i, PER_RACK)
     step = (VW_ - 60) / (PER_RACK - 1)
-    return 30 + k * step + (step / 2 if row else 0)
+    return 30 + k * step + (step / 2 if row % 2 else 0)
 
 
 def neck_y(i):
@@ -1073,7 +1136,7 @@ def necklace(cord, pend, shine, drop):
 
 
 def v_collares():
-    """The tailor's back room: a velvet wall with two long rails of empty pegs, candles on a glass case,
+    """The tailor's back room: a velvet wall with three long rails of empty pegs, two candles,
     a dark wooden floor. The sets' undershirts are drawn apart (v-camisetas-shirts.png): the game hangs the
     ones you have. (They were necklaces once: the names inside still say neck.)"""
     im = Image.new("RGBA", (VW_, VH_))
@@ -1089,9 +1152,6 @@ def v_collares():
     for i in range(len(NECKLACES)):
         x, ry = neck_x(i), neck_y(i)
         d.rectangle([x - 1, ry, x + 1, ry + 3], fill=hexrgb("#c8a060"))
-    d.rectangle([150, 74, 330, 104], fill=hexrgb("#2a1a14"), outline=hexrgb("#6a4a22"))
-    d.rectangle([156, 78, 324, 92], fill=hexrgb("#1a2a2e"), outline=hexrgb("#6a8a90"))
-    d.line([(160, 80), (172, 80)], fill=hexrgb("#a8d0d8"))
     for x in (140, 340):
         d.rectangle([x - 2, 62, x + 2, 74], fill=hexrgb("#efe6cf"))
         d.polygon([(x, 54), (x + 3, 60), (x, 63), (x - 3, 60)], fill=hexrgb("#ffb347"))
@@ -1115,7 +1175,225 @@ def v_collares():
     return im
 
 
-VILLAGE = {"v-camisetas": v_collares, "v-merchant": v_merchant, "v-casetes": v_casetes, "v-sell": v_sell, "v-stash": v_stash, "v-alembic": v_alembic}
+
+def _shade(c, t):
+    """A hex colour darker (t<0) or lighter (t>0)."""
+    r, g, b = hexrgb(c)[:3]
+    to = 255 if t > 0 else 0
+    t = abs(t)
+    return "#%02x%02x%02x" % tuple(round(v + (to - v) * t) for v in (r, g, b))
+
+
+def v_establo():
+    """The stable: a plank barn at sundown, the big door open on green Andean hills, stalls along the
+    back wall, hay stacked up, a lantern on the beam, straw on the floor. The animals stand in front."""
+    W, H = VW_, VH_
+    im = Image.new("RGBA", (W, H))
+    d = ImageDraw.Draw(im)
+    rnd = random.Random(31)
+    # plank wall
+    x = 0
+    while x < W:
+        w = rnd.choice((7, 8, 9))
+        c = rnd.choice(["#5a3c24", "#4e3420", "#62422a", "#563a22"])
+        d.rectangle([x, 0, x + w - 1, 88], fill=hexrgb(c))
+        d.line([(x, 0), (x, 88)], fill=hexrgb("#2e1e12"))
+        for _ in range(2):  # grain and knots
+            yy = rnd.randrange(4, 84)
+            d.line([(x + 2, yy), (x + 2, yy + rnd.randrange(4, 10))], fill=hexrgb(_shade(c, -0.18)))
+        if rnd.random() < 0.25:
+            ky = rnd.randrange(20, 80)
+            d.ellipse([x + 2, ky, x + 4, ky + 2], fill=hexrgb("#2e1e12"))
+        x += w
+    # the open door (left): sky, hills, a wax palm
+    dx0, dx1, dy0 = 34, 112, 16
+    for y in range(dy0, 88):
+        t = (y - dy0) / (88 - dy0)
+        top, bot = hexrgb("#f0a860"), hexrgb("#ffe0a0")
+        d.line([(dx0, y), (dx1, y)], fill=tuple(round(top[i] + (bot[i] - top[i]) * t) for i in range(3)))
+    d.ellipse([84, 30, 98, 44], fill=hexrgb("#fff2c8"))  # the sun going down
+    for (base, col, amp, ph) in ((60, "#6a8a5a", 7, 0.0), (70, "#4a7040", 6, 1.3), (80, "#3a5a30", 4, 2.1)):
+        pts = [(dx0, 88)] + [(xx, base - amp * math.sin(xx / 13 + ph) - amp * 0.5 * math.sin(xx / 5 + ph)) for xx in range(dx0, dx1 + 1, 2)] + [(dx1, 88)]
+        d.polygon(pts, fill=hexrgb(col))
+    px = 52  # a wax palm on the hill
+    d.line([(px, 82), (px + 1, 46)], fill=hexrgb("#c8c0a8"), width=1)
+    for a in (-150, -120, -60, -30, -95):
+        r_ = math.radians(a)
+        d.line([(px + 1, 46), (px + 1 + 9 * math.cos(r_), 46 + 9 * math.sin(r_) + 3)], fill=hexrgb("#2e5a2a"), width=2)
+    for k in range(3):  # cows far off
+        cx, cy = 70 + k * 9, 72 - k
+        d.rectangle([cx, cy, cx + 4, cy + 2], fill=hexrgb("#f0e8e0" if k != 1 else "#3a2a20"))
+    # door frame and the door swung open against the wall, with its Z brace
+    d.rectangle([dx0 - 4, dy0 - 4, dx1 + 4, dy0 - 1], fill=hexrgb("#3a2414"))
+    d.rectangle([dx0 - 4, dy0, dx0 - 1, 88], fill=hexrgb("#3a2414"))
+    d.rectangle([dx1 + 1, dy0, dx1 + 4, 88], fill=hexrgb("#3a2414"))
+    d.rectangle([4, dy0 + 2, dx0 - 6, 88], fill=hexrgb("#7a4a2a"), outline=hexrgb("#3a2414"))
+    d.line([(6, dy0 + 6), (dx0 - 8, dy0 + 6)], fill=hexrgb("#3a2414"), width=2)
+    d.line([(6, 82), (dx0 - 8, 82)], fill=hexrgb("#3a2414"), width=2)
+    d.line([(6, 82), (dx0 - 8, dy0 + 6)], fill=hexrgb("#3a2414"), width=2)
+    # beam and rafters
+    d.rectangle([0, 6, W, 13], fill=hexrgb("#3e2816"))
+    d.line([(0, 6), (W, 6)], fill=hexrgb("#6a4828"))
+    d.line([(0, 13), (W, 13)], fill=hexrgb("#24160c"))
+    for x in range(140, W, 70):
+        d.polygon([(x, 0), (x + 6, 0), (x + 6, 6), (x, 6)], fill=hexrgb("#2e1e10"))
+    # stalls along the back: low plank walls with a cross brace, a window in the middle one
+    for k, sx in enumerate(range(128, W - 76, 60)):
+        d.rectangle([sx, 54, sx + 56, 88], fill=hexrgb("#6e4828"), outline=hexrgb("#2e1e12"))
+        for yy in (60, 68, 76):
+            d.line([(sx + 1, yy), (sx + 55, yy)], fill=hexrgb("#4a301a"))
+        d.line([(sx + 2, 56), (sx + 54, 86)], fill=hexrgb("#8a5c32"), width=2)
+        d.line([(sx + 54, 56), (sx + 2, 86)], fill=hexrgb("#8a5c32"), width=2)
+        d.rectangle([sx - 2, 48, sx + 2, 88], fill=hexrgb("#3a2414"))
+        if k == 2:  # a little window with the sky
+            d.rectangle([sx + 16, 24, sx + 40, 42], fill=hexrgb("#f4c078"), outline=hexrgb("#2e1e12"))
+            d.line([(sx + 28, 24), (sx + 28, 42)], fill=hexrgb("#2e1e12"))
+            d.line([(sx + 16, 33), (sx + 40, 33)], fill=hexrgb("#2e1e12"))
+        if k == 0:  # a horseshoe for luck, points up
+            d.arc([sx + 22, 30, sx + 32, 40], 0, 180, fill=hexrgb("#a8a8a8"), width=2)
+        if k == 1:  # a saddle on its peg
+            d.rectangle([sx + 26, 30, sx + 28, 34], fill=hexrgb("#2e1e12"))
+            d.pieslice([sx + 16, 30, sx + 40, 48], 180, 360, fill=hexrgb("#8a3a1e"), outline=hexrgb("#3a1a0c"))
+            d.line([(sx + 22, 39), (sx + 22, 47)], fill=hexrgb("#6a2a14"))
+            d.rectangle([sx + 20, 47, sx + 24, 49], fill=hexrgb("#a8a8a8"))
+        if k == 3:  # a woven ruana hung over the wall
+            for i, c in enumerate(("#b02a2a", "#e0b030", "#2a6ab0", "#b02a2a", "#2a8a4a")):
+                d.rectangle([sx + 8 + i * 3, 50, sx + 10 + i * 3, 66], fill=hexrgb(c))
+    # hay stacked in the right corner, a pitchfork leaning on it
+    for (bx, by) in ((W - 72, 66), (W - 40, 66), (W - 56, 46), (W - 26, 46)):
+        d.rectangle([bx, by, bx + 30, by + 20], fill=hexrgb("#d8b050"), outline=hexrgb("#7a5a1e"))
+        for i in range(bx + 3, bx + 28, 3):
+            d.line([(i, by + 2), (i + 1, by + 18)], fill=hexrgb("#b8902e"))
+        d.line([(bx, by + 6), (bx + 30, by + 6)], fill=hexrgb("#8a5a2a"))
+        d.line([(bx, by + 14), (bx + 30, by + 14)], fill=hexrgb("#8a5a2a"))
+    d.line([(W - 84, 94), (W - 64, 40)], fill=hexrgb("#8a6a40"), width=2)
+    for o in (-3, 0, 3):
+        d.line([(W - 64 + o, 40), (W - 62 + o, 32)], fill=hexrgb("#b8b8b8"))
+    # the straw floor
+    for y in range(88, H):
+        t = (y - 88) / (H - 88)
+        d.line([(0, y), (W, y)], fill=hexrgb(_shade("#c49a4a", -0.25 * t)))
+    for _ in range(900):
+        x0, y0 = rnd.randrange(0, W), rnd.randrange(88, H)
+        c = rnd.choice(["#e8c870", "#a87a30", "#f4dc90", "#8a6428"])
+        d.line([(x0, y0), (x0 + rnd.choice((-3, -2, 2, 3)), y0 + rnd.choice((-1, 0, 1)))], fill=hexrgb(c))
+    d.line([(0, 88), (W, 88)], fill=hexrgb("#4a301a"))
+    # warm light: the sun through the door across the floor, the lantern on the beam
+    over = Image.new("RGBA", (W, H))
+    od = ImageDraw.Draw(over)
+    od.polygon([(dx0, 88), (dx1, 88), (dx1 + 70, H), (dx0 + 40, H)], fill=(255, 210, 130, 60))
+    lx = 300
+    od.ellipse([lx - 70, 4, lx + 70, 90], fill=(255, 190, 90, 22))
+    od.ellipse([lx - 36, 16, lx + 36, 64], fill=(255, 200, 110, 30))
+    im.alpha_composite(over)
+    d = ImageDraw.Draw(im)
+    d.line([(lx, 13), (lx, 22)], fill=hexrgb("#2a2a2a"))
+    d.rectangle([lx - 4, 22, lx + 4, 34], fill=hexrgb("#2e2a26"))
+    d.rectangle([lx - 3, 24, lx + 3, 32], fill=hexrgb("#ffd070"))
+    d.point([(lx, 27), (lx, 28)], fill=hexrgb("#ffffff"))
+    d.polygon([(lx - 5, 22), (lx + 5, 22), (lx, 18)], fill=hexrgb("#2e2a26"))
+    vignette(im, 0.5)
+    return im
+
+
+def v_monton():
+    """The Montón: a cave mouth high in the cordillera at night. Crystal veins glow in its walls, the
+    peaks stand white under the stars outside, and the gems pile up on the rock floor in the middle."""
+    W, H = 480, 160
+    im = Image.new("RGBA", (W, H))
+    d = ImageDraw.Draw(im)
+    rnd = random.Random(47)
+    for y in range(H):  # night sky
+        t = y / H
+        a, b = hexrgb("#0a0820"), hexrgb("#2a2050")
+        d.line([(0, y), (W, y)], fill=tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3)))
+    for _ in range(140):
+        x0, y0 = rnd.randrange(W), rnd.randrange(0, 90)
+        d.point((x0, y0), fill=hexrgb(rnd.choice(["#ffffff", "#c8d0ff", "#8a90c0", "#fff0c0"])))
+    d.ellipse([352, 18, 366, 32], fill=hexrgb("#f4f0dc"))  # the moon
+    d.ellipse([356, 16, 370, 30], fill=hexrgb("#141030"))
+    # the cordillera, back to front, snow on the high peaks
+    for k, (base, col, amp, step) in enumerate(((120, "#3e4078", 70, 44), (132, "#2c2c5a", 30, 52), (144, "#1c1c3a", 12, 70))):
+        pts, x0 = [(0, H)], -10
+        r2 = random.Random(80 + k)
+        up = True
+        while x0 < W + step:  # alternating peaks and saddles
+            pts.append((x0, base - (r2.uniform(0.65, 1) if up else r2.uniform(0.15, 0.4)) * amp))
+            up = not up
+            x0 += r2.uniform(step * 0.4, step * 0.8)
+        pts.append((W, H))
+        d.polygon(pts, fill=hexrgb(col))
+        lit = _shade(col, 0.18)
+        for (ax_, ay_), (bx_, by_) in zip(pts[1:-2], pts[2:-1]):  # moonlit west faces
+            if by_ > ay_:
+                d.polygon([(ax_, ay_), (bx_, by_), (ax_ + (bx_ - ax_) * 0.35, by_)], fill=hexrgb(lit))
+        if k == 0:  # snow on the high peaks, following the slopes down a little
+            for (ax_, ay_), (px_, py_), (bx_, by_) in zip(pts[1:-2], pts[2:-1], pts[3:]):
+                if py_ < base - amp * 0.6 and py_ < ay_ and py_ < by_:
+                    dl, dr = min(0.35, 9 / max(1, ay_ - py_)), min(0.35, 9 / max(1, by_ - py_))
+                    L = (px_ + (ax_ - px_) * dl, py_ + (ay_ - py_) * dl)
+                    R = (px_ + (bx_ - px_) * dr, py_ + (by_ - py_) * dr)
+                    d.polygon([(px_, py_), L, (L[0] + (px_ - L[0]) * 0.4, L[1] - 1), ((L[0] + R[0]) / 2, (L[1] + R[1]) / 2 + 3), (R[0] - (R[0] - px_) * 0.4, R[1] - 2), R], fill=hexrgb("#e8ecff"))
+    # the cave: rock walls on both sides and a ceiling with stalactites, framing the opening
+    rock, rock2, rock3 = "#2a2228", "#3a3036", "#1a1418"
+
+    def wall(xs):
+        pts = [(xs[0][0], 0)] + xs + [(xs[-1][0], H)]
+        d.polygon(pts, fill=hexrgb(rock))
+    left = [(0, 0), (70, 0), (60, 18), (74, 36), (58, 56), (66, 80), (48, 104), (56, 128), (40, 150), (0, H)]
+    right = [(W, 0), (W - 64, 0), (W - 52, 20), (W - 70, 40), (W - 56, 64), (W - 66, 90), (W - 46, 112), (W - 58, 136), (W - 36, 152), (W, H)]
+    d.polygon(left, fill=hexrgb(rock))
+    d.polygon(right, fill=hexrgb(rock))
+    ceil = [(0, 0), (W, 0), (W, 12)] + [(x0, 12 + 6 * math.sin(x0 / 17) + (8 if x0 % 37 < 6 else 0)) for x0 in range(W, -1, -6)]
+    d.polygon(ceil, fill=hexrgb(rock))
+    for x0 in range(76, W - 70, 23):  # stalactites
+        l_ = rnd.randrange(6, 18)
+        d.polygon([(x0 - 3, 14), (x0 + 3, 14), (x0, 14 + l_)], fill=hexrgb(rock2))
+        d.point((x0, 14 + l_ + 3), fill=hexrgb("#8ab8ff"))
+    for poly, sh in ((left, 1), (right, -1)):  # light edge on the rim, cracks
+        for (a, b) in zip(poly[1:-2], poly[2:-1]):
+            d.line([a, b], fill=hexrgb(rock2), width=2)
+    for _ in range(40):
+        side = rnd.random() < 0.5
+        x0 = rnd.randrange(4, 50) if side else rnd.randrange(W - 48, W - 4)
+        y0 = rnd.randrange(10, 150)
+        d.line([(x0, y0), (x0 + rnd.randrange(-6, 7), y0 + rnd.randrange(3, 9))], fill=hexrgb(rock3))
+    # crystal veins in the walls, each a cluster of points glowing
+    over = Image.new("RGBA", (W, H))
+    od = ImageDraw.Draw(over)
+    clusters = [(22, 44, "#e03a6a"), (40, 96, "#3ad08a"), (16, 132, "#3a8aff"), (W - 26, 30, "#f0c030"), (W - 40, 80, "#b04af0"), (W - 18, 124, "#f0f0ff"), (140, 16, "#3ad0e0"), (330, 18, "#e03a6a")]
+    for cx, cy, col in clusters:
+        c = hexrgb(col)
+        for r, a in ((16, 14), (9, 26), (5, 40)):
+            od.ellipse([cx - r, cy - r, cx + r, cy + r], fill=c[:3] + (a,))
+    im.alpha_composite(over)
+    d = ImageDraw.Draw(im)
+    for cx, cy, col in clusters:
+        down = cy < 24  # the ones in the ceiling hang down
+        for k in range(5):  # hexagonal prisms fanning out of the rock: a body and a pointed tip
+            ang = math.radians((60 if down else -150) + k * 15 + rnd.randrange(-5, 6))
+            L_ = rnd.choice((9, 12, 15, 11, 8))
+            u = (math.cos(ang), math.sin(ang))
+            n = (-u[1] * 2.2, u[0] * 2.2)
+            b0 = (cx, cy)
+            b1 = (cx + u[0] * L_ * 0.7, cy + u[1] * L_ * 0.7)
+            tip = (cx + u[0] * L_, cy + u[1] * L_)
+            body = [(b0[0] + n[0], b0[1] + n[1]), (b1[0] + n[0], b1[1] + n[1]), tip, (b1[0] - n[0], b1[1] - n[1]), (b0[0] - n[0], b0[1] - n[1])]
+            d.polygon(body, fill=hexrgb(_shade(col, -0.15)), outline=hexrgb(_shade(col, -0.6)))
+            d.polygon([(b0[0] + n[0] * 0.2, b0[1] + n[1] * 0.2), (b1[0] + n[0] * 0.2, b1[1] + n[1] * 0.2), tip, (b1[0] + n[0] * 0.9, b1[1] + n[1] * 0.9), (b0[0] + n[0] * 0.9, b0[1] + n[1] * 0.9)], fill=hexrgb(_shade(col, 0.35)))
+            d.point((round(tip[0] - u[0] * 2), round(tip[1] - u[1] * 2)), fill=hexrgb("#ffffff"))
+    # the floor: a rock shelf, worn smooth where the pile sits
+    floor = [(0, H)] + [(x0, 146 + 3 * math.sin(x0 / 23) + (2 if 150 < x0 < 330 else 0)) for x0 in range(0, W + 1, 8)] + [(W, H)]
+    d.polygon(floor, fill=hexrgb("#241c22"))
+    d.line(floor[1:-1], fill=hexrgb("#4a3e48"), width=1)
+    for _ in range(30):
+        x0 = rnd.randrange(W)
+        y0 = 150 + rnd.randrange(0, 6)
+        d.ellipse([x0, y0, x0 + rnd.randrange(3, 7), y0 + 2], fill=hexrgb("#3a3036"))
+    vignette(im, 0.45)
+    return im
+
+VILLAGE = {"v-camisetas": v_collares, "v-merchant": v_merchant, "v-casetes": v_casetes, "v-sell": v_sell, "v-stash": v_stash, "v-alembic": v_alembic, "v-establo": v_establo, "v-monton": v_monton}
 
 SCENES.update(VILLAGE)
 
@@ -1130,4 +1408,4 @@ if __name__ == "__main__":
         "Ground and scenery tiles (water, grass, grassalt, watergrass, dirt, dirt2, lava, lavarock, rock, trunk, treetop, castlewalls,\ncastlefloors_outside) and village props (barrel, buckets, cabinets, castle_lightsources, chests, country, kitchen, signs, victoria), tinted: LPC Base Assets by Lanea Zimmerman (Sharm),\n"
         "Liberated Pixel Cup. CC-BY-SA 3.0 / GPL 3.0 / OGA-BY 3.0.\n"
         "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles\n\n"
-        "Skies, mountains, mist, treelines, mangroves, reeds, frailejones, moriche palms, fire, smoke, vines, leaves,\nthe stone guardians and the stalactites; in the village the houses, walls, floors, stall, card table,\nthe bohío, the lagoon, the tunjos, the woven cloth, the sombrero, balance, coins, the copper still, the tailor's room and the sets' undershirts: original, drawn in code for Leyendas.\n")
+        "Skies, mountains, mist, treelines, mangroves, reeds, frailejones, moriche palms, fire, smoke, vines, leaves,\nthe stone guardians and the stalactites; in the village the houses, walls, floors, stall, card table,\nthe bohío, the lagoon, the tunjos, the woven cloth, the sombrero, balance, coins, the copper still, the tailor's room, the stable, the Montón's cave and the sets' undershirts: original, drawn in code for Leyendas.\n")

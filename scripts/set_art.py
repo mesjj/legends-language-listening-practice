@@ -693,6 +693,9 @@ def _hat(grid, pal, lift=0):
 
 def custom_head(sid, main, acc):
     """(picture, where) for the sets whose hat is drawn here; colours from the set's stops."""
+    if sid in NEW_HEADS:  # the sets of 204-400 (new_sets_400_art.py) borrow these pictures
+        grid, pal, lift = NEW_HEADS[sid]
+        return _hat(globals()[grid], pal(main, acc), lift)
     if sid == "llanero":
         return _hat(LLANERO_HAT, {"H": acc[0], "h": acc[2], "b": "#d83a2a"}, 3)
     if sid == "silbon":
@@ -1134,3 +1137,11 @@ def shirt_icons(triples):
         im = shirt_pic(body, trim, shine)
         out[f"item:camiseta:{sid}"] = im.resize((im.width * 2, im.height * 2), Image.NEAREST)
     return out
+
+
+# ---------------------------------------------------------------- the sets of levels 204-400
+# their recipes, effects, icons and drawn heads come from scripts/new_sets_400_art.py
+from new_sets_400_art import NEW_RECIPES, NEW_FX, NEW_ICONS, NEW_HEADS  # noqa: E402
+RECIPES.update(NEW_RECIPES)
+FX.update(NEW_FX)
+ICONS.update(NEW_ICONS)

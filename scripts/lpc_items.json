@@ -31,7 +31,23 @@
    "luzclara",
    "dorado",
    "arhuaco",
-   "shakya"
+   "shakya",
+   "taraverde",
+   "sue",
+   "pulowi",
+   "quimbaya",
+   "chenrezig",
+   "karagabi",
+   "aluna",
+   "chiminigagua",
+   "yeshe",
+   "medicina",
+   "nagarjuna",
+   "amitabha",
+   "prajna",
+   "samantabhadra",
+   "cincobudas",
+   "ruedadharma"
   ],
   "baston": [
    "cacique",
@@ -228,7 +244,8 @@
   ],
   "anillo": [
    "luzclara",
-   "bochica"
+   "bochica",
+   "amitabha"
   ],
   "yelmohueso": [
    "osario"
@@ -312,37 +329,105 @@
    "llanero",
    "madremonte",
    "tunda",
-   "barquero"
+   "barquero",
+   "tierradentro",
+   "chia",
+   "choco",
+   "yurupari",
+   "zenu",
+   "chingaza",
+   "magdalena",
+   "nencatacoa",
+   "orinoco",
+   "barnizpasto",
+   "sanandres",
+   "selva",
+   "sayona"
   ],
   "mantoluna": [
    "vigilia",
    "llanero",
    "madremonte",
    "tunda",
-   "barquero"
+   "barquero",
+   "tierradentro",
+   "chia",
+   "choco",
+   "yurupari",
+   "zenu",
+   "chingaza",
+   "magdalena",
+   "nencatacoa",
+   "orinoco",
+   "barnizpasto",
+   "sanandres",
+   "selva",
+   "sayona"
   ],
   "arcoluna": [
-   "vigilia"
+   "vigilia",
+   "chia",
+   "yurupari",
+   "selva"
   ],
   "cordonluna": [
    "vigilia",
    "llanero",
    "madremonte",
    "tunda",
-   "barquero"
+   "barquero",
+   "tierradentro",
+   "chia",
+   "choco",
+   "yurupari",
+   "zenu",
+   "chingaza",
+   "magdalena",
+   "nencatacoa",
+   "orinoco",
+   "barnizpasto",
+   "sanandres",
+   "selva",
+   "sayona"
   ],
   "brazalesluna": [
    "vigilia",
    "llanero",
    "madremonte",
-   "tunda"
+   "tunda",
+   "tierradentro",
+   "chia",
+   "choco",
+   "yurupari",
+   "zenu",
+   "chingaza",
+   "magdalena",
+   "nencatacoa",
+   "orinoco",
+   "barnizpasto",
+   "sanandres",
+   "selva",
+   "sayona"
   ],
   "zapatosluna": [
    "vigilia",
    "llanero",
    "madremonte",
    "tunda",
-   "barquero"
+   "barquero",
+   "tierradentro",
+   "chia",
+   "choco",
+   "yurupari",
+   "zenu",
+   "chingaza",
+   "magdalena",
+   "nencatacoa",
+   "orinoco",
+   "barnizpasto",
+   "sanandres",
+   "selva",
+   "sayona"
   ],
   "cintocatatumbo": [
    "arhuaco"
@@ -353,7 +438,23 @@
    "galeon",
    "silbon",
    "canocristales",
-   "rey"
+   "rey",
+   "tatacoa",
+   "sanagustin",
+   "catedralsal",
+   "mompox",
+   "nevadoruiz",
+   "tutruica",
+   "murallas",
+   "zaque",
+   "zipa",
+   "cauca",
+   "coronanegra",
+   "malpelo",
+   "llorona",
+   "mulatrespatas",
+   "mahakala",
+   "bardo"
   ],
   "corazasombra": [
    "pacto",
@@ -362,25 +463,74 @@
    "silbon",
    "canocristales",
    "rey",
-   "shakya"
+   "shakya",
+   "tatacoa",
+   "sanagustin",
+   "catedralsal",
+   "mompox",
+   "nevadoruiz",
+   "tutruica",
+   "murallas",
+   "zaque",
+   "zipa",
+   "cauca",
+   "coronanegra",
+   "malpelo",
+   "llorona",
+   "mulatrespatas",
+   "mahakala",
+   "bardo"
   ],
   "mandoblesombra": [
    "pacto",
    "sombreron",
-   "rey"
+   "rey",
+   "mompox"
   ],
   "guantessombra": [
    "pacto",
    "caiman",
    "galeon",
    "silbon",
-   "rey"
+   "rey",
+   "tatacoa",
+   "sanagustin",
+   "catedralsal",
+   "mompox",
+   "nevadoruiz",
+   "tutruica",
+   "murallas",
+   "zaque",
+   "zipa",
+   "cauca",
+   "coronanegra",
+   "malpelo",
+   "llorona",
+   "mulatrespatas",
+   "mahakala",
+   "bardo"
   ],
   "pezunassombra": [
    "pacto",
    "caiman",
    "silbon",
-   "shakya"
+   "shakya",
+   "tatacoa",
+   "sanagustin",
+   "catedralsal",
+   "mompox",
+   "nevadoruiz",
+   "tutruica",
+   "murallas",
+   "zaque",
+   "zipa",
+   "cauca",
+   "coronanegra",
+   "malpelo",
+   "llorona",
+   "mulatrespatas",
+   "mahakala",
+   "bardo"
   ],
   "cintosombra": [
    "pacto",
@@ -389,11 +539,26 @@
    "sombreron",
    "canocristales",
    "rey",
-   "shakya"
+   "shakya",
+   "tatacoa",
+   "catedralsal",
+   "mompox",
+   "tutruica",
+   "cauca",
+   "llorona",
+   "mulatrespatas",
+   "bardo"
   ],
   "mangualsombra": [
    "caiman",
-   "silbon"
+   "silbon",
+   "tatacoa",
+   "sanagustin",
+   "nevadoruiz",
+   "zaque",
+   "malpelo",
+   "mulatrespatas",
+   "mahakala"
   ],
   "escudoastral": [
    "caiman",
@@ -401,7 +566,15 @@
    "candileja",
    "huitaca",
    "dzogchen",
-   "pemagyalpo"
+   "pemagyalpo",
+   "quimbaya",
+   "manjushri",
+   "medicina",
+   "vajrasattva",
+   "vajrayogini",
+   "samantabhadra",
+   "cincobudas",
+   "ruedadharma"
   ],
   "capiroteastral": [
    "firmamento",
@@ -421,7 +594,37 @@
    "pandita",
    "nyima",
    "sengedradrok",
-   "drollo"
+   "drollo",
+   "teyuna",
+   "taraverde",
+   "sue",
+   "milarepa",
+   "pulowi",
+   "juya",
+   "quimbaya",
+   "manjushri",
+   "chenrezig",
+   "karagabi",
+   "naropa",
+   "serankua",
+   "aluna",
+   "tilopa",
+   "chiminigagua",
+   "marpa",
+   "yeshe",
+   "machig",
+   "calima",
+   "medicina",
+   "gampopa",
+   "nagarjuna",
+   "vajrasattva",
+   "shantideva",
+   "vajrayogini",
+   "amitabha",
+   "prajna",
+   "samantabhadra",
+   "cincobudas",
+   "ruedadharma"
   ],
   "vestiduraastral": [
    "firmamento",
@@ -441,7 +644,37 @@
    "pandita",
    "nyima",
    "sengedradrok",
-   "drollo"
+   "drollo",
+   "teyuna",
+   "taraverde",
+   "sue",
+   "milarepa",
+   "pulowi",
+   "juya",
+   "quimbaya",
+   "manjushri",
+   "chenrezig",
+   "karagabi",
+   "naropa",
+   "serankua",
+   "aluna",
+   "tilopa",
+   "chiminigagua",
+   "marpa",
+   "yeshe",
+   "machig",
+   "calima",
+   "medicina",
+   "gampopa",
+   "nagarjuna",
+   "vajrasattva",
+   "shantideva",
+   "vajrayogini",
+   "amitabha",
+   "prajna",
+   "samantabhadra",
+   "cincobudas",
+   "ruedadharma"
   ],
   "espadaastral": [
    "firmamento",
@@ -452,7 +685,26 @@
    "loden",
    "pemagyalpo",
    "sengedradrok",
-   "drollo"
+   "drollo",
+   "taraverde",
+   "milarepa",
+   "quimbaya",
+   "manjushri",
+   "naropa",
+   "aluna",
+   "murallas",
+   "marpa",
+   "zipa",
+   "yeshe",
+   "medicina",
+   "coronanegra",
+   "nagarjuna",
+   "vajrasattva",
+   "vajrayogini",
+   "prajna",
+   "samantabhadra",
+   "cincobudas",
+   "ruedadharma"
   ],
   "guantesastral": [
    "firmamento",
@@ -473,7 +725,37 @@
    "pandita",
    "nyima",
    "sengedradrok",
-   "drollo"
+   "drollo",
+   "teyuna",
+   "taraverde",
+   "sue",
+   "milarepa",
+   "pulowi",
+   "juya",
+   "quimbaya",
+   "manjushri",
+   "chenrezig",
+   "karagabi",
+   "naropa",
+   "serankua",
+   "aluna",
+   "tilopa",
+   "chiminigagua",
+   "marpa",
+   "yeshe",
+   "machig",
+   "calima",
+   "medicina",
+   "gampopa",
+   "nagarjuna",
+   "vajrasattva",
+   "shantideva",
+   "vajrayogini",
+   "amitabha",
+   "prajna",
+   "samantabhadra",
+   "cincobudas",
+   "ruedadharma"
   ],
   "zapatillasastral": [
    "firmamento",
@@ -494,12 +776,47 @@
    "pandita",
    "nyima",
    "sengedradrok",
-   "drollo"
+   "drollo",
+   "teyuna",
+   "taraverde",
+   "sue",
+   "milarepa",
+   "pulowi",
+   "juya",
+   "quimbaya",
+   "manjushri",
+   "chenrezig",
+   "karagabi",
+   "naropa",
+   "serankua",
+   "aluna",
+   "tilopa",
+   "chiminigagua",
+   "marpa",
+   "yeshe",
+   "machig",
+   "calima",
+   "medicina",
+   "gampopa",
+   "nagarjuna",
+   "vajrasattva",
+   "shantideva",
+   "vajrayogini",
+   "amitabha",
+   "prajna",
+   "samantabhadra",
+   "cincobudas",
+   "ruedadharma"
   ],
   "arcoastral": [
    "andes",
    "mahamudra",
-   "marimba"
+   "marimba",
+   "juya",
+   "karagabi",
+   "chiminigagua",
+   "calima",
+   "amitabha"
   ],
   "fajinastral": [
    "andes",
@@ -512,10 +829,31 @@
    "pandita",
    "nyima",
    "sengedradrok",
-   "drollo"
+   "drollo",
+   "teyuna",
+   "milarepa",
+   "juya",
+   "chenrezig",
+   "naropa",
+   "serankua",
+   "tilopa",
+   "chiminigagua",
+   "marpa",
+   "machig",
+   "calima",
+   "gampopa",
+   "shantideva",
+   "vajrayogini",
+   "cincobudas",
+   "ruedadharma"
   ],
   "sableluna": [
-   "galeon"
+   "galeon",
+   "choco",
+   "zenu",
+   "nencatacoa",
+   "barnizpasto",
+   "sayona"
   ],
   "rodelaluna": [
    "galeon"
@@ -524,21 +862,48 @@
    "frailejon",
    "bochica",
    "madremonte",
-   "shakya"
+   "shakya",
+   "catedralsal",
+   "tutruica",
+   "cauca",
+   "llorona",
+   "bardo"
   ],
   "lanzaastral": [
    "bufeo",
    "canocristales",
    "pandita",
-   "nyima"
+   "nyima",
+   "teyuna",
+   "sue",
+   "pulowi",
+   "chenrezig",
+   "serankua",
+   "tilopa",
+   "machig",
+   "gampopa",
+   "shantideva"
   ],
   "tridenteluna": [
    "llanero",
    "tunda",
-   "barquero"
+   "barquero",
+   "tierradentro",
+   "chingaza",
+   "magdalena",
+   "orinoco",
+   "sanandres"
   ],
   "escudosombra": [
-   "rey"
+   "rey",
+   "sanagustin",
+   "nevadoruiz",
+   "murallas",
+   "zaque",
+   "zipa",
+   "coronanegra",
+   "malpelo",
+   "mahakala"
   ]
  },
  "uniques": {
@@ -570,7 +935,9 @@
    "Sombrero de Doce Vueltas"
   ],
   "anillo": [
-   "Anillo del Guaquero"
+   "Anillo del Guaquero",
+   "Anillo de Fura",
+   "Anillo del Barquero"
   ],
   "latigo": [
    "Látigo del Arriero Bravo"
@@ -587,7 +954,8 @@
    "Arco de las Siete Lunas"
   ],
   "collar": [
-   "Collar de Chaquiras"
+   "Collar de Chaquiras",
+   "Collar de Cuentas de Tumbaga"
   ],
   "mascara": [
    "Máscara del Carnaval"
@@ -611,7 +979,9 @@
    "Oído de la Montaña"
   ],
   "sortija": [
-   "Sortija de la Novia Triste"
+   "Sortija de la Novia Triste",
+   "Sortija del Relámpago",
+   "Sortija del Principio"
   ],
   "ballesta": [
    "Ballesta del Centinela"
@@ -701,10 +1071,196 @@
    "Cincha del Caballo de Bolívar"
   ],
   "amuleto": [
-   "Amuleto de la Lechuza"
+   "Amuleto de la Lechuza",
+   "Amuleto de la Garza Blanca"
   ],
   "corona": [
    "Corona del Dorado"
+  ],
+  "guadanahueso": [
+   "Guadaña de la Patasola"
+  ],
+  "varahueso": [
+   "Vara del Mohán Viejo"
+  ],
+  "petohueso": [
+   "Peto del Sepulturero de Mompox"
+  ],
+  "yelmohueso": [
+   "Yelmo de la Calavera Parlante"
+  ],
+  "brazaleshueso": [
+   "Brazales del Tamborero"
+  ],
+  "cinturonhueso": [
+   "Cinturón del Hombre Caimán"
+  ],
+  "escudohueso": [
+   "Escudo de las Ánimas"
+  ],
+  "estoqueesmeralda": [
+   "Estoque de Fura"
+  ],
+  "alabardaesmeralda": [
+   "Alabarda de Tena"
+  ],
+  "cetroesmeralda": [
+   "Cetro del Guaquero Mayor"
+  ],
+  "cotaesmeralda": [
+   "Cota de la Mina de Muzo"
+  ],
+  "guantesesmeralda": [
+   "Guantes del Tallador"
+  ],
+  "zapatosesmeralda": [
+   "Zapatos de la Quebrada"
+  ],
+  "fajaesmeralda": [
+   "Faja del Contrabandista de Piedras"
+  ],
+  "yelmoesmeralda": [
+   "Yelmo de la Piedra Verde"
+  ],
+  "mazatumbaga": [
+   "Maza del Orfebre Quimbaya"
+  ],
+  "lanzatumbaga": [
+   "Lanza de la Balsa Muisca"
+  ],
+  "baculotumbaga": [
+   "Báculo del Poporo"
+  ],
+  "rodelatumbaga": [
+   "Rodela del Cacique de Guatavita"
+  ],
+  "yelmotumbaga": [
+   "Yelmo del Hombre Dorado"
+  ],
+  "corazatumbaga": [
+   "Coraza del Tesoro Quimbaya"
+  ],
+  "grebastumbaga": [
+   "Grebas del Caminante de Ciudad Perdida"
+  ],
+  "cintotumbaga": [
+   "Cinto de los Mil Cascabeles"
+  ],
+  "espadacatatumbo": [
+   "Espada del Relámpago Quieto"
+  ],
+  "martillocatatumbo": [
+   "Martillo de la Tormenta Perpetua"
+  ],
+  "ballestacatatumbo": [
+   "Ballesta del Faro del Lago"
+  ],
+  "escudocatatumbo": [
+   "Escudo del Pararrayos"
+  ],
+  "yelmocatatumbo": [
+   "Yelmo del Trueno Lejano"
+  ],
+  "corazacatatumbo": [
+   "Coraza de la Ciénaga Encendida"
+  ],
+  "guantescatatumbo": [
+   "Guantes del Pescador de Rayos"
+  ],
+  "botascatatumbo": [
+   "Botas del Lanchero"
+  ],
+  "cintocatatumbo": [
+   "Cinto de la Noche Encendida"
+  ],
+  "sableluna": [
+   "Sable de la Serenata"
+  ],
+  "tridenteluna": [
+   "Tridente de Chía"
+  ],
+  "arcoluna": [
+   "Arco de la Luna Llena"
+  ],
+  "rodelaluna": [
+   "Rodela del Eclipse"
+  ],
+  "yelmoluna": [
+   "Yelmo del Sereno"
+  ],
+  "mantoluna": [
+   "Manto de la Llorona"
+  ],
+  "brazalesluna": [
+   "Brazales de la Lavandera"
+  ],
+  "zapatosluna": [
+   "Zapatos del Sonámbulo"
+  ],
+  "cordonluna": [
+   "Cordón de las Mareas"
+  ],
+  "mangualsombra": [
+   "Mangual del Abismo Hondo"
+  ],
+  "mandoblesombra": [
+   "Mandoble del Último Descenso"
+  ],
+  "varasombra": [
+   "Vara de la Madre de Agua"
+  ],
+  "escudosombra": [
+   "Escudo de la Mula Herrada"
+  ],
+  "yelmosombra": [
+   "Yelmo del Hojarasquín"
+  ],
+  "corazasombra": [
+   "Coraza del Diablo Cojo"
+  ],
+  "guantessombra": [
+   "Guanteletes del Fraile Penitente"
+  ],
+  "pezunassombra": [
+   "Pezuñas del Cabro Negro"
+  ],
+  "cintosombra": [
+   "Cinto del Barquero Negro"
+  ],
+  "espadaastral": [
+   "Espada del Lucero",
+   "Espada del Principio"
+  ],
+  "lanzaastral": [
+   "Lanza de Chiminigagua"
+  ],
+  "arcoastral": [
+   "Arco de las Siete Cabrillas"
+  ],
+  "escudoastral": [
+   "Escudo del Cielo Muisca"
+  ],
+  "capiroteastral": [
+   "Capirote del Astrónomo de Sogamoso"
+  ],
+  "vestiduraastral": [
+   "Vestidura de la Vía Láctea",
+   "Manto del Primer Amanecer"
+  ],
+  "guantesastral": [
+   "Guantes de la Tejedora de Estrellas"
+  ],
+  "zapatillasastral": [
+   "Zapatillas del Cometa"
+  ],
+  "fajinastral": [
+   "Fajín de la Aurora"
+  ],
+  "medallon": [
+   "Medallón de la Luna Nueva"
+  ],
+  "cadena": [
+   "Cadena de las Siete Cabrillas"
   ]
  },
  "tunjo": [

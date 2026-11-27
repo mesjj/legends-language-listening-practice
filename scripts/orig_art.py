@@ -345,6 +345,23 @@ def cape(pen, P, col, side, trim=None, ragged=False):
         pen.line([pts[3], pts[2]], trim, 1)
 
 
+def wings(pen, P, col, side, tips=None):
+    """Behind the back: two feathered wings (one from the side)."""
+    sh = shoulders(P)
+    if not sh:
+        return
+    l, r, y = sh
+    roots = [((l + r) / 2 - 2, y + 2)] if side else [(l + 2, y + 2), (r - 2, y + 2)]
+    for k, (x, yy) in enumerate(roots):
+        d = -1 if (side or k == 0) else 1
+        tip = (x + d * 14, yy - 10)
+        low = (x + d * 12, yy + 10)
+        pen.poly([(x, yy), tip, (x + d * 16, yy - 2), low, (x, yy + 6)], col)
+        for i in range(3):
+            a = lerp(tip, low, (i + 1) / 4)
+            pen.line([(x + d * 2, yy + 2), a], tips or col, 1)
+
+
 def shawl(pen, P, col, side, trim=None):
     sh, w = shoulders(P), waist(P)
     if not sh or not w:
@@ -581,6 +598,50 @@ def weapon(pen, kind, g, t, C):
         for b in (-3, 3):
             pen.line([tip, at(tip, u, n, 2, b), at(tip, u, n, 5, b)], C["metal"], 1)
         pen.line([at(g, u, n, L - 9, 1), at(g, u, n, L - 14, 4)], C["ribbon"], 1)
+    elif kind == "bow":  # g, t: the two limb ends; C["bulge"]: which side the wood curves to (the hand's)
+        k = C.get("bulge", 1) * max(3, L * 0.18)
+        mid = at(g, u, n, L / 2, k)
+        ctl = at(g, u, n, L / 2, 2 * k)  # a quadratic through mid
+        pts = [((1 - q) ** 2 * g[0] + 2 * (1 - q) * q * ctl[0] + q * q * t[0], (1 - q) ** 2 * g[1] + 2 * (1 - q) * q * ctl[1] + q * q * t[1]) for q in [i / 8 for i in range(9)]]
+        pen.line([g, t], C["string"], 1)
+        pen.line(pts, C["wood"], 2)
+        pen.ell(mid[0] - 1, mid[1] - 1, mid[0] + 1, mid[1] + 1, C["grip"])
+        for e in (g, t):
+            pen.px(e[0], e[1], C["tip"])
+    elif kind == "flail":
+        pen.line([at(g, u, n, -3), at(g, u, n, L * 0.45)], C["wood"], 2)
+        end = at(g, u, n, L * 0.45)
+        ball = at(g, u, n, L * 0.85, 3)
+        pen.line([end, lerp(end, ball, 0.5), ball], C["chain"], 1)
+        pen.ell(ball[0] - 3, ball[1] - 3, ball[0] + 3, ball[1] + 3, C["head"])
+        for a in range(0, 360, 60):
+            r = math.radians(a)
+            pen.px(ball[0] + 4 * math.cos(r), ball[1] + 4 * math.sin(r), C["spike"])
+    elif kind == "mace":
+        pen.line([at(g, u, n, -3), at(g, u, n, L - 4)], C["wood"], 2)
+        c0 = at(g, u, n, L - 3)
+        pen.ell(c0[0] - 3.5, c0[1] - 3.5, c0[0] + 3.5, c0[1] + 3.5, C["head"])
+        pen.ell(c0[0] - 1.5, c0[1] - 1.5, c0[0] + 0.5, c0[1] + 0.5, C["spike"])
+    elif kind == "spear":
+        pen.line([g, at(g, u, n, L - 5)], C["wood"], 2)
+        b0 = at(g, u, n, L - 6)
+        pen.poly([at(b0, u, n, 0, -2.5), at(b0, u, n, 3, -2), t, at(b0, u, n, 3, 2), at(b0, u, n, 0, 2.5)], C["blade"])
+        pen.line([at(b0, u, n, 1), t], C["shine"], 1)
+        pen.line([at(b0, u, n, -1, -2), at(b0, u, n, -4, -3)], C["ribbon"], 1)
+    elif kind == "trident":
+        pen.line([g, at(g, u, n, L - 5)], C["wood"], 2)
+        b0 = at(g, u, n, L - 5)
+        pen.line([at(b0, u, n, 0, -3.5), at(b0, u, n, 0, 3.5)], C["blade"], 2)
+        for b in (-3.5, 0, 3.5):
+            pen.line([at(b0, u, n, 0, b), at(b0, u, n, 6 if b == 0 else 4.5, b)], C["blade"], 1)
+            pen.px(*at(b0, u, n, 6.5 if b == 0 else 5, b), C["shine"])
+    elif kind == "saber":
+        tip = t
+        mid = at(g, u, n, L * 0.6, 2.5)
+        pen.line([at(g, u, n, 3), mid, tip], C["blade"], 2)
+        pen.line([at(g, u, n, 4, -1), at(g, u, n, L * 0.6, 1.5)], C["shine"], 1)
+        pen.line([at(g, u, n, 2, 3), at(g, u, n, 2, -3)], C["guard"], 2)
+        pen.line([at(g, u, n, -3), at(g, u, n, 1)], C["grip"], 2)
     elif kind == "phurba":
         base_ = at(g, u, n, 4)
         tip = at(g, u, n, max(14, L * 0.9))
@@ -603,6 +664,24 @@ def shield(pen, kind, box, C, side):
         for k in range(8):
             a = k * math.pi / 4
             pen.px(cx + math.cos(a) * 3.5, cy - 1 + math.sin(a) * 3.5, C["emblem"])
+    elif kind in ("round", "sun"):
+        r = min(x1 - x0, y1 - y0) / 2 + 1
+        rx = r * (0.6 if side else 1)
+        if kind == "sun":
+            for k in range(12):
+                a = k * math.pi / 6
+                pen.line([(cx + math.cos(a) * rx, cy + math.sin(a) * r), (cx + math.cos(a) * (rx + 3), cy + math.sin(a) * (r + 3))], C["emblem"], 1)
+        pen.ell(cx - rx, cy - r, cx + rx, cy + r, C["rim"])
+        pen.ell(cx - rx + 1.5, cy - r + 1.5, cx + rx - 1.5, cy + r - 1.5, C["face"])
+        pen.ell(cx - 1.5, cy - 1.5, cx + 1.5, cy + 1.5, C["emblem"])
+    elif kind == "tower":
+        w, h = (x1 - x0) / 2 + 1, (y1 - y0) / 2 + 2
+        if side:
+            w *= 0.6
+        pen.poly([(cx - w, cy - h), (cx + w, cy - h), (cx + w, cy + h), (cx - w, cy + h)], C["rim"])
+        pen.poly([(cx - w + 1.5, cy - h + 1.5), (cx + w - 1.5, cy - h + 1.5), (cx + w - 1.5, cy + h - 1.5), (cx - w + 1.5, cy + h - 1.5)], C["face"])
+        pen.line([(cx, cy - h + 2), (cx, cy + h - 2)], C["emblem"], 1)
+        pen.line([(cx - w + 2, cy - 1), (cx + w - 2, cy - 1)], C["emblem"], 1)
     elif kind == "mirror":
         r = min(x1 - x0, y1 - y0) / 2
         rx = r * (0.55 if side else 1)
@@ -946,12 +1025,19 @@ def held(B, sid, base, body, M, A):
             hs = [(x + off, y + off) for x, y in pose.get("hands", [])]
             cx, cy = _centre(pts)
             hand = min(hs, key=lambda h: (h[0] - cx) ** 2 + (h[1] - cy) ** 2) if hs else None
-            ax = weapon_axis(pts, hand, heavy_tip=kind in ("crook", "pole", "staff", "khatvanga"))
+            ax = weapon_axis(pts, hand, heavy_tip=kind in ("crook", "pole", "staff", "khatvanga", "spear", "trident"))
             if not ax:
                 return pen.im
             g, t, L = ax
-            if kind in ("crook", "pole", "staff", "khatvanga"):
+            if kind in ("crook", "pole", "staff", "khatvanga", "spear", "trident"):
                 pass  # a long staff runs the probe's whole length, butt to head
+            elif kind == "bow":  # limb to limb; the wood bows out on the hand's side
+                if hand is not None:
+                    u_, n_, _ = _uv(g, t)
+                    mid = ((g[0] + t[0]) / 2, (g[1] + t[1]) / 2)
+                    Cw = {**C, "bulge": 1 if (hand[0] - mid[0]) * n_[0] + (hand[1] - mid[1]) * n_[1] >= 0 else -1}
+                    weapon(pen, kind, g, t, Cw)
+                    return finish(pen.im)
             elif kind == "vajra" and hand is not None:
                 g = hand  # held in the fist
             elif hand is not None and math.hypot(g[0] - hand[0], g[1] - hand[1]) < 8:
@@ -996,3 +1082,13 @@ def piece(B, sid, base, body, M, A):
     if (sid, base) in WEAPONS or (sid, base) in SHIELDS:
         return held(B, sid, base, body, M, A)
     return garment(B, sid, base, body, M, A)
+
+
+# ---------------------------------------------------------------- the sets of levels 204-400
+# drawn the same way, from scripts/new_sets_400_art.py (its recipes use the pieces above)
+import sys as _sys  # noqa: E402
+from new_sets_400_art import orig_tables  # noqa: E402
+_a, _w, _s = orig_tables(_sys.modules[__name__])
+SETS_ART.update(_a)
+WEAPONS.update(_w)
+SHIELDS.update(_s)

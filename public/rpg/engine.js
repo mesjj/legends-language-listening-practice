@@ -146,7 +146,7 @@ export const TOP = {
 };
 export function makeTopItem(rarity, ilvl, slot = null) {
   // about a third of the time, a piece of the tier's own set, once you're near its level
-  const sets = SETS.filter((s) => s.tier === rarity && s.lvl <= ilvl + 4).flatMap((s) => s.pieces.filter((p) => !slot || BASE[p.base].slot === slot).map((p) => [s, p]));
+  const sets = setsNear(SETS.filter((s) => s.tier === rarity && s.lvl <= ilvl + 4), ilvl).flatMap((s) => s.pieces.filter((p) => !slot || BASE[p.base].slot === slot).map((p) => [s, p]));
   if (sets.length && chance(0.35)) {
     const [set, piece] = pick(sets);
     // the best-made version of its base you could find at this level, and some of the tier's extras
@@ -285,17 +285,33 @@ function plainRoll(mf, bonus) {
   return "magic";
 }
 
+const UNIQUE_SPAN = 15;
+// Sets drop from the ones near the item's level (up to opts.setSpan below it), as uniques do; with none
+// that near (there are fewer sets than uniques), the nearest ones below. The player picks the span in
+// Opciones (main.js makes opts.setSpan read the character's choice); 0 turns it off: any set up to the level.
+export const SET_SPAN = 40;
+export const opts = { setSpan: SET_SPAN };
+function setsNear(list, ilvl) {
+  const span = opts.setSpan;
+  if (!(span > 0)) return list;
+  const near = list.filter((s) => s.lvl >= ilvl - span);
+  if (near.length || !list.length) return near;
+  const top = Math.max(...list.map((s) => s.lvl));
+  return list.filter((s) => s.lvl >= top - span);
+}
 export function randomItem(ilvl, mf = 0, bonus = 1, slot = null, D = null, good = 1, force = null, luck = 1) {
   let rarity = force || rollRarity(mf, bonus, D, good, luck);
   if (TOP[rarity]) return makeTopItem(rarity, ilvl, slot);
   if (rarity === "unique") {
     // the hand-written ones first; past those, or one time in three, an invented one
-    const list = UNIQUES.filter((u) => u.lvl <= ilvl + 2 && (!slot || BASE[u.base].slot === slot));
+    // a written unique only near the drop's level (within 15 below): past the highest one (62) every unique is
+    // made at the drop's level, so a level-100 drop is never a level-9 unique (2026-11-27; before, any lower one could come)
+    const list = UNIQUES.filter((u) => u.lvl <= ilvl + 2 && u.lvl >= ilvl - UNIQUE_SPAN && (!slot || BASE[u.base].slot === slot));
     if (list.length && chance(0.66)) return makeUnique(pick(list), ilvl);
     return makeRandomUnique(ilvl, slot);
   }
   if (rarity === "set") {
-    const list = SETS.filter((s) => !s.tier && s.lvl <= ilvl + 2).flatMap((s) => s.pieces.filter((p) => !slot || BASE[p.base].slot === slot).map((p) => [s, p]));
+    const list = setsNear(SETS.filter((s) => !s.tier && s.lvl <= ilvl + 2), ilvl).flatMap((s) => s.pieces.filter((p) => !slot || BASE[p.base].slot === slot).map((p) => [s, p]));
     if (list.length) { const [s, p] = pick(list); return makeSetItem(s, p, ilvl); }
     rarity = "rare";
   }
@@ -508,10 +524,11 @@ export function charStats(ch) {
   }
   // the pet and the horse you take along
   if (PETS[ch.pet] && ch.pets?.includes(ch.pet)) add(PETS[ch.pet].props);
-  if (MOUNTS[ch.mount] && ch.mounts?.includes(ch.mount)) add(MOUNT_PROPS);
-  const all = P.allStats || 0;
-  const str = ch.base.str + (P.str || 0) + all, dex = ch.base.dex + (P.dex || 0) + all;
-  const vit = ch.base.vit + (P.vit || 0) + all, ene = ch.base.ene + (P.ene || 0) + all;
+  if (MOUNTS[ch.mount] && ch.mounts?.includes(ch.mount)) add(MOUNTS[ch.mount].props);
+  const all = P.allStats || 0, allPct = P.allStatsPct || 0;
+  // attributes: base + flat, then the percentages (runas: strPct... and allStatsPct)
+  const attr = (k) => Math.round((ch.base[k] + (P[k] || 0) + all) * (1 + (allPct + (P[k + "Pct"] || 0)) / 100));
+  const str = attr("str"), dex = attr("dex"), vit = attr("vit"), ene = attr("ene");
 
   const weapon = ch.equip[`weapon${ch.swap}`];
   const kind = weapon ? BASE[weapon.base].kind : "melee";
@@ -523,7 +540,9 @@ export function charStats(ch) {
   const statBonus = kind === "ranged" ? dex : str;
   const m = (1 + otherPct / 100) * (1 + statBonus / 100);
   dmg = [Math.max(1, Math.round((dmg[0] + otherMin) * m)), Math.max(1, Math.round((dmg[1] + otherMax) * m))];
-  const elem = { fire: P.fire || 0, cold: P.cold || 0, light: P.light || 0, poison: P.poison || 0 };
+  // elemental damage: flat, plus a share of your physical damage (runas: firePct...)
+  const avg = (dmg[0] + dmg[1]) / 2, share = (k) => Math.round(avg * (P[k + "Pct"] || 0) / 100);
+  const elem = { fire: (P.fire || 0) + share("fire"), cold: (P.cold || 0) + share("cold"), light: (P.light || 0) + share("light"), poison: (P.poison || 0) + share("poison") };
 
   let armor = Math.round(dex / 4);
   for (const it of equippedItems(ch)) armor += itemDefense(it);
@@ -532,15 +551,17 @@ export function charStats(ch) {
 
   const res = (k) => clamp((P[k] || 0) + (P.resAll || 0), -100, 75);
   const beltSlots = 4 + (P.beltSlots || 0);
+  const maxLife = Math.round((10 + vit * 2 + ch.level * 4 + (P.life || 0)) * (1 + (P.lifePct || 0) / 100));
+  const maxMana = Math.round((5 + ene * 1.6 + ch.level * 1.5 + (P.mana || 0)) * (1 + (P.manaPct || 0) / 100));
   return {
     str, dex, vit, ene, kind, dmg, elem, armor, block, otherPct, statPct: statBonus, otherFlat: [otherMin, otherMax],
-    maxLife: Math.round(10 + vit * 2 + ch.level * 4 + (P.life || 0)),
-    maxMana: Math.round(5 + ene * 1.6 + ch.level * 1.5 + (P.mana || 0)),
+    maxLife, maxMana,
     crit: clamp(5 + dex * 0.08 + (P.crit || 0), 0, 50),
     dodge: clamp((P.dodge || 0) + dex * 0.03, 0, 40),
     resFire: res("resFire"), resCold: res("resCold"), resLight: res("resLight"), resPoison: res("resPoison"),
-    leech: P.leech || 0, manaLeech: P.manaLeech || 0, lifeRegen: 1 + (P.lifeRegen || 0), manaRegen: 2 + Math.floor(ene / 15) + (P.manaRegen || 0),
-    killHeal: P.killHeal || 0, thorns: P.thorns || 0,
+    leech: P.leech || 0, manaLeech: P.manaLeech || 0, lifeRegen: 1 + (P.lifeRegen || 0) + Math.round(maxLife * (P.lifeRegenPct || 0) / 100),
+    manaRegen: 2 + Math.floor(ene / 15) + (P.manaRegen || 0) + Math.round(maxMana * (P.manaRegenPct || 0) / 100),
+    killHeal: (P.killHeal || 0) + Math.round(maxLife * (P.killHealPct || 0) / 100), thorns: P.thorns || 0, thornsPct: P.thornsPct || 0,
     dmgDictation: P.dmgDictation || 0, dmgCloze: P.dmgCloze || 0,
     replayCost: clamp(P.replayCost || 0, 0, 80), hintCost: clamp(P.hintCost || 0, 0, 90),
     freeReplay: P.freeReplay || 0, slowFree: !!P.slowFree, typoTol: P.typoTol || 0, nearExact: !!P.nearExact,

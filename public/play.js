@@ -88,7 +88,10 @@ function checkStop() {
     stopAt = null;
   }
 }
-(function watch() { checkStop(); requestAnimationFrame(watch); })();
+// the frame loop runs only while the audio plays (it used to run every frame forever)
+let watching = false;
+function watch() { checkStop(); if (!audio.paused) requestAnimationFrame(watch); else watching = false; }
+audio.addEventListener("play", () => { if (!watching) { watching = true; requestAnimationFrame(watch); } });
 audio.addEventListener("timeupdate", checkStop);
 audio.addEventListener("pause", () => $("#playLine").classList.remove("playing"));
 

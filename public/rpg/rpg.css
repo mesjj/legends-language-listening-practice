@@ -158,12 +158,12 @@ main { max-width: 960px; margin: 0 auto; padding: 22px 20px; }
 .playbtn.heard::after { content: "✓"; position: absolute; right: -3px; bottom: -3px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
   font: 700 12px/1 system-ui, sans-serif; color: #10240f; background: #6fd07a; border: 2px solid #1a140c; }
 @keyframes playdone { from { transform: scale(1.18); } to { transform: scale(1); } }
-#slowBtn { position: relative; }
-#slowBtn.playing { background: linear-gradient(90deg, rgba(240, 210, 92, .45) calc(var(--p, 0) * 100%), transparent 0); border-color: var(--gold); box-shadow: 0 0 14px rgba(240, 210, 92, .5); }
-#slowBtn .eq { display: inline-flex; height: 12px; margin-left: 6px; vertical-align: -1px; }
-#slowBtn .eq i { width: 3px; background: var(--gold); }
-#slowBtn.done { border-color: #6fd07a; box-shadow: 0 0 14px rgba(111, 208, 122, .7); }
-#slowBtn.heard::after { content: "✓"; margin-left: 6px; color: #6fd07a; font-weight: 700; }
+#slowBtn, #tSlow { position: relative; }
+#slowBtn.playing, #tSlow.playing { background: linear-gradient(90deg, rgba(240, 210, 92, .45) calc(var(--p, 0) * 100%), transparent 0); border-color: var(--gold); box-shadow: 0 0 14px rgba(240, 210, 92, .5); }
+#slowBtn .eq, #tSlow .eq { display: inline-flex; height: 12px; margin-left: 6px; vertical-align: -1px; }
+#slowBtn .eq i, #tSlow .eq i { width: 3px; background: var(--gold); }
+#slowBtn.done, #tSlow.done { border-color: #6fd07a; box-shadow: 0 0 14px rgba(111, 208, 122, .7); }
+#slowBtn.heard::after, #tSlow.heard::after { content: "✓"; margin-left: 6px; color: #6fd07a; font-weight: 700; }
 .cost { font-size: 12.5px; color: #8fa6ff; margin-left: 4px; }
 .exinfo { margin-left: auto; font-size: 14px; }
 .flagBtn { font-size: 14px; color: var(--dim); }
@@ -1226,12 +1226,13 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .ground .drop .skiptag { font-size: 12px; font-style: normal; font-weight: 400; color: #b8b2a6; border: 1px solid #5a5248; border-radius: 4px; padding: 0 5px; margin-left: 4px; white-space: nowrap; }
 .ground .drop.unwanted:hover, .ground .drop.unwanted:focus-visible { opacity: 1; }
 .pickgroup.rules { flex-direction: column; }
+.spanopt input { width: 64px; height: 30px; padding: 0 6px; font: inherit; text-align: center; }
 .pickrule { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
 .pickhint { margin: 2px 0 0; font-size: .9em; }
 
 /* the Montón: a night clearing, a glow, perfect gems heaped into a pyramid */
 .townscene.moundscene { aspect-ratio: 3 / 1; height: auto; overflow: hidden; position: relative;
-  background: radial-gradient(ellipse 60% 70% at 50% 100%, #2b2440 0%, transparent 70%), linear-gradient(#0d0b18 0%, #17132a 62%, #2a2118 62%, #1d1710 100%); }
+  background: #0d0b18 url("scenes/v-monton.png") 0 0 / 100% 100% no-repeat; }
 .moundscene .moundglow { position: absolute; left: 50%; bottom: 6%; width: 60%; height: 50%; transform: translateX(-50%);
   background: radial-gradient(ellipse at 50% 100%, rgba(255, 240, 200, 0.16), transparent 70%); pointer-events: none; }
 .moundscene .mgem { position: absolute; aspect-ratio: 1 / 0.86; transform: rotate(var(--rot));
@@ -1721,3 +1722,103 @@ button.danger:hover:not([disabled]) { background: #4a1d14; }
 .tbar i { display: block; height: 100%; background: var(--gold); transition: width .4s; }
 .tbar.done i { background: #6fd07a; }
 @media (max-width: 500px) { .tbar { width: 60px; } .today { font-size: 12px; } }
+
+/* tighter fight header and HUD (2026-11-27): today's count on the mastery line; smaller orbs and belt */
+.fighthead { margin-bottom: 10px; }
+.fsub { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; line-height: 1.35; }
+.fsub .tmini::before { content: "·"; margin-right: 8px; }
+.fsub .tmini b { color: var(--gold); }
+.fsub .tmini .done { color: #6fd07a; }
+.orb { width: 78px; height: 78px; }
+.orb span { font-size: 14px; }
+.hud { padding: 4px 16px calc(6px + env(safe-area-inset-bottom)); gap: 14px; align-items: center; }
+.hud-mid { gap: 5px; padding-bottom: 0; }
+.slot.pot { width: 36px; height: 36px; }
+.spells .spell { width: 36px; height: 36px; }
+.swap { padding: 3px 9px; }
+.xp { height: 12px; }
+.xp span { font-size: 10px; line-height: 11px; }
+@media (max-width: 760px) {
+  .fighthead { gap: 2px 10px; margin-bottom: 6px; }
+  .fighthead .combo { font-size: 14px; }
+  #portal { padding: 5px 10px; font-size: 13px; }
+  .orb { width: 52px; height: 52px; }
+  .orb span { font-size: 12px; }
+  .hud { gap: 6px; padding: 4px 6px calc(5px + env(safe-area-inset-bottom)); }
+  .hud-mid { gap: 4px; }
+  .hud-row { flex-wrap: nowrap; gap: 6px; }
+  .belt { gap: 3px; } /* a long belt still wraps */
+  .slot.pot, .spells .spell { width: 30px; height: 30px; }
+  .slot.pot img { max-width: 24px; max-height: 24px; }
+  .swap { padding: 2px 6px; }
+  .swap .mode { display: none; }
+  body { padding-bottom: 86px; }
+}
+/* desktop windows of ordinary height: the scene a little smaller, so the line, the result and the next
+   button fit above the HUD; and anything focused or scrolled to (the next button) stops clear of the HUD */
+html { scroll-padding-bottom: 104px; }
+@media (min-width: 761px) and (max-height: 1100px) {
+  .stage { margin-bottom: 10px; }
+  .stage.scene { padding: 8px 12px 6px; min-height: 224px; }
+  .stage.bossfight { padding-top: 80px; min-height: 340px; }
+  .stage.scene > .me { zoom: .8; }
+  .stage.scene > .foes { zoom: .86; }
+  #answer { padding: 9px 12px; font-size: 20px; }
+  .result { margin-top: 12px; padding-top: 10px; }
+}
+@media (max-width: 760px) { html { scroll-padding-bottom: 72px; } }
+/* an empty gap when you try to answer (main.js attack) */
+#cloze input.need { border-color: var(--miss, #e0604a); animation: need .35s; }
+@keyframes need { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+/* ---------- lighter loops (2026-11-27) ----------
+   Glows that pulsed a box-shadow or a filter repainted every frame; now each fades a ready-made glow
+   (opacity, which the GPU does on its own). */
+@keyframes ringpulse { 50% { opacity: .6; } }
+@media (prefers-reduced-motion: no-preference) {
+  .item.r-mitico { animation: none; }
+  .item.r-mitico::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 0 16px rgba(111,230,255,.25), 0 0 10px #6fe6ff; opacity: 0; animation: glowfade 2.4s ease-in-out infinite; }
+  #goMain.hasloot { position: relative; animation: none; box-shadow: 0 0 10px rgba(255, 214, 110, .35); }
+  #goMain.hasloot::after { content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+    box-shadow: 0 0 0 5px rgba(255, 214, 110, .3), 0 0 22px rgba(255, 214, 110, .75); opacity: 0; animation: glowfade 1.4s ease-in-out infinite; }
+}
+@keyframes glowfade { 50% { opacity: 1; } }
+/* Opciones → Animaciones de fondo off (main.js applyCalm): the scenes' and village's particles go, and
+   every looping animation plays once and stops */
+body.calm [class*="sfx-"], body.calm [class*="tfx-"] { display: none !important; }
+body.calm *, body.calm *::before, body.calm *::after { animation-iteration-count: 1 !important; }
+
+/* ---------- the stable (village → Establo) ---------- */
+.stablescene { aspect-ratio: 480 / 110; border: 1px solid var(--edge); border-radius: 8px; margin: -4px 0 16px; display: flex; align-items: flex-end; justify-content: safe center; gap: 1.5%; padding: 0 3% 3%;
+  background: #3a2a1c url("scenes/v-establo.png") 0 0 / 100% 100% no-repeat; image-rendering: pixelated; box-shadow: inset 0 0 30px rgba(0,0,0,.45); overflow: hidden; }
+.stablescene img { image-rendering: pixelated; flex: none; }
+.stablescene img.mount { width: clamp(52px, 11%, 140px); } .stablescene img.pet { width: auto; height: auto; zoom: 2; }
+.stable { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 760px) { .stable { grid-template-columns: 1fr; } .stablescene { margin-bottom: 10px; } .stablescene img.pet { zoom: 1; } }
+.stl-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.stl-title h3 { margin: 6px 0; }
+.stl-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "head join" "art art"; gap: 4px 8px; align-items: center;
+  padding: 6px 8px; border: 1px solid #3a3326; border-radius: 6px; margin-bottom: 6px; background: #1a1611; }
+.stl-row.none { opacity: .6; }
+.stl-head { grid-area: head; display: flex; gap: 8px; align-items: center; min-width: 0; }
+.stl-head > div { display: flex; flex-direction: column; min-width: 0; }
+.stl-lvl { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #3a2f1e; color: #f2d27a; font-size: 13px; }
+.stl-join { grid-area: join; font-size: 12px; padding: 4px 8px; white-space: nowrap; }
+.stl-art { grid-area: art; display: flex; flex-wrap: wrap; gap: 4px; }
+.stl-a { position: relative; display: flex; align-items: flex-end; justify-content: center; min-width: 56px; height: 50px; padding: 2px 4px; }
+.stl-a.on { border-color: #f2d27a; box-shadow: 0 0 0 1px #f2d27a; }
+.stl-a img { image-rendering: pixelated; max-height: 44px; max-width: 64px; }
+.stl-a img.pet { zoom: 1.2; }
+.stl-a img.unknown { filter: brightness(0); opacity: .35; }
+.stl-a span { position: absolute; right: 3px; top: 1px; font-size: 11px; color: #f2d27a; }
+.stl-a.ghost { border: 1px dashed #3a3326; border-radius: 6px; }
+.stabledrop { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 6px 0; }
+.stabledrop img { image-rendering: pixelated; } .stabledrop img.pet { zoom: 1.5; } .stabledrop img.mount { width: 72px; }
+.logcomp { image-rendering: pixelated; height: 16px; vertical-align: middle; }
+.compbtn { position: relative; }
+.compbtn .clvl { position: absolute; top: 2px; right: 4px; font-size: 10px; color: #f2d27a; }
+.comps { max-height: 220px; overflow-y: auto; }
+.stl-row.slim { grid-template-areas: "head head"; padding: 3px 8px; }
+.stl-row.slim .stl-lvl { width: 20px; height: 20px; font-size: 11px; }
+.stl-row.slim .stl-head > div { flex-direction: row; gap: 8px; align-items: baseline; }

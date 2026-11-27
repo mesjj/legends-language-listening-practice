@@ -1,6 +1,6 @@
 // Leyendas: a listening RPG. Every attack is a listening exercise on a line of the episode.
 import { $, esc, store, api, md, CFG, logout, playable, chooseBlanks, isSound, scoreDictation, scoreCloze, flagLine, norm, hash, accentKey } from "../listen-core.js";
-import { RARITY, SLOTS, BASE, CLASSES, ZONES, BOSSES, EASY_ROSTER, MONSTER_MODS, POTIONS, SETS, GEMS, RUNE, CRAFT, TIERS, BANDS, SPELLS, PETS, PET_KIND, MOUNTS, MOUNT_PROPS, COMPANION_MIN_SECONDS, PROPS, TUNJO_ITEMS, POWERS, RUNAS, RUNA, RUNA_TIERS, RUNA_SETS } from "./data.js";
+import { RARITY, SLOTS, BASE, CLASSES, ZONES, BOSSES, EASY_ROSTER, MONSTER_MODS, POTIONS, SETS, GEMS, RUNE, CRAFT, TIERS, BANDS, SPELLS, PETS, PET_KIND, MOUNTS, COMPANION_MIN_SECONDS, STABLE_LEVELS, STABLE_KINDS, STABLE_DROP, PROPS, TUNJO_ITEMS, POWERS, RUNAS, RUNA, RUNA_TIERS, RUNA_SETS } from "./data.js";
 import * as E from "./engine.js";
 import { figureSvg, itemIconSvg, monsterSvg, loadFigure, loadAnims, fightFigure, attackAnim, lookOfChar, stanceLoop, SHOW_SLOTS, setPieceFor, shirtChoice } from "./figure.js";
 import { loadLook, lookData, prepareLook, defaultLook, randomLook, fixLook, fits } from "./look.js";
@@ -499,28 +499,41 @@ function playCard(card, rate = 1) {
 // checked every frame, and on the audio's own progress events: frames stop in a background tab,
 // where without them a line would play on into the rest of the episode
 function checkStop() { if (stopAt != null && !audio.paused && audio.currentTime >= stopAt) { audio.pause(); stopAt = null; } }
-requestAnimationFrame(function watch() { checkStop(); showPlaying(); requestAnimationFrame(watch); }); // from the next frame: what it reads is declared below
+// The frame loop runs only while something plays (it used to run every frame forever, keeping the laptop
+// from ever idling): it starts on the audio's "play" and stops once both players are paused.
+let watching = false;
+function watch() {
+  checkStop(); showPlaying();
+  if (!audio.paused || !cardAudio.paused) return void requestAnimationFrame(watch);
+  watching = false;
+}
+const startWatch = () => { if (!watching) { watching = true; requestAnimationFrame(watch); } };
+for (const el of [audio, cardAudio]) el.addEventListener("play", startWatch);
 audio.addEventListener("timeupdate", checkStop);
 
 // ---------- is it playing? The button you pressed shows it ----------
 // While the line plays, the play button (or Despacio) lights up, bars bounce in it and a ring (a bar on
 // Despacio) fills as the line goes; when it stops, a green flash and a tick, and the tick stays small
 // on the button until the next line.
-let playing = null; // { el: the <audio>, start, end (null: to its end), slow }
-const playBtns = () => [$("#playBtn"), $("#slowBtn")].filter(Boolean);
+let playing = null; // { el: the <audio>, start, end (null: to its end), slow, ids: the [play, slow] buttons' ids }
+const FIGHT_BTNS = ["#playBtn", "#slowBtn"];
 const EQ = `<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>`;
-function markPlaying(el, start, end, slow) {
-  playing = { el, start, end, slow };
-  if (S.F?.shown && !S.F.checked) (S.F.listens ||= []).push([Date.now() - S.F.shown.t, slow ? "slow" : "normal"]);
-  for (const b of playBtns()) b.classList.remove("playing", "done", "heard");
+// ids: which buttons show it (the fight's by default; the identification trial passes #tPlay / #tSlow).
+// Looked up by id each time, so a button redrawn while the line plays picks it up again.
+function markPlaying(el, start, end, slow, ids = FIGHT_BTNS) {
+  if (playing && playing.ids !== ids) for (const id of playing.ids) clearPlayBtn($(id));
+  playing = { el, start, end, slow, ids };
+  if (ids === FIGHT_BTNS && S.F?.shown && !S.F.checked) (S.F.listens ||= []).push([Date.now() - S.F.shown.t, slow ? "slow" : "normal"]);
+  for (const id of ids) $(id)?.classList.remove("playing", "done", "heard");
   showPlaying();
 }
+function clearPlayBtn(b) { if (!b) return; b.classList.remove("playing"); b.querySelector(".eq")?.remove(); b.style.removeProperty("--p"); }
 function markDone() {
   if (!playing) return;
-  const slow = playing.slow;
+  const { slow, ids } = playing;
   playing = null;
-  for (const b of playBtns()) { b.classList.remove("playing"); b.querySelector(".eq")?.remove(); b.style.removeProperty("--p"); }
-  const b = slow ? $("#slowBtn") : $("#playBtn");
+  for (const id of ids) clearPlayBtn($(id));
+  const b = $(ids[slow ? 1 : 0]);
   if (!b) return;
   b.classList.add("done", "heard");
   setTimeout(() => b.classList.remove("done"), 900);
@@ -528,8 +541,8 @@ function markDone() {
 // every frame: the progress, and the state put back if the buttons were redrawn while it played
 function showPlaying() {
   if (!playing) return;
-  const { el, start, end, slow } = playing;
-  const b = slow ? $("#slowBtn") : $("#playBtn");
+  const { el, start, end, slow, ids } = playing;
+  const b = $(ids[slow ? 1 : 0]);
   if (!b) return;
   if (!b.classList.contains("playing")) { b.classList.add("playing"); if (!b.querySelector(".eq")) b.insertAdjacentHTML("beforeend", EQ); }
   const stop = end ?? el.duration;
@@ -1298,17 +1311,18 @@ $("#invBtn").onclick = () => { $("#srcPanel").hidden = true; togglePanel("#invPa
 
 function companionsPanel() {
   const block = (type) => {
-    const C = COMPANION[type], own = ch[C.own] || [];
-    const how = type === "pet" ? "Domina un episodio entero (20 minutos o más): todas sus frases al 100%, con huecos y al dictado, en Normal o Difícil."
-      : "Domina un episodio entero así en Difícil.";
-    if (!own.length) return `<p class="dim small">${type === "pet" ? "Mascota" : "Montura"}: ninguna aún. ${how}</p>`;
-    return `<div class="comps">${Object.keys(C.list).map((id) => {
-      const has = own.includes(id), on = ch[C.on] === id;
-      return `<button class="compbtn${on ? " on" : ""}" ${has ? `data-comp="${type}:${id}"` : "disabled"} title="${has ? esc(`${C.list[id].name}: ${companionLine(type, id)}${on ? " Va contigo: clic para dejarlo en la aldea." : " Clic para llevarlo."}`) : "Aún no lo tienes"}">
-        ${has ? `<img class="${type}" src="${compImg(type, id)}" alt="">` : `<span class="q">?</span>`}<span>${has ? esc(C.list[id].name) : "—"}</span></button>`;
-    }).join("")}</div>${ch[C.on] && own.includes(ch[C.on]) ? `<p class="dim small">${esc(C.list[ch[C.on]].name)}: ${esc(companionLine(type, ch[C.on]))}</p>` : ""}`;
+    const C = COMPANION[type], cnt = stableCount(type);
+    const how = type === "pet" ? "Domina un episodio entero (20 minutos o más): todas sus frases al 100%, con huecos y al dictado, en Normal o Difícil. O encuéntrala al ganar un combate."
+      : "Domina un episodio entero así en Difícil, o encuéntrala al ganar un combate.";
+    const ids = Object.keys(cnt).sort((a, b) => C.list[b].lvl - C.list[a].lvl);
+    if (!ids.length) return `<p class="dim small">${type === "pet" ? "Mascota" : "Montura"}: ninguna aún. ${how}</p>`;
+    return `<div class="comps">${ids.map((id) => {
+      const on = ch[C.on] === id;
+      return `<button class="compbtn${on ? " on" : ""}" data-comp="${type}:${id}" title="${esc(`${C.list[id].name} · nivel ${C.list[id].lvl}: ${companionLine(type, id)}${on ? " Va contigo: clic para dejarlo en la aldea." : " Clic para llevarlo."}`)}">
+        <img class="${type}" src="${compImg(type, id)}" alt=""><span>${esc(C.list[id].name)}</span><span class="clvl">${C.list[id].lvl}</span></button>`;
+    }).join("")}</div>${ch[C.on] && cnt[ch[C.on]] ? `<p class="dim small">${esc(C.list[ch[C.on]].name)}: ${esc(companionLine(type, ch[C.on]))}</p>` : ""}`;
   };
-  return `<h3>Compañeros</h3>${block("pet")}${block("mount")}`;
+  return `<h3>Compañeros</h3>${block("pet")}${block("mount")}<p class="dim small">Juntar y ver todos: en la aldea, el Establo.</p>`;
 }
 function renderChar() {
   const st = stats(), c = CLASSES[ch.cls];
@@ -1436,10 +1450,8 @@ $("#charPanel").addEventListener("click", (e) => {
   if (e.target.closest("#linesExport")) return flushLines().then(() => (location.href = "api/lines"));
   const cb = e.target.closest("[data-comp]");
   if (cb) {
-    const [type, id] = cb.dataset.comp.split(":"), on = COMPANION[type].on;
-    ch[on] = ch[on] === id ? null : id;
-    save(); renderPanels(); renderHud(); renderMe();
-    return toast(ch[on] ? `${COMPANION[type].list[id].name} va contigo` : `${COMPANION[type].list[id].name} se queda en la aldea`);
+    const [type, id] = cb.dataset.comp.split(":");
+    return toggleCompanion(type, id);
   }
   const b = e.target.closest("[data-attr]");
   if (b && ch.points > 0) {
@@ -1800,16 +1812,16 @@ function transformMound() {
   from.splice(from.indexOf(relic), 1);
   M.splice(M.length - k * MOUND_STEP);
   for (let i = 0; i < k; i++) {
-    const kinds = ["item", ...["pet", "mount"].filter((t) => Object.keys(COMPANION[t].list).some((id) => !(ch[COMPANION[t].own] || []).includes(id)))];
+    const kinds = ["item", ...["pet", "mount"].filter((t) => ofLevel(t, 1).some((id) => !(ch[COMPANION[t].own] || []).includes(id)))];
     const kind = kinds[Math.floor(Math.random() * kinds.length)];
     if (kind === "item") {
       const it = E.makeTopItem("mitico", ch.level + 2);
       const where = stow(it) || (ch.inv.push(it), "a tu bolsa");
       celebrate({ mound: true, it, where, i, n: k });
     } else {
-      const C = COMPANION[kind], own = (ch[C.own] ||= []), fresh = Object.keys(C.list).filter((id) => !own.includes(id));
+      const C = COMPANION[kind], own = (ch[C.own] ||= []), fresh = ofLevel(kind, 1).filter((id) => !own.includes(id));
       const id = fresh[Math.floor(Math.random() * fresh.length)];
-      own.push(id); if (!ch[C.on]) ch[C.on] = id;
+      addAnimal(kind, id);
       celebrate({ mound: true, companion: kind, id, i, n: k });
     }
   }
@@ -1874,6 +1886,7 @@ function townScene(tab) {
     return Array.from({ length: n }, () => `<i class="tfx-${k}" style="left:${(x + (Math.random() * 2 - 1) * spread).toFixed(2)}%;top:${y}%;--d:${r(0.7, 1.4)};--t:${r(-1, 0)};--k:${Math.random() < 0.5 ? -1 : 1}"></i>`);
   }).join("");
   if (tab === "monton") return moundScene();
+  if (tab === "establo") return stableScene();
   return `<div class="townscene" style="background-image:url('${new URL(`rpg/scenes/v-${tab}.png`, location.href).href}')" aria-hidden="true">${fx}${tab === "camisetas" ? hungShirts() : ""}</div>`;
 }
 function renderTown() {
@@ -1882,7 +1895,7 @@ function renderTown() {
   ch.life = st.maxLife; ch.mana = st.maxMana; // rest in town
   S.townTab = S.townTab === "collares" ? "camisetas" : S.townTab === "gamble" || S.townTab === "coleccion" ? "merchant" : S.townTab || "merchant"; // (Apuestas and Colección are gone)
   const tierNow = ch.level >= 24 ? 2 : ch.level >= 10 ? 1 : 0;
-  const tabs = [["merchant", "Mercader"], ["casetes", "Tunjos"], ["sell", "Vender"], ["stash", "Alijo"], ["alembic", "Alambique"], ["camisetas", "Camisetas"], ["monton", "Montón"]];
+  const tabs = [["merchant", "Mercader"], ["casetes", "Tunjos"], ["sell", "Vender"], ["stash", "Alijo"], ["alembic", "Alambique"], ["camisetas", "Camisetas"], ["monton", "Montón"], ["establo", "Establo"]];
   let body = "";
   if (S.townTab === "merchant") {
     body = `<p class="dim">Pociones para el camino. Para vender, la pestaña Vender.</p><div class="shop">` +
@@ -1911,6 +1924,8 @@ function renderTown() {
     body = shirtShelf();
   } else if (S.townTab === "monton") {
     body = moundPanel();
+  } else if (S.townTab === "establo") {
+    body = stablePanel();
   } else if (S.townTab === "stash") {
     body = `<p class="dim">Lo que guardes aquí no ocupa el inventario. ${touch() ? "Toca un objeto del inventario para guardarlo, y uno del alijo para sacarlo." : "Clic en un objeto del inventario para guardarlo, y en uno del alijo para sacarlo. Clic derecho para más opciones."}</p>${invInline()}<h3 class="rwtitle">El alijo <span class="dim">${ch.stash.length}/${STASH_SIZE}</span></h3><div class="grid stash" style="--scols:${(stashColsShown = stashCols())}">${grid(ch.stash, stashShown(stashColsShown))}</div><div class="row"><button id="sortStash" ${ch.stash.length > 1 ? "" : "disabled"} title="Equipo (de mejor a peor, cada conjunto junto), gemas, pociones">Ordenar el alijo</button><button id="stashList" title="El alijo en una tabla, sin pasar el ratón por encima">Ver como lista</button></div>${unidCount() ? `<button id="idAll" class="idall">Identificar uno tras otro <span class="dim">(${unidCount()} sin identificar, en la bolsa y el alijo)</span></button>` : ""}`;
   } else {
@@ -1929,6 +1944,7 @@ function renderTown() {
       ${townScene(S.townTab)}
       <div class="townbody">${body}</div>
     </section>`;
+  if (S.townTab === "establo") bindStable(screen);
   screen.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => {
     S.townTab = b.dataset.tab;
     // the stash works by clicking items in the inventory, so open it alongside
@@ -2744,6 +2760,7 @@ function leechFoe(enc) {
   return m;
 }
 function addLog(text, cls = "") {
+  if (!S.F) return; // the fight's log: nothing to write to in the village
   S.F.log.unshift({ text, cls });
   S.F.log = S.F.log.slice(0, 12);
   const el = $("#log");
@@ -2756,7 +2773,7 @@ function renderFight() {
     <section class="fight">
       <div class="fighthead">
         <div><b>${esc(S.zone.name)}</b> <span class="dim">${F.review ? `${S.review?.source === "subj" ? "Subjuntivo o no" : "Repaso de Anki"} · grupo ${zp.pack + 1}` : S.zone.fights ? `${LEVEL_NAME[courseFight(S.zone, zp.pack).mode]}${F.enc.boss ? " · jefe" : ` · combate ${zp.pack + 1} de ${S.zone.packs}`}` : F.enc.boss ? "Jefe" : F.extra ? `${S.zone.endless ? `Descenso ${(zp.depth || 0) + 1} · ` : ""}grupo extra · ${bossNeed(S.zone, zp.depth || 0)} frases para el jefe` : S.zone.endless ? `Descenso ${(zp.depth || 0) + 1} · grupo ${zp.pack + 1}` : `Grupo ${zp.pack + 1} de ${S.zone.packs}`} · nivel ${F.enc.lvl} · ${E.diffOf(ch).name}</span>
-          <div class="dim small" id="groupMastery"></div><div class="today" id="today">${todayHtml()}</div></div>
+          <div class="dim small fsub"><span id="groupMastery"></span><span class="tmini" id="today">${todayHtml(true)}</span></div></div>
         <div class="combo" id="combo"></div>
         <button id="portal" class="ghost" title="${F.review ? "Vuelves a la aldea con el oro que llevas ganado." : "Vuelves a la aldea. El grupo actual se reinicia."}">Volver a la aldea</button>
       </div>
@@ -2932,10 +2949,14 @@ function todayGoal() {
   for (const k of Object.keys(days)) if (k < dayKey(new Date(Date.now() - 14 * 864e5))) delete days[k];
   return (ch.dayGoal = { date: today, goal, prev, prevDate, paid: false });
 }
-function todayHtml() {
+// mini: the fight header's short form, on the mastery line (the map has the bar)
+function todayHtml(mini = false) {
   if (!ch) return "";
   const g = todayGoal(), n = ch.days?.[dayKey()] || 0;
   const was = !g.prev ? "tu primera meta" : g.prevDate === dayKey(new Date(Date.now() - 864e5)) ? `ayer, ${g.prev}` : `la última vez, ${g.prev}`;
+  if (mini) return g.paid || n >= g.goal
+    ? `<span class="done" title="Meta de hoy cumplida (${g.goal} frases)">hoy ${n} ✓</span>`
+    : `<span title="Frases de hoy: ${n} de ${g.goal}. La meta es un poco más que ${was}">hoy <b>${n}</b>/${g.goal}</span>`;
   return g.paid || n >= g.goal
     ? `<span class="tbar done"><i style="width:100%"></i></span> <span>Hoy: ${n} frases. Meta cumplida ✓</span>`
     : `<span class="tbar" title="Meta de hoy: un poco más que ${was}"><i style="width:${(n / g.goal) * 100}%"></i></span> <span>Hoy: ${n} de ${g.goal} frases <span class="dim">(${was})</span></span>`;
@@ -2953,11 +2974,11 @@ function countToday() {
     sfx.coin?.();
   }
   const el = $("#today");
-  if (el) el.innerHTML = todayHtml();
+  if (el) el.innerHTML = todayHtml(true);
 }
 // ---------- the streak dice (E.streakRoll) ----------
-// Rolled when the line is answered; the prize goes straight to you (gold to your purse, the thing to your
-// bag, or the stash, or the ground); the dice play out over the stage a moment later.
+// Rolled when the line is answered; the dice play out over the stage a moment later, and the prize (gold
+// to your purse, the thing to your bag, or the stash, or the ground) is given when they reveal it (r.grant).
 // Two streaks roll their own dice: the streak (perfect lines) and the ear streak (perfect lines heard only once).
 const DICE_KIND = { racha: { name: "Dados de la racha", n: (F) => F.combo }, oido: { name: "Dados de oído", n: (F) => F.ear } };
 function streakDice(F, kind = "racha") {
@@ -2969,19 +2990,32 @@ function streakDice(F, kind = "racha") {
   lineLog({ ev: "dice", kind, streak: K.n(F), roll: r.roll, need: r.need, win: !!r.win, prize: r.win ? (r.gold ? { gold: r.gold } : { rarity: r.item?.rarity, name: r.item ? E.itemName(r.item) : null }) : null });
   if (!r.win) return addLog(`${dieIco(kind)} ${K.name}: sale <b>${r.roll}</b>; ganabas con ${r.need === 1 ? "un 1" : `1 a ${r.need}`} (${r.need}% de probabilidad). Sin premio.`, "dice"), r;
   ch.stats.diceWins = (ch.stats.diceWins || 0) + 1;
-  let where = "";
-  if (r.gold) ch.gold += r.gold;
-  else {
-    if (!r.item.kind && UNID.has(r.item.rarity)) r.item.unid = true;
-    where = stow(r.item) || (F.ground.items.push(r.item), "al suelo");
-    logDrops([r.item], { tier: "racha", lvl: F.enc?.lvl || ch.level });
-  }
-  r.where = where;
-  const what = r.gold ? `<b>${r.gold} de oro</b>` : `<b style="color:${E.itemColor(r.item)}">${esc(r.item.unid ? `${RARITY[r.item.rarity]?.name || ""} sin identificar` : E.itemName(r.item))}</b>`;
-  addLog(`${dieIco(kind)} <b>¡${K.name}!</b> Sale ${r.roll}, y ganabas con ${r.need === 1 ? "un 1" : `1 a ${r.need}`}. Dado de premio: ${r.face}${r.bonus ? ` + ${r.bonus}` : ""} = <b>${r.total}</b>: ${what}${where ? ` <span class="dim">(va ${where})</span>` : ""}.`, "good");
-  save();
+  if (!r.gold && !r.item.kind && UNID.has(r.item.rarity)) r.item.unid = true;
+  // The prize is yours, but it shows up (purse, bag, log) only when the dice reveal it, so the inventory
+  // doesn't give it away first. r.grant() is called by the show at the reveal, and also if the show is
+  // closed early, after a while in any case, or when the page goes away: it can't be lost.
+  r.grant = () => {
+    if (r.granted) return;
+    r.granted = true;
+    pendingGrants.delete(r);
+    let where = "";
+    if (r.gold) ch.gold += r.gold;
+    else {
+      where = stow(r.item) || (!F.over && S.F === F ? (F.ground.items.push(r.item), "al suelo") : (ch.stash.push(r.item), "al alijo"));
+      logDrops([r.item], { tier: "racha", lvl: F.enc?.lvl || ch.level });
+    }
+    r.where = where;
+    const what = r.gold ? `<b>${r.gold} de oro</b>` : `<b style="color:${E.itemColor(r.item)}">${esc(r.item.unid ? `${RARITY[r.item.rarity]?.name || ""} sin identificar` : E.itemName(r.item))}</b>`;
+    addLog(`${dieIco(kind)} <b>¡${K.name}!</b> Sale ${r.roll}, y ganabas con ${r.need === 1 ? "un 1" : `1 a ${r.need}`}. Dado de premio: ${r.face}${r.bonus ? ` + ${r.bonus}` : ""} = <b>${r.total}</b>: ${what}${where ? ` <span class="dim">(va ${where})</span>` : ""}.`, "good");
+    save(); renderHud(); renderPanels();
+  };
+  pendingGrants.add(r);
+  setTimeout(r.grant, 20000);
   return r;
 }
+// dice prizes rolled but not yet revealed (see streakDice): given at once if the page goes away
+const pendingGrants = new Set();
+addEventListener("pagehide", () => { for (const r of [...pendingGrants]) r.grant(); });
 // coins and sparks raining over a whole-screen layer (the dice and the victory celebration)
 function coinRain(layer, color, n, delay = 0.8) {
   if (FX.reduced()) return;
@@ -3053,6 +3087,7 @@ function showDice(r) {
       <div class="dice-need">gana con ${r.need === 1 ? "un 1" : `1 a ${r.need}`}</div>
       <div class="dice-res"></div></div>`);
   kind === "oido" ? stack.append(box) : stack.prepend(box);
+  box._r = r;
   const rain = (color, n) => coinRain(show, color, n);
   // a burst of coins and sparkles out of the box
   const burst = (color, n) => {
@@ -3108,6 +3143,7 @@ function showDice(r) {
     sfx.dice();
     await tumble(d20, Array.from({ length: 20 }, (_, i) => String(i + 1)), 900);
     if (!box.isConnected) return;
+    r.grant?.(); // now it's yours to see: purse, bag, log
     const top = r.kind === "mitico" || r.kind === "legendario" || r.kind === "ancestral";
     const color = r.gold ? "#f0d25c" : E.itemColor(r.item);
     res.innerHTML = `<b class="dice-total">${r.total}</b> <span style="color:${color}">${r.gold ? `${r.gold} de oro` : esc(r.label.replace(/^un[a]? /, "").replace(/^./, (c) => c.toUpperCase()))}</span>`;
@@ -3128,7 +3164,6 @@ function showDice(r) {
     const me = $("#me");
     if (me && (top || r.kind === "item")) FX.beam(stage, FX.pointOn(me, stage, 0.5, 0.9), color, top ? 2600 : 1600);
     if (top) FX.shake(stage);
-    renderHud(); renderPanels();
     // the prize stays a while; less if a victory is waiting to be celebrated (it marks the show "hurry")
     // (an item stays longer, so its name can be read)
     const t0 = Date.now(), hold = top ? 4800 : r.item ? 4200 : 3000, quick = r.item ? 2800 : 1500;
@@ -3142,6 +3177,18 @@ function showDice(r) {
     setTimeout(wait, 100);
   });
 }
+// A win on screen: Enter (or Escape) closes it, and doesn't reach the line underneath. The prize is
+// already yours. A miss, or dice still rolling, let keys through as before.
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== "Escape") return;
+  const show = document.querySelector(".diceshow.won:not(.wincel):not(.closing)");
+  if (!show) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  show.querySelectorAll(".dicebox").forEach((b) => b._r?.grant?.()); // closed early: the prize is given now
+  show.classList.add("closing", "out");
+  hush();
+  setTimeout(() => show.remove(), 350);
+}, true);
 function renderCombo() {
   const c = S.F.combo, L = ch.streakLost;
   // a broken streak on its way back: a glowing badge, a dot per perfect line (the newest pops, the next blinks)
@@ -3642,6 +3689,9 @@ function attack() {
   const opts = { extraTol: st.typoTol, nearIsExact: st.nearExact, names: S.T?.names };
   let r;
   if (F.mode === "cloze") {
+    // every gap needs something in it before the line counts (a guess is fine)
+    const empty = [...document.querySelectorAll("#cloze input")].find((x) => !x.value.trim());
+    if (empty) { empty.focus(); empty.classList.remove("need"); void empty.offsetWidth; empty.classList.add("need"); return toast("Rellena todos los huecos"); }
     const typed = Object.fromEntries([...document.querySelectorAll("#cloze input")].map((x) => [x.dataset.i, x.value.trim()]));
     r = scoreCloze(words, F.blanks, typed, opts);
   } else r = scoreDictation(words, $("#answer").value, opts);
@@ -3841,7 +3891,8 @@ function resolveAttack(r, acc, perfectFirst) {
       if (a.el) incoming.by[a.el] = (incoming.by[a.el] || 0) + a.elDmg;
       if (m.vamp) m.hp = Math.min(m.maxHp, m.hp + Math.round(a.dmg * 0.5));
       if (m.mods.includes("ladron")) ch.mana = Math.max(0, ch.mana - Math.round(3 + m.lvl / 3));
-      if (st.thorns) { m.hp -= st.thorns; if (m.hp <= 0) { kill(m); break; } }
+      const back = st.thorns + Math.round(a.dmg * st.thornsPct / 100); // flat, and a share of the blow (runas)
+      if (back) { m.hp -= back; if (m.hp <= 0) { kill(m); break; } }
     }
     // a perfect line doesn't give it time to heal
     if (m.mods.includes("regenera") && m.hp > 0 && acc < 1) m.hp = Math.min(m.maxHp, m.hp + Math.round(m.maxHp * 0.02));
@@ -3990,11 +4041,11 @@ function checkCompanions() {
 }
 function awardCompanion(type) {
   const C = COMPANION[type], own = (ch[C.own] ||= []);
-  const fresh = Object.keys(C.list).filter((id) => !own.includes(id));
+  const fresh = ofLevel(type, 1).filter((id) => !own.includes(id));
   const id = fresh.length ? fresh[Math.floor(Math.random() * fresh.length)] : null;
   ((ch.companionEps ||= {})[S.ep] ||= {})[type] = id || "all";
   let it = null, where = null;
-  if (id) { own.push(id); if (!ch[C.on]) ch[C.on] = id; }
+  if (id) addAnimal(type, id);
   else { // every coat already: a legendary instead
     it = E.randomItem(ch.level + 2, 0, 1, null, null, 1, "legendario"); it.unid = true;
     where = stow(it);
@@ -4005,9 +4056,140 @@ function awardCompanion(type) {
   celebrate({ companion: type, id, it, where: where || "al suelo: recógelo al terminar el combate" });
 }
 const compImg = (type, id) => `rpg/lpc/companions/${type}-${id}.png`;
-const companionLine = (type, id) => type === "pet"
-  ? `${PETS[id].desc} ${Object.entries(PETS[id].props).map(([k, v]) => PROPS[k].fmt.replace("{v}", v)).join(", ")}.`
-  : `${Object.entries(MOUNT_PROPS).map(([k, v]) => PROPS[k].fmt.replace("{v}", v)).join(", ")}.`;
+
+// ---------- the stable ----------
+// ch.pets / ch.mounts are lists of ids, one entry per animal you have (so the same coat can be there
+// more than once: three of a level, any coats, make one of the next). ch.pet / ch.mount: the one with you.
+// ch.stableSeen["pet:7"]: you've had a level-7 pet once (its kind's name shows in the stable from then on).
+const ofLevel = (type, L) => Object.keys(COMPANION[type].list).filter((id) => COMPANION[type].list[id].lvl === L);
+function stableCount(type) {
+  const C = COMPANION[type], m = {};
+  for (const id of ch[C.own] || []) if (C.list[id]) m[id] = (m[id] || 0) + 1;
+  return m;
+}
+function addAnimal(type, id) {
+  const C = COMPANION[type];
+  (ch[C.own] ||= []).push(id);
+  if (!ch[C.on]) ch[C.on] = id;
+  (ch.stableSeen ||= {})[`${type}:${C.list[id].lvl}`] = 1;
+}
+function toggleCompanion(type, id) {
+  const C = COMPANION[type];
+  ch[C.on] = ch[C.on] === id ? null : id;
+  save(); renderPanels(); renderHud(); renderMe();
+  if (S.view === "town" && S.townTab === "establo") renderTown();
+  toast(ch[C.on] ? `${C.list[id].name} va contigo` : `${C.list[id].name} se queda en la aldea`);
+}
+// Three of level L into one of level L+1, any coats: the coats you have most copies of go first, and the
+// one with you only if nothing else is left (then the new one goes with you instead). Returns its id.
+function stableJoin(type, L) {
+  const C = COMPANION[type], own = ch[C.own] || [];
+  if (L >= STABLE_LEVELS || own.filter((id) => C.list[id]?.lvl === L).length < 3) return null;
+  for (let k = 0; k < 3; k++) {
+    const cnt = stableCount(type);
+    const ids = Object.keys(cnt).filter((id) => C.list[id].lvl === L);
+    const spare = (id) => cnt[id] - (id === ch[C.on] ? 1 : 0);
+    const out = ids.sort((a, b) => spare(b) - spare(a) || cnt[b] - cnt[a])[0];
+    own.splice(own.indexOf(out), 1);
+  }
+  const id = E.pick(ofLevel(type, L + 1));
+  addAnimal(type, id);
+  if (!own.includes(ch[C.on])) ch[C.on] = id;
+  return id;
+}
+// A won fight may bring an animal (STABLE_DROP): returns { type, id } or null
+function stableDrop(boss) {
+  if (Math.random() >= (boss ? STABLE_DROP.boss : STABLE_DROP.fight)) return null;
+  const type = Math.random() < 0.5 ? "pet" : "mount";
+  let L = 1;
+  while (L < STABLE_LEVELS && Math.random() < 1 / STABLE_DROP.ratio) L++;
+  const id = E.pick(ofLevel(type, L));
+  addAnimal(type, id);
+  const x = COMPANION[type].list[id];
+  addLog(`<img class="logcomp" src="${compImg(type, id)}" alt=""> <b>${esc(x.name)}</b> (${type === "pet" ? "mascota" : "montura"} de nivel ${L}) se une a tu establo.`, "good");
+  return { type, id };
+}
+const STABLE_SCENE_PETS = 6;
+function stableScene() {
+  // your mount and pet, and the best of the rest, standing in the straw
+  const show = [];
+  for (const type of ["mount", "pet"]) {
+    const C = COMPANION[type], cnt = stableCount(type);
+    const ids = Object.keys(cnt).sort((a, b) => (b === ch[C.on]) - (a === ch[C.on]) || C.list[b].lvl - C.list[a].lvl);
+    show.push(...ids.slice(0, type === "mount" ? 3 : STABLE_SCENE_PETS).map((id) => [type, id]));
+  }
+  return `<div class="stablescene" aria-hidden="true">${show.map(([type, id]) => `<img class="${type}" src="${compImg(type, id)}" alt="">`).join("") || `<span class="dim">El establo está vacío.</span>`}</div>`;
+}
+function stablePanel() {
+  const part = (type) => {
+    const C = COMPANION[type], K = STABLE_KINDS[type], cnt = stableCount(type), seen = ch.stableSeen || {};
+    let top = 1;
+    for (let L = 1; L <= STABLE_LEVELS; L++) if (seen[`${type}:${L}`] || ofLevel(type, L).some((id) => cnt[id])) top = L;
+    const shown = Math.min(STABLE_LEVELS, top + 1);
+    const rows = [];
+    for (let L = 1; L <= shown; L++) {
+      const ids = ofLevel(type, L), have = ids.reduce((n, id) => n + (cnt[id] || 0), 0), known = have || seen[`${type}:${L}`];
+      const kind = K[L - 1];
+      if (!known && L < shown) { rows.push(`<div class="stl-row none slim"><div class="stl-head"><b class="stl-lvl">${L}</b><div><b>¿?</b><span class="dim small">Aún no lo has visto</span></div></div></div>`); continue; }
+      const art = have ? ids.filter((id) => cnt[id]).map((id) => `<button class="stl-a${ch[C.on] === id ? " on" : ""}" data-scomp="${type}:${id}" title="${esc(`${C.list[id].name}${ch[C.on] === id ? ": va contigo. Clic para dejarlo." : ": clic para llevarlo contigo."}`)}"><img class="${type}" src="${compImg(type, id)}" alt=""><span translate="no">×${cnt[id]}</span></button>`).join("")
+        : `<span class="stl-a ghost"><img class="${type} unknown" src="${compImg(type, ids[0])}" alt=""></span>`;
+      const props = C.list[ids[0]].props;
+      rows.push(`<div class="stl-row${have ? "" : " none"}">
+        <div class="stl-head"><b class="stl-lvl">${L}</b><div><b>${known ? esc(kind.name) : "¿?"}</b><span class="dim small">${known ? (L === 1 && type === "pet" ? "Cada color, su don" : esc(propsLine(props))) : "Aún no lo has visto"}</span></div></div>
+        <div class="stl-art">${art}</div>
+        ${!have ? "" : L < STABLE_LEVELS ? `<button class="stl-join" data-join="${type}:${L}" ${have >= 3 ? "" : "disabled"} title="Tres de nivel ${L}, del color que sean, se juntan en uno de nivel ${L + 1}. Tienes ${have}.">Juntar 3 → nivel ${L + 1}</button>` : `<span class="dim small">El más alto</span>`}
+      </div>`);
+    }
+    const can = Object.keys(cnt).some((id) => C.list[id].lvl < STABLE_LEVELS && ofLevel(type, C.list[id].lvl).reduce((n, i) => n + (cnt[i] || 0), 0) >= 3);
+    return `<section class="stl-part"><div class="stl-title"><h3>${type === "pet" ? "Mascotas" : "Monturas"}</h3><button data-joinall="${type}" ${can ? "" : "disabled"}>Juntarlo todo</button></div>
+      ${rows.join("")}${shown < STABLE_LEVELS ? `<p class="dim small">Niveles ${shown + 1} a ${STABLE_LEVELS}: por descubrir.</p>` : ""}</section>`;
+  };
+  return `<p class="dim">Tres animales del mismo nivel, del color que sean, se juntan en uno del nivel siguiente, más fuerte. También aparecen al ganar un combate, rara vez (de un jefe, más a menudo), y cada nivel es más raro que el de abajo. ${touch() ? "Toca" : "Clic en"} uno para llevarlo contigo: una mascota y una montura a la vez.</p>
+    <div class="stable">${part("pet")}${part("mount")}</div>`;
+}
+function bindStable(root) {
+  root.querySelectorAll("[data-scomp]").forEach((b) => (b.onclick = () => { const [type, id] = b.dataset.scomp.split(":"); toggleCompanion(type, id); }));
+  root.querySelectorAll("[data-join]").forEach((b) => (b.onclick = () => {
+    const [type, L] = b.dataset.join.split(":");
+    const id = stableJoin(type, +L);
+    if (!id) return;
+    save(); renderTown(); renderPanels(); renderHud(); renderMe();
+    celebrate({ stable: true, companion: type, id, from: +L, n: 1 });
+  }));
+  root.querySelectorAll("[data-joinall]").forEach((b) => (b.onclick = () => {
+    const type = b.dataset.joinall, made = [];
+    for (let L = 1; L < STABLE_LEVELS; L++) { let id; while ((id = stableJoin(type, L))) made.push(id); }
+    if (!made.length) return;
+    const C = COMPANION[type], best = made.reduce((a, b) => (C.list[b].lvl > C.list[a].lvl ? b : a));
+    addLog(`El establo: ${made.length} ${made.length === 1 ? "animal nuevo" : "animales nuevos"}: ${made.map((id) => `${esc(C.list[id].name)} (${C.list[id].lvl})`).join(", ")}.`, "good");
+    save(); renderTown(); renderPanels(); renderHud(); renderMe();
+    celebrate({ stable: true, companion: type, id: best, from: C.list[best].lvl - 1, n: made.length });
+  }));
+}
+function showStableCheer(c) {
+  const C = COMPANION[c.companion], x = C.list[c.id];
+  const sparks = Array.from({ length: 28 }, (_, i) => `<i style="--a:${(i * 360) / 28 + (i % 3) * 7}deg;--d:${0.9 + (i % 5) * 0.25}s;--r:${110 + (i % 4) * 45}px"></i>`).join("");
+  const d = dialog(`<div class="cheer" style="--c:#f2d27a">
+      <div class="sparks" aria-hidden="true">${sparks}</div>
+      <p class="cheer-kicker">El establo</p>
+      <h3>¡Nivel ${x.lvl}!</h3>
+      <p class="cheer-what">${c.n > 1 ? `Juntaste lo que podías: ${c.n} animales nuevos. El mejor:` : `Tres de nivel ${c.from} se juntan en uno nuevo.`}</p>
+      <div class="cheer-comp"><img class="${c.companion}" src="${compImg(c.companion, c.id)}" alt=""><div><b>${esc(x.name)}</b><span class="dim">${esc(compKindLine(c.companion, c.id))} · ${esc(companionLine(c.companion, c.id))}</span>
+        <span class="dim small">${ch[C.on] === c.id ? "Va contigo." : "En el establo: clic en él para llevarlo contigo."}</span></div></div>
+      <button class="primary" id="cheerOk">${cheers.length > 1 ? "Siguiente premio" : "¡Seguir!"}</button>
+    </div>`, { cls: "cheerbox", onClose: () => { cheers.shift(); if (cheers.length) setTimeout(showCheer, 250); } });
+  d.querySelector("#cheerOk").onclick = () => closeDialog();
+  setTimeout(() => d.querySelector("#cheerOk")?.focus(), 50);
+  sfx.fanfare();
+}
+const propsLine = (props) => Object.entries(props).map(([k, v]) => PROPS[k].fmt.replace("{v}", v)).join(", ");
+const companionLine = (type, id) => { const x = COMPANION[type].list[id]; return `${x.desc ? `${x.desc} ` : ""}${propsLine(x.props)}.`; };
+// "Un perro criollo rojizo" for the level-1 coats (which have their own names), "Nivel 7" for the rest
+const compKindLine = (type, id) => {
+  const x = COMPANION[type].list[id];
+  if (x.lvl > 1) return `Nivel ${x.lvl}`;
+  return type === "pet" ? `Un ${PET_KIND} ${x.coat}` : `Un caballo ${x.coat}`;
+};
 
 function celebrate(c) {
   cheers.push(c);
@@ -4017,6 +4199,7 @@ function showCheer() {
   const c = cheers[0];
   if (!c) return;
   if (c.mound) return showMoundCheer(c);
+  if (c.stable) return showStableCheer(c);
   if (c.companion && c.id) return showCompanionCheer(c);
   const color = E.itemColor(c.it), R = RARITY[c.it.rarity].name;
   const sparks = Array.from({ length: 28 }, (_, i) => `<i style="--a:${(i * 360) / 28 + (i % 3) * 7}deg;--d:${0.9 + (i % 5) * 0.25}s;--r:${110 + (i % 4) * 45}px"></i>`).join("");
@@ -4042,7 +4225,7 @@ function showMoundCheer(c) {
   let prize, color = RARITY.relic.color;
   if (c.companion) {
     const C = COMPANION[c.companion], x = C.list[c.id], pet = c.companion === "pet";
-    prize = `<div class="cheer-comp"><img class="${c.companion}" src="${compImg(c.companion, c.id)}" alt=""><div><b>${esc(x.name)}</b><span class="dim">${pet ? `Un ${PET_KIND} ${x.coat}` : `Un caballo ${x.coat}`} · ${esc(companionLine(c.companion, c.id))}</span>
+    prize = `<div class="cheer-comp"><img class="${c.companion}" src="${compImg(c.companion, c.id)}" alt=""><div><b>${esc(x.name)}</b><span class="dim">${esc(compKindLine(c.companion, c.id))} · ${esc(companionLine(c.companion, c.id))}</span>
       <span class="dim small">${ch[C.on] === c.id ? "Va contigo." : "Llévalo contigo desde Personaje → Compañeros."}</span></div></div>`;
   } else {
     color = E.itemColor(c.it);
@@ -4069,7 +4252,7 @@ function showCompanionCheer(c) {
       <p class="cheer-kicker">${esc(S.T.title)}</p>
       <h3>¡Episodio dominado${pet ? "" : " en Difícil"}!</h3>
       <p class="cheer-what">Todas las frases, con huecos y al dictado, al 100%${pet ? "" : " en Difícil"}.</p>
-      <div class="cheer-comp"><img class="${c.companion}" src="${compImg(c.companion, c.id)}" alt=""><div><b>${esc(x.name)}</b><span class="dim">${pet ? `Un ${PET_KIND} ${x.coat}` : `Un caballo ${x.coat}`} · ${esc(companionLine(c.companion, c.id))}</span>
+      <div class="cheer-comp"><img class="${c.companion}" src="${compImg(c.companion, c.id)}" alt=""><div><b>${esc(x.name)}</b><span class="dim">${esc(compKindLine(c.companion, c.id))} · ${esc(companionLine(c.companion, c.id))}</span>
         <span class="dim small">${ch[C.on] === c.id ? "Va contigo." : "Llévalo contigo desde Personaje → Compañeros."}</span></div></div>
       <button class="primary" id="cheerOk">${cheers.length > 1 ? "Siguiente premio" : "¡Seguir!"}</button>
     </div>`, { cls: "cheerbox", onClose: () => { cheers.shift(); if (cheers.length) setTimeout(showCheer, 250); } });
@@ -4470,6 +4653,7 @@ function victory() {
   else zp.pack++;
   ch.gold += F.ground.gold;
   S.loot = { gold: F.ground.gold, items: F.ground.items };
+  const animal = stableDrop(wasBoss);
   save();
   const nz = E.nextZone(S.zone.id);
   $("#arena").innerHTML = `
@@ -4477,6 +4661,7 @@ function victory() {
       <h3>${wasBoss ? `${esc(BOSSNAME(S.zone))} ha caído.` : "Grupo derrotado."}</h3>
       ${wasBoss && !S.zone.endless && nz ? `<p>Se abre el camino a <b>${esc(nz.name)}</b>.</p>` : ""}
       ${S.loot.gold ? `<p class="gold">${icon("coins-pile", "#e2b84a")} +${S.loot.gold} de oro</p>` : ""}
+      ${animal ? `<p class="stabledrop"><img class="${animal.type}" src="${compImg(animal.type, animal.id)}" alt=""><span><b>${esc(COMPANION[animal.type].list[animal.id].name)}</b> se une a tu establo <span class="dim">· ${animal.type === "pet" ? "mascota" : "montura"} de nivel ${COMPANION[animal.type].list[animal.id].lvl}</span></span></p>` : ""}
       <div class="ground" id="ground"></div>
       <div class="row">
         ${wasBoss && !S.zone.endless
@@ -4576,12 +4761,26 @@ function isUpgrade(it) {
 const pickingAll = () => [...PICKUP_KEYS].every((k) => ch.pickup?.[k] !== false);
 
 
+// Background animations (fog, rain, embers, glows that loop forever) can be turned off: the CPU and GPU
+// rest. One-off effects (hits, dice, celebrations) still play. A setting of this device, like the sound.
+// How far below an item's level its set can be (Opciones; per character, 0 = any set up to the level).
+const setSpan = () => (Number.isFinite(ch?.setSpan) ? ch.setSpan : E.SET_SPAN);
+Object.defineProperty(E.opts, "setSpan", { get: setSpan });
+const calmOn = () => localStorage.getItem("rpgCalm") === "1";
+const applyCalm = () => document.body.classList.toggle("calm", calmOn());
+applyCalm();
 function openOptions() {
   const box = ([k, name, col]) => `<label class="pickopt"><input type="checkbox" data-pick="${k}" ${ch.pickup?.[k] === false ? "" : "checked"}><span style="color:${col}">${esc(name)}</span></label>`;
   const d = dialog(`<h3>Opciones</h3>
     <h4>Idioma del juego</h4>
     <p class="langpick" translate="no">${Object.entries(LANGS).map(([k, n]) => `<button data-lang="${k}" class="${lang() === k ? "primary" : "ghost"}">${n}</button>`).join("")}</p>
     <p class="dim">Los menús, los textos y los objetos cambian de idioma; las frases del episodio y lo que escribes, no.</p>
+    <h4>Animaciones</h4>
+    <label class="pickopt"><input type="checkbox" id="optAnim" ${calmOn() ? "" : "checked"}><span>Animaciones de fondo</span></label>
+    <p class="dim">La niebla, la lluvia y las chispas de las escenas, y los brillos que laten sin parar. Sin ellas, el ordenador trabaja menos y se calienta menos. Los golpes, los dados y las celebraciones se ven igual.</p>
+    <h4>Conjuntos que caen</h4>
+    <label class="pickopt spanopt">Solo conjuntos de hasta <input type="number" id="optSpan" min="0" max="400" step="1" value="${setSpan()}" inputmode="numeric"> niveles por debajo del objeto</label>
+    <p class="dim">Con 40, un objeto de nivel 300 trae un conjunto de entre el nivel 260 y el 300. Con 0 no hay límite: puede salir cualquier conjunto hasta su nivel, también los más bajos.</p>
     <h4>Qué recoge el botón de recoger</h4>
     <p class="dim">Al acabar un combate, el botón principal recoge solo lo que marques aquí; lo demás se queda en el suelo, y siempre puedes recogerlo a mano con un clic.</p>
     ${PICKUP.map((g) => `<fieldset class="pickgroup"><legend>${g.title}${g.hint ? ` <span class="dim">· ${g.hint}</span>` : ""}</legend>${g.keys.map(box).join("")}</fieldset>`).join("")}
@@ -4592,6 +4791,13 @@ function openOptions() {
     </fieldset>
     <div class="row"><button id="pickAll" class="ghost">Marcarlo todo</button><button id="pickNone" class="ghost">No marcar nada</button><button id="optClose" class="primary">Listo</button></div>`, { cls: "optdlg" });
   d.querySelectorAll("[data-lang]").forEach((b) => (b.onclick = () => { if (b.dataset.lang !== lang()) setLang(b.dataset.lang); }));
+  d.querySelector("#optAnim").onchange = (e) => { localStorage.setItem("rpgCalm", e.target.checked ? "0" : "1"); applyCalm(); };
+  d.querySelector("#optSpan").onchange = (e) => {
+    const n = Math.max(0, Math.min(400, Math.round(Number(e.target.value))));
+    ch.setSpan = Number.isFinite(n) ? n : E.SET_SPAN;
+    e.target.value = ch.setSpan;
+    save();
+  };
   const sync = () => { save(); renderGround(); };
   d.querySelectorAll("[data-pick]").forEach((c) => (c.onchange = () => {
     ch.pickup ||= {};
@@ -4802,6 +5008,7 @@ function pickLine(minW, maxW, list = S.lines) {
 }
 // onFlag(): the line was marked as not matching its audio (single-line clips only)
 // maxPlays: how many times the clip may be heard before answering (the first, automatic, counts); after, freely
+const TRIAL_BTNS = ["#tPlay", "#tSlow"];
 function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays = 0 }) {
   const box = dialog(`
     <h3>${title}</h3>${sub ? `<p class="dim">${sub}</p>` : ""}
@@ -4826,6 +5033,7 @@ function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays
       if (!n) box.querySelectorAll("#tPlay, #tSlow").forEach((x) => (x.disabled = true));
     }
     playRange(clip.start, clip.end, (clip.rate || 1) * (slow ? 0.75 : 1));
+    markPlaying(audio, audio.currentTime, stopAt, slow, TRIAL_BTNS);
   };
   const ans = box.querySelector("#tAnswer");
   T.skeleton = () => {
@@ -5356,4 +5564,4 @@ async function quickStart() {
 }
 
 // for debugging in the console
-window.leyendas = { S, get ch() { return ch; }, E, socket, toAlembic, tooltipHtml2: (it) => tooltipHtml(it), showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats, zoneBoss, restartEpisode, enterEncrucijada };
+window.leyendas = { S, get ch() { return ch; }, E, socket, toAlembic, tooltipHtml2: (it) => tooltipHtml(it), showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats, zoneBoss, restartEpisode, enterEncrucijada, identify };
