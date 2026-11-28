@@ -36,6 +36,16 @@ npm install
 npm start     # http://127.0.0.1:8790/
 ```
 
+**Each game in its own folder** (optional). With the games on separate branches, each can have its own git worktree, and `hub.mjs` serves them all from one port:
+
+```sh
+git worktree add ../leyendas <leyendas-branch>
+git worktree add ../rumbo <rumbo-branch>
+node hub.mjs  # http://127.0.0.1:8790/: /leyendas/ and /rumbo/
+```
+
+The hub runs each folder's own `server.js` on an inner port (8793 and 8794), with this folder's `data/`, and forwards `/leyendas/` and `/rumbo/` to them, so an edit in either folder shows up on reload. `/` links both games, and old links (`/rpg.html`, `/rumbo.html`) redirect. Both games stay on one origin, so they share the browser's saves (Rumbo's transmissions read the Leyendas save). The worktrees need this folder's local files, linked in: `node_modules`, `.venv`, `.env`, `models` and the episode folders in `media/`. Override the folders with `LEYENDAS_DIR` and `RUMBO_DIR`.
+
 "Explain" uses the Claude Code CLI (`claude -p`), so it runs on whatever account Claude Code is logged in with, such as your Pro/Max plan. Each answer takes about 5–8 seconds. If `ANTHROPIC_API_KEY` is set, it calls the API directly instead.
 
 ## Play (dictation game)
