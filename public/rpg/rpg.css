@@ -1925,3 +1925,10 @@ body.calm *, body.calm *::before, body.calm *::after { animation-iteration-count
   .oido .maphead { flex-direction: column; }
   .costrow { grid-template-columns: 9em 1fr; }
 }
+
+/* Continuar: the top of the map */
+.continue { display: flex; align-items: center; gap: 14px; background: var(--panel); border: 1px solid var(--edge); border-left: 4px solid var(--gold); border-radius: 6px; padding: 12px 16px; margin: 12px 0 16px; }
+.continue button { font-size: 18px; padding: 8px 22px; white-space: nowrap; }
+.continue p { margin: 4px 0 0; font-size: 14px; }
+.continue .warn { color: var(--close); }
+@media (max-width: 600px) { .continue { flex-direction: column; align-items: stretch; } }

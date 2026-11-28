@@ -5372,4 +5372,11 @@
 "Esta vez, sin premio.":"No prize this time.",
 "índice de oído{0}":"listening index{0}",
 "{0} Quedan {1} frases nuevas en este episodio.":"{0} {1} new lines left in this episode.",
-"Ver el índice de oído":"View the listening index"}
+"Ver el índice de oído":"View the listening index",
+"grupo {0} de {1}":"group {0} of {1}",
+"{0} de {1} frases dominadas":"{0} of {1} lines mastered",
+"Cambia a tus armas {0}, que rellenan huecos.":"Switch to your {0} weapons, which fill the gaps.",
+"Cambia a tus armas {0}, que dictan.":"Switch to your {0} weapons, which do dictation.",
+"Para seguir rellenando huecos necesitas un arma a distancia.":"To keep filling the gaps you need a ranged weapon.",
+"Para seguir dictando necesitas un arma cuerpo a cuerpo.":"To keep doing dictation you need a melee weapon.",
+"Continuar":"Continue"}

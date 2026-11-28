@@ -2120,6 +2120,59 @@ function descentList(z, zp) {
   if (deep >= n) rows.push(row(deep === cur ? cur : deep, descentName(z, deep === cur ? cur : deep), "el episodio vuelve a empezar"));
   return `<p class="dim small">${n} descensos hasta el final del episodio; cada uno es el tramo siguiente. Más hondo, el episodio vuelve a empezar, más duro.</p><ol class="descents">${rows.join("")}</ol>`;
 }
+// ---------- Continuar: back to where you left off ----------
+// Per episode, the last zone you fought in (ch.lastPlace[ep]: zone, descent, a course's mode) and what you were
+// last answering there, gaps or dictation (updated with every answer, so swapping weapons mid-fight counts).
+// The top of the map offers to go on with exactly that, while it isn't mastered and is still open.
+function notePlace(id) {
+  const zp = ch.zones[id] || {}, z = id === REMOLINO ? null : E.zoneById(id);
+  (ch.lastPlace ||= {})[S.ep] = { zone: id, mode: z?.modes ? modeOf(id) : null, depth: z?.endless ? zp.depth || 0 : null, kind: scoreKind(), t: Date.now() };
+}
+function notePlaceKind() {
+  const P = ch.lastPlace?.[S.ep];
+  if (P && P.zone === S.zone?.id && (S.F.mode === "cloze" || S.F.mode === "dictation") && !S.F.lesson) P.kind = S.F.mode === "cloze" ? "cloze" : "dict";
+}
+// the kind your other weapon set attacks with
+function otherSetKind() {
+  const was = ch.swap;
+  ch.swap = was === 1 ? 2 : 1;
+  const k = stats().kind;
+  ch.swap = was;
+  return k === "ranged" ? "cloze" : "dict";
+}
+function lastPlace() {
+  const P = ch?.lastPlace?.[S.ep];
+  if (!P || !S.T) return null;
+  const rem = P.zone === REMOLINO, i = ZONES.findIndex((z) => z.id === P.zone);
+  if (rem ? !episodeDone() : i < 0 || !(i === 0 || ch.zones[ZONES[i - 1].id]?.cleared)) return null;
+  const z = rem ? remolinoZone() : ZONES[i], zp = ch.zones[P.zone];
+  if (!zp) return null;
+  if (z.modes) return P.mode && !zp.done?.[P.mode] ? { P, z, zp } : null;
+  const depth = z.endless ? P.depth ?? zp.depth ?? 0 : 0, zl = zoneLines(z, depth), have = mastered(zl, P.kind);
+  return zl.length && have < zl.length ? { P, z, zp, depth, have, need: zl.length } : null;
+}
+function continueHtml() {
+  const L = lastPlace();
+  if (!L) return "";
+  const { P, z, zp, depth, have, need } = L;
+  const what = P.mode ? LEVEL_NAME[P.mode] : P.kind === "cloze" ? "Rellenar huecos" : "Dictado";
+  const where = z.endless ? descentName(z, depth) : zp.pack < z.packs ? `grupo ${zp.pack + 1} de ${z.packs}` : zp.cleared ? "liberada" : `te espera ${BOSSNAME(z)}`;
+  const prog = need ? `${have} de ${need} frases dominadas` : "";
+  let note = "", ok = true;
+  if (!P.mode && P.kind !== scoreKind()) {
+    if (otherSetKind() === P.kind) { const set = ch.swap === 1 ? "II" : "I"; note = P.kind === "cloze" ? `Cambia a tus armas ${set}, que rellenan huecos.` : `Cambia a tus armas ${set}, que dictan.`; }
+    else { ok = false; note = P.kind === "cloze" ? "Para seguir rellenando huecos necesitas un arma a distancia." : "Para seguir dictando necesitas un arma cuerpo a cuerpo."; }
+  }
+  return `<div class="continue"><button id="continueBtn" class="primary" ${ok ? "" : "disabled"}>Continuar</button>
+    <div><b>${esc(z.name)}</b> · ${what}<span class="dim"> · ${[where, prog].filter(Boolean).join(" · ")}</span>${note ? `<p class="${ok ? "dim" : "warn"}">${note}</p>` : ""}</div></div>`;
+}
+function continuePlace() {
+  const L = lastPlace();
+  if (!L) return renderMap();
+  const { P, z } = L;
+  if (!P.mode && P.kind !== scoreKind()) { if (otherSetKind() !== P.kind) return; swapWeapons(); }
+  enterZone(P.zone, P.mode || undefined, z.endless ? L.depth : undefined);
+}
 function renderMap() {
   useEpisodeZones(); migrateModes(); identifyOld(); dropRunes(); necklacesToShirts(); attuneTunjo();
   seedRating(); loadWordfreq();
@@ -2129,6 +2182,7 @@ function renderMap() {
   screen.innerHTML = `
     <section class="map">
       <div class="maphead"><div><h2>El camino</h2><p class="dim">${S.T.zones ? "Cada zona es un grupo de verbos. Elige cómo estudiarlo: el verbo, palabra por palabra, escribir el verbo o la frase entera. Cada forma tiene sus combates y su jefe, y puedes cambiar cuando quieras." : "Cada zona es siempre el mismo tramo del episodio: repítela hasta dominar todas sus frases."}${epShift() ? ` Cada episodio lleva su propio avance: este lo empezaste en el nivel ${epShift() + 1}, y sus zonas empiezan ahí.` : ""}</p></div><button id="toTown">Volver a la aldea</button></div>
+      ${continueHtml()}
       <div class="diffpick" role="radiogroup" aria-label="Dificultad">
         ${Object.entries(E.DIFFICULTY).map(([id, d]) => `<button role="radio" aria-checked="${(ch.difficulty || "medio") === id}" data-diff="${id}"><b>${d.name}</b><span>${esc(d.desc)}</span></button>`).join("")}
       </div>
@@ -2168,6 +2222,7 @@ function renderMap() {
     d.querySelector("#reYes").onclick = () => { restartEpisode(); closeDialog(); renderMap(); toast("El episodio empieza de nuevo a tu nivel"); };
   };
   screen.querySelectorAll("[data-zone]").forEach((b) => (b.onclick = () => enterZone(b.dataset.zone, b.dataset.mode, b.dataset.depth)));
+  $("#continueBtn")?.addEventListener("click", continuePlace);
   screen.querySelectorAll("[data-diff]").forEach((b) => (b.onclick = () => { ch.difficulty = b.dataset.diff; save(); renderMap(); }));
   if (!CFG.online) { renderRepasoEntry(); renderEncrucijadaEntry(); }
   renderOidoEntry();
@@ -2575,6 +2630,7 @@ function enterZone(id, mode, depth) {
   }
   migrateModes();
   if (mode) setMode(id, mode);
+  notePlace(id);
   if (id === REMOLINO) {
     if (!episodeDone()) return toast("El Remolino se abre cuando domines todo el episodio");
     const zp = ch.zones[REMOLINO];
@@ -3932,7 +3988,7 @@ function resolveAttack(r, acc, perfectFirst) {
   const wrote = r.strictAcc ?? acc;
   if (wrote >= 1) ch.stats.perfect++;
   if (F.review) F.masteredNow = 0;
-  else { masteryUpdate(wrote, words, D); trackWords(r); if (F.masteredNow) zoneRewards(S.zone); }
+  else { notePlaceKind(); masteryUpdate(wrote, words, D); trackWords(r); if (F.masteredNow) zoneRewards(S.zone); }
   const caught = []; // (runes caught by ear used to rise over you here)
   if (acc >= 1 && ch.streakLost) sfx.regain(F.combo + 1); else if (acc >= 1) sfx.correct(F.combo, perfectFirst); else if (acc >= 0.8) sfx.partial();
   const said = new Set((r.words || []).map((x) => norm(x.w))), right = new Set((r.words || []).filter((x) => x.ok).map((x) => norm(x.w)));
