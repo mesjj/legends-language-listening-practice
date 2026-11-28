@@ -9,6 +9,7 @@ import { sourcesHtml } from "../sources.js";
 import { runeOf as runeOfEs } from "./grammar.js";
 import { SUBJ, SUBJ_CATS } from "./subjuntivo.js";
 import { startI18n, lang, setLang, LANGS } from "./i18n.js";
+import * as RT from "./rating.js";
 import { sfx, isMuted, setMuted, setBusy, hush, quiet, wailOver } from "./sfx.js";
 import { loadBossArt, hasBossArt, bossSprite, specialMeter, bossIntro, bossShout, bossLeap, bossFinisher, bigHit, bigHurt } from "./boss.js";
 import * as MUSIC from "./music.js";
@@ -1356,6 +1357,34 @@ function companionsPanel() {
   };
   return `<h3>Compañeros</h3>${block("pet")}${block("mount")}<p class="dim small">Juntar y ver todos: en la aldea, el Establo.</p>`;
 }
+// The character sheet's Índice de oído: each rating (dictation, gaps) with its line over the days
+function ratingPanel() {
+  const kinds = [["dict", "Dictado"], ["cloze", "Huecos"]].filter(([k]) => ch.rating?.[k]?.n);
+  const intro = `<p class="dim small">Mide cómo entiendes audio nuevo, como el ranking del ajedrez: solo cuentan las frases que oyes por primera vez, y ni el equipo, ni las pociones, ni la dificultad lo cambian. Antes de cada una se calcula cuánto deberías acertar: si aciertas más, sube; si aciertas menos, baja. 1500 es acertar la mitad de una frase normal de tus episodios.</p>`;
+  if (!kinds.length) return `<h3>Índice de oído</h3>${intro}<p class="dim small">Todavía no ha contado ninguna frase nueva.</p>`;
+  return `<h3>Índice de oído</h3>${intro}${kinds.map(([k, name]) => {
+    const R = ch.rating[k], prov = RT.provisional(R);
+    return `<div class="ratingbox">${`<div class="srow"><span>${name}</span><b>${RT.shown(R.th)}${prov ? ` <small class="dim">provisional</small>` : ""}</b></div>`}
+      ${ratingSpark(R.hist)}
+      <p class="dim small">${R.n === 1 ? "1 frase nueva contada" : `${R.n} frases nuevas contadas`}${prov ? `; deja de ser provisional a las ${RT.RATING.provisional}` : ""}.</p></div>`;
+  }).join("")}`;
+}
+// a small line of the rating, one point a day (the day's last value), with 1500 dashed for reference
+function ratingSpark(hist) {
+  if (!hist?.length) return "";
+  const W = 240, H = 48, pad = 5, v = hist.map(([, th]) => RT.shown(th));
+  const lo = Math.min(1500, ...v) - 10, hi = Math.max(1500, ...v) + 10;
+  const X = (i) => (hist.length === 1 ? W - pad : pad + (i * (W - 2 * pad)) / (hist.length - 1)), Y = (y) => H - pad - ((y - lo) * (H - 2 * pad)) / (hi - lo);
+  const pts = v.map((y, i) => `${X(i).toFixed(1)},${Y(y).toFixed(1)}`).join(" ");
+  const slot = (W - 2 * pad) / Math.max(1, hist.length - 1);
+  const fmtDay = (d) => { const [y, m, dd] = d.split("-").map(Number); return new Date(y, m - 1, dd).toLocaleDateString("es", { day: "numeric", month: "short" }); };
+  return `<svg class="ratespark" viewBox="0 0 ${W} ${H}" role="img" aria-label="Índice de oído por día: de ${v[0]} a ${v[v.length - 1]}">
+    <line x1="${pad}" x2="${W - pad}" y1="${Y(1500).toFixed(1)}" y2="${Y(1500).toFixed(1)}" class="base"/>
+    ${hist.length > 1 ? `<polyline points="${pts}" class="line"/>` : ""}
+    <circle cx="${X(v.length - 1).toFixed(1)}" cy="${Y(v[v.length - 1]).toFixed(1)}" r="3.5" class="dot"/>
+    ${v.map((y, i) => `<rect x="${(X(i) - slot / 2).toFixed(1)}" y="0" width="${Math.max(8, slot).toFixed(1)}" height="${H}" class="hit"><title>${fmtDay(hist[i][0])}: ${y}</title></rect>`).join("")}
+  </svg>`;
+}
 function renderChar() {
   const st = stats(), c = CLASSES[ch.cls];
   const attr = (k, label, help, now) => `<div class="attr"><div class="aname">${label}<small>${esc(help)}</small><small class="anow">${esc(now)}</small></div><b>${st[k]}</b>${ch.points ? `<button data-attr="${k}" title="Asignar un punto a ${label}">+</button>` : ""}</div>`;
@@ -1404,6 +1433,7 @@ function renderChar() {
     ${st.block ? row("Bloqueo", `${st.block}%`) : ""}
     ${row("Esquiva", `${st.dodge.toFixed(1)}%`)}
     ${row("Res. fuego", `${st.resFire}%`, "fire")}${row("Res. frío", `${st.resCold}%`, "cold")}${row("Res. rayo", `${st.resLight}%`, "light")}${row("Res. veneno", `${st.resPoison}%`, "poison")}
+    ${ratingPanel()}
     <h3>Escucha</h3>
     ${row("Repetir", `${C.replay} de maná`)}
     ${row("Escuchar despacio", C.slow ? `${C.slow} de maná` : "gratis")}
@@ -1587,7 +1617,7 @@ function show(view) {
   // the streak lasts through the village too: it ends only when you miss or fall
   closeMenu(); tip.hidden = true;
   $("#hud").hidden = !ch || view === "create";
-  ({ create: renderCreate, town: renderTown, map: renderMap, fight: renderFight, dead: renderDead })[view]();
+  ({ create: renderCreate, town: renderTown, map: renderMap, fight: renderFight, dead: renderDead, oido: renderOido })[view]();
   renderHud();
   placeMusic();
 }
@@ -2092,6 +2122,7 @@ function descentList(z, zp) {
 }
 function renderMap() {
   useEpisodeZones(); migrateModes(); identifyOld(); dropRunes(); necklacesToShirts(); attuneTunjo();
+  seedRating(); loadWordfreq();
   // prizes for zones finished before there were prizes (or when the bag was full)
   if (S.T) for (const z of ZONES) zoneRewards(z);
   const unlocked = (i) => i === 0 || ch.zones[ZONES[i - 1].id]?.cleared;
@@ -2105,6 +2136,7 @@ function renderMap() {
       ${companionProgressHtml()}
       <section class="repaso" id="repaso"><p class="dim">Buscando tus mazos de Anki…</p></section>
       <section class="repaso encruc" id="encruc"></section>
+      <section class="repaso oidoentry" id="oidoEntry"></section>
       ${weakSpotsHtml()}
       <ol class="zones">
         ${ZONES.map((z, i) => {
@@ -2138,6 +2170,7 @@ function renderMap() {
   screen.querySelectorAll("[data-zone]").forEach((b) => (b.onclick = () => enterZone(b.dataset.zone, b.dataset.mode, b.dataset.depth)));
   screen.querySelectorAll("[data-diff]").forEach((b) => (b.onclick = () => { ch.difficulty = b.dataset.diff; save(); renderMap(); }));
   if (!CFG.online) { renderRepasoEntry(); renderEncrucijadaEntry(); }
+  renderOidoEntry();
 }
 
 // ---------- Repaso: your due Anki cards as a fight ----------
@@ -2730,11 +2763,11 @@ function gapFreshness(r) {
   S.F.gapStale = mult < 0.95 ? { mult, words: known } : null;
   return mult;
 }
-function trackWords(r) {
-  const F = S.F;
+function trackWords(r, F = S.F) {
   if (F.review || !r.words) return;
-  const W = weakBook();
+  const W = weakBook(), G = (ch.words ||= {});
   for (const x of r.words) {
+    if (!x.name) RT.addWord(G, x.w, x.ok); // every episode's history with the word, for the listening rating
     const k = norm(x.w);
     if (k.length < 2 || isSound(x.w) || x.name) continue; // a name you got wrong isn't a weak word
     if (x.ok) { if (W[k]) W[k].hit++; continue; }
@@ -2917,6 +2950,146 @@ async function flushLines(beacon = false) {
 }
 addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushLines(true); });
 addEventListener("pagehide", () => flushLines(true));
+// ---------- Índice de oído: the data for a listening rating (rating.js, README) ----------
+// Only a line heard for the first time measures listening, so every stretch of audio a line plays is
+// remembered (ch.heard: per episode, per line, 1 = all of it or the [a, b) word ranges played), as is your
+// history with every word across episodes (ch.words). A fresh line's features and score go to the line log.
+let wordfreq = null, wordfreqP = null;
+const loadWordfreq = () => (wordfreqP ||= api("api/wordfreq").then((j) => (wordfreq = j)).catch(() => (wordfreqP = null)));
+const heardOf = (ep = S.ep) => ((ch.heard ||= {})[ep] ||= {});
+// episodes the rating leaves out: the courses (generated, and asked in their own way) and English ones
+const ratedEp = () => S.T && !S.T.zones && S.T.source !== "course" && (!S.T.lang || S.T.lang === "es") && !/-en$/.test(S.ep || "");
+// Lines heard on the listening pages aren't fresh either: answered in Dictado, or played in Escuchar
+// (everything before the furthest point it reached).
+function heardElsewhere(si, ep = S.ep, T = S.T) {
+  const seg = T.segments[si];
+  if (store.get("game:" + ep, null)?.r?.[si] != null) return true;
+  const far = ((ch.listenFar ||= {})[ep] = Math.max(ch.listenFar[ep] || 0, +store.get("pos:" + ep, 0) || 0));
+  return seg.end <= far;
+}
+// Once per character: everything it has already answered counts as heard (its mastery records, struggles and
+// weak words), and its word history starts from them. Until that's done no line is rated.
+let seedP = null;
+function seedRating() {
+  if (!ch || ch.ratingSeed) return Promise.resolve();
+  return (seedP ||= (async () => {
+    const eps = new Set([...Object.keys(ch.mastery || {}), ...Object.keys(ch.masteryCloze || {}), ...Object.keys(ch.struggle || {}), ...Object.keys(ch.weak || {})]);
+    const W = (ch.words ||= {});
+    for (const ep of eps) {
+      let T;
+      try { T = await (await fetch(`media/${encodeURIComponent(ep)}/transcript.json`)).json(); } catch { continue; }
+      const H = heardOf(ep), segs = T.segments;
+      const mark = (si, a, b) => { if (segs[si]) H[si] = RT.addHeard(H[si], a, b ?? segs[si].words.length, segs[si].words.length); };
+      for (const M of [ch.mastery?.[ep], ch.masteryCloze?.[ep]]) for (const [key, v] of Object.entries(M || {})) {
+        const e = RT.parseExKey(key);
+        if (!e || !segs[e.si]) continue;
+        mark(e.si, e.a, e.b);
+        // a perfect answer: every word right; otherwise which ones were missed is in the weak words below
+        for (const x of RT.counted(segs[e.si].words.slice(e.a, e.b ?? undefined), T.names)) {
+          const k = norm(x.w);
+          if (k.length < 2) continue;
+          const r = (W[k] ||= { seen: 0, hit: 0, miss: 0 });
+          r.seen++; if (v >= 1) r.hit++;
+        }
+      }
+      for (const si of Object.keys(ch.struggle?.[ep] || {})) mark(+si, 0, null);
+      for (const [k, e] of Object.entries(ch.weak?.[ep] || {})) {
+        (e.si || []).forEach((si) => mark(si, 0, null));
+        const r = (W[k] ||= { seen: 0, hit: 0, miss: 0 });
+        r.miss += e.miss || 0; r.hit += e.hit || 0; r.seen = Math.max(r.seen, r.hit + r.miss);
+      }
+    }
+    ch.ratingSeed = Date.now();
+    save();
+  })().catch((e) => console.warn("rating seed", e)).finally(() => (seedP = null)));
+}
+// At a line's show: is it fresh, which rating it's for, its features. Then its audio counts as heard.
+function rateShow(F) {
+  F.rate = null;
+  if (!ch || !S.T || F.review || F.ex?.card || F.lesson) return;
+  const si = F.si, seg = S.T.segments[si];
+  if (!seg || seg.flagged) return;
+  const n = seg.words.length, a = F.ex.a ?? 0, b = F.ex.b ?? n;
+  const H = heardOf();
+  const kind = F.mode === "cloze" ? "cloze" : F.mode === "dictation" ? "dict" : null;
+  const fresh = !!(kind && ratedEp() && ch.ratingSeed && !S.zone?.dynamic && !RT.overlaps(H[si], a, b) && !heardElsewhere(si));
+  H[si] = RT.addHeard(H[si], a, b, n);
+  if (!fresh) return;
+  const words = exWords(), mods = alive(F).flatMap((m) => m.mods);
+  const ctx = { names: S.T.names, freq: wordfreq, words: ch.words || {}, playRate: mods.includes("veloz") ? RT.RATING.fast : 1, quiet: mods.includes("murmullo") };
+  // filling the gaps: the gaps' words are what's asked; how fast the line is spoken is the whole stretch's
+  const feat = RT.lineFeatures(kind === "cloze" ? (F.blanks || []).map((i) => words[i]).filter(Boolean) : words, ctx);
+  if (!feat) return;
+  if (kind === "cloze") feat.rate = RT.lineFeatures(words, ctx)?.rate ?? feat.rate;
+  F.rate = ratePredict(kind, feat);
+  if (F.rate) F.rate.where = { ep: S.ep, si, text: words.map((w) => w.w).join(" ") };
+}
+// The rating and its model, per kind ("dict" dictation, "cloze" filling the gaps)
+const ratingOf = (kind) => ((ch.rating ||= {})[kind] ||= RT.newRating());
+const modelOf = (kind) => ((ch.ratingModel ||= {})[kind] ||= RT.newModel());
+// a fresh line's prediction; without the corpus statistics (api/wordfreq not loaded) it isn't rated
+function ratePredict(kind, feat) {
+  const stats = wordfreq?.stats?.[kind];
+  if (!stats) return null;
+  const x = RT.featureVector(feat, stats);
+  return { kind, feat, x, E: RT.predict(x, modelOf(kind).w, ratingOf(kind).th) };
+}
+// After the answer: the score, the update, and what to log. F.rate.out keeps the change for the verdict,
+// and F.rate.undo puts things back if the line is then flagged as not matching its audio.
+function rateApply(rate, { strict, plays, slows, hinted }) {
+  const R = ratingOf(rate.kind), M = modelOf(rate.kind);
+  const rs = RT.answerScore({ strict, plays, slows, hinted });
+  if (rs == null) return { fresh: false };
+  rate.undo = { R: JSON.parse(JSON.stringify(R)), w: { ...M.w } };
+  const u = RT.rateUpdate(R, M, rate.x, rs, dayKey());
+  rate.out = { E: u.E, S: rs, d: RT.shown(u.th1) - RT.shown(u.th0), now: RT.shown(u.th1), n: R.n };
+  // the last 300 fresh lines, for the Índice de oído screen (its chart, its table, how good the predictions are)
+  const L = (ch.ratingLog ||= []);
+  L.push({ t: Date.now(), k: rate.kind, ep: rate.where?.ep, si: rate.where?.si, text: (rate.where?.text || "").slice(0, 120), E: u.E, S: rs, th: R.th, ...(S.chal ? { chal: 1 } : {}) });
+  if (L.length > 300) L.splice(0, L.length - 300);
+  rate.logged = L[L.length - 1];
+  return { fresh: true, rk: rate.kind, feat: rate.feat, rs, pred: u.E, th0: +u.th0.toFixed(4), th1: +u.th1.toFixed(4) };
+}
+function rateUndo(rate) {
+  if (!rate?.undo) return;
+  ch.rating[rate.kind] = rate.undo.R; modelOf(rate.kind).w = rate.undo.w;
+  if (rate.logged && ch.ratingLog) ch.ratingLog = ch.ratingLog.filter((x) => x !== rate.logged);
+  rate.undo = null; rate.out = null;
+}
+// under the result: *Frase nueva · esperado 62% · +14*
+function rateNote(rate) {
+  const o = rate?.out;
+  if (!o) return "";
+  const cls = o.d > 0 ? "up" : o.d < 0 ? "down" : "";
+  return `<span class="ratenote ${cls}" title="Una frase que nunca habías oído: cuenta para tu índice de oído (${rate.kind === "cloze" ? "huecos" : "dictado"}), ahora ${o.now}. Se esperaba que acertaras un ${Math.round(o.E * 100)}% y conseguiste un ${Math.round(o.S * 100)}% (contando las escuchas y la ayuda).">Frase nueva · esperado ${Math.round(o.E * 100)}% · ${o.d > 0 ? "+" : o.d < 0 ? "−" : "±"}${Math.abs(o.d)}</span>`;
+}
+// Opciones: a tag on a fresh line before you answer, from the prediction (it never shows the words)
+const RATE_TAG = { "fácil": "Fácil", media: "Media", "difícil": "Difícil", brutal: "Brutal" };
+function rateTag(rate, where) {
+  where?.querySelector(".ratetag")?.remove();
+  if (!rate || rate.out || !ch.rateTag || !where) return;
+  const t = RT.tagOf(rate.E);
+  where.append(h(`<span class="ratetag t-${t.normalize("NFD").replace(/[^a-z]/g, "")}" title="Frase nueva: se espera que aciertes un ${Math.round(rate.E * 100)}% a la primera.">${RATE_TAG[t]}</span>`));
+}
+// The same for a trial's clip (identifying an item, a tunjo): only a whole single line is rated.
+function rateClip(clip) {
+  const seg = clip.si != null ? S.T?.segments[clip.si] : null;
+  if (!ch || !seg || seg.flagged || clip.words !== seg.words) return null;
+  const H = heardOf(), n = seg.words.length;
+  const fresh = ratedEp() && ch.ratingSeed && !RT.overlaps(H[clip.si], 0, n) && !heardElsewhere(clip.si);
+  H[clip.si] = RT.addHeard(H[clip.si], 0, n, n);
+  if (!fresh) return null;
+  const feat = RT.lineFeatures(seg.words, { names: S.T.names, freq: wordfreq, words: ch.words || {}, playRate: clip.rate || 1 });
+  const rate = feat ? ratePredict("dict", feat) : null;
+  if (rate) rate.where = { ep: S.ep, si: clip.si, text: seg.text };
+  return rate;
+}
+// The answer's rating fields for the line log, after updating the rating.
+function rateAnswer(F, r) {
+  document.querySelector(".ratetag")?.remove();
+  if (!F.rate) return { fresh: false };
+  return rateApply(F.rate, { strict: r?.strictAcc ?? null, plays: (F.plays || 0) + (F.slows || 0), slows: F.slows, hinted: F.hinted });
+}
 function logShown() {
   const F = S.F;
   if (!F.fid) {
@@ -2926,10 +3099,12 @@ function logShown() {
   }
   F.shown = { id: rid(), t: Date.now() };
   F.listens = []; F.keys = 0; F.firstKey = null;
+  rateShow(F);
+  rateTag(F.rate, $("#playBtn")?.closest(".excontrols"));
   const card = F.ex?.card;
   const words = card ? [] : exWords();
   lineLog({
-    ev: "show", id: F.shown.id, fid: F.fid, ep: S.ep, si: F.si ?? null, part: F.ex?.k ?? null,
+    ev: "show", id: F.shown.id, fid: F.fid, ep: S.ep, si: F.si ?? null, part: F.ex?.k ?? null, ex: card ? null : exKey(F.ex), fresh: !!F.rate,
     words: card ? null : words.length, text: card ? null : words.map((w) => w.w).join(" "),
     start: words[0]?.s ?? null, end: words[words.length - 1]?.e ?? null,
     combo: F.combo, ear: F.ear || 0, life: Math.round((ch.life / stats().maxLife) * 100), mana: ch.mana, today: ch.days?.[dayKey()] || 0,
@@ -2950,6 +3125,7 @@ function logAnswer(r, acc, perfectFirst) {
     plays: F.plays || 0, slows: F.slows || 0, paid: F.paidCount || 0, hinted: !!F.hinted, ease: F.ease ?? null, typed, kind: r?.kind || null,
     // every word: [word, what you typed, 2 right | 1 near | "a" accent | 0 missed | "n" a name that doesn't count]
     w: (r?.words || []).map((x) => [x.w, x.typed ?? null, x.name ? "n" : x.ok ? 2 : x.accent ? "a" : x.near ? 1 : 0]),
+    ex: F.ex?.card ? null : exKey(F.ex), ...rateAnswer(F, r),
   });
   F.answers = (F.answers || 0) + 1; if (acc >= 1) F.rights = (F.rights || 0) + 1;
 }
@@ -3566,6 +3742,7 @@ function setupExercise(keep) {
   $("#attackBtn").onclick = attack;
   bindFlag();
   if (F.hinted) { F.hinted = false; hint(true); }
+  if (keep) rateTag(F.rate, $("#playBtn")?.closest(".excontrols"));
   updateExInfo();
   focusInput();
 }
@@ -4547,6 +4724,7 @@ function showResult(r, acc, hit) {
     ${nearMissHtml(r)}
     <div class="verdict"><b>${pct}%</b> ${acc >= 1 && (r.strictAcc ?? 1) < 1 ? `En el combate cuenta como perfecta: a tu equipo no le importan las tildes que faltan. Lo que escribiste: <b>${Math.min(99, Math.round(r.strictAcc * 100))}%</b>, así que no cuenta para dominarla.` : acc >= 1 ? "Perfecto." : r.accentMiss && acc >= 0.9 ? `Casi: ${r.accentMiss === 1 ? "falta una tilde" : `fallan ${r.accentMiss} tildes`} (palabras subrayadas).` : acc >= 0.8 ? "Casi." : acc >= 0.5 ? "A medias." : "Se te escapó."}
       <span class="dim">${F.prevBest == null ? "Primera vez que la oyes." : `Tu mejor antes: ${Math.round(F.prevBest * 100)}%.`}</span>
+      ${rateNote(F.rate)}
       ${F.masteredNow ? `<span class="mastered">¡Frase dominada! +${F.masteredNow} exp</span>` : ""}
       ${F.lesson ? "" : r.accentsPerfect ? `<span class="accents" title="Todas las palabras bien escritas, con tildes y eñes: el botín de este golpe tiene el doble de probabilidad de ser raro, de conjunto o único.">Tildes perfectas: botín ×2</span>` : ""}
       ${F.mode === "cloze" && F.gapStale ? `<span class="stale" title="Los huecos eran palabras que ya has acertado en huecos muchas veces (${esc(F.gapStale.words.join(", "))}): el botín de este golpe tiene menos probabilidad de ser raro o mejor. Cuanto más repetidas, menos.">Huecos ya sabidos: botín raro ×${F.gapStale.mult.toFixed(2).replace(".", ",")}</span>` : ""}</div>
@@ -4596,6 +4774,7 @@ async function flagCurrent() {
   catch (e) { document.querySelectorAll(".flagBtn").forEach((b) => (b.disabled = false)); return toast(e.message); }
   stopAll();
   lineLog({ ev: "flag", id: F.shown?.id, ep: S.ep, si });
+  rateUndo(F.rate); // a line that doesn't match its audio says nothing about your listening
   const b = F.before, st = stats();
   ch.life = Math.min(st.maxLife, Math.max(ch.life, b.life));
   ch.mana = Math.min(st.maxMana, Math.max(ch.mana, b.mana));
@@ -4810,6 +4989,9 @@ function openOptions() {
     <h4>Animaciones</h4>
     <label class="pickopt"><input type="checkbox" id="optAnim" ${calmOn() ? "" : "checked"}><span>Animaciones de fondo</span></label>
     <p class="dim">La niebla, la lluvia y las chispas de las escenas, y los brillos que laten sin parar. Sin ellas, el ordenador trabaja menos y se calienta menos. Los golpes, los dados y las celebraciones se ven igual.</p>
+    <h4>Índice de oído</h4>
+    <label class="pickopt"><input type="checkbox" id="optRateTag" ${ch.rateTag ? "checked" : ""}><span>Marcar las frases nuevas como fáciles o difíciles</span></label>
+    <p class="dim">Antes de responder una frase que nunca has oído, una etiqueta dice cuánto se espera que aciertes: fácil, media, difícil o brutal. No muestra ninguna palabra.</p>
     <h4>Conjuntos que caen</h4>
     <label class="pickopt spanopt">Conjuntos de nivel <input type="number" id="optSetLvl" min="1" max="${ch.level}" step="1" value="${setLevel() || ""}" placeholder="—" inputmode="numeric"> y hasta ${E.SET_SPAN} niveles por debajo</label>
     <p class="dim">Con 300, caen conjuntos de entre el nivel 260 y el 300, estés donde estés. No puede pasar de tu nivel (${ch.level}). En blanco, cada objeto trae conjuntos de cerca de su propio nivel.</p>
@@ -4823,6 +5005,7 @@ function openOptions() {
     </fieldset>
     <div class="row"><button id="pickAll" class="ghost">Marcarlo todo</button><button id="pickNone" class="ghost">No marcar nada</button><button id="optClose" class="primary">Listo</button></div>`, { cls: "optdlg" });
   d.querySelectorAll("[data-lang]").forEach((b) => (b.onclick = () => { if (b.dataset.lang !== lang()) setLang(b.dataset.lang); }));
+  d.querySelector("#optRateTag").onchange = (e) => { ch.rateTag = e.target.checked; save(); if (S.F) rateTag(S.F.checked ? null : S.F.rate, $("#playBtn")?.closest(".excontrols")); };
   d.querySelector("#optAnim").onchange = (e) => { localStorage.setItem("rpgCalm", e.target.checked ? "0" : "1"); applyCalm(); };
   d.querySelector("#optSetLvl").onchange = (e) => {
     const n = Math.round(Number(e.target.value));
@@ -5041,7 +5224,7 @@ function pickLine(minW, maxW, list = S.lines) {
 // onFlag(): the line was marked as not matching its audio (single-line clips only)
 // maxPlays: how many times the clip may be heard before answering (the first, automatic, counts); after, freely
 const TRIAL_BTNS = ["#tPlay", "#tSlow"];
-function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays = 0 }) {
+function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays = 0, onClose }) {
   const box = dialog(`
     <h3>${title}</h3>${sub ? `<p class="dim">${sub}</p>` : ""}
     <div class="excontrols">
@@ -5052,8 +5235,9 @@ function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays
     <div class="skeleton" id="tSkel" hidden></div>
     <textarea id="tAnswer" rows="2" placeholder="Escribe lo que oíste y pulsa Enter" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
     <div class="row" id="tRow"><button id="tCheck" class="primary">Comprobar <kbd>Enter</kbd></button><button id="tClose" class="ghost">Cerrar</button></div>
-    <div class="result" id="tRes" hidden></div>`, { cls: "trial" });
-  const T = { done: false, hinted: false };
+    <div class="result" id="tRes" hidden></div>`, { cls: "trial", onClose });
+  const T = { done: false, hinted: false, listens: 0, slows: 0, rate: rateClip(clip) };
+  rateTag(T.rate, box.querySelector(".excontrols"));
   let plays = 0;
   const left = () => box.querySelector("#tLeft");
   const play = (slow) => {
@@ -5064,6 +5248,7 @@ function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays
       if (left()) left().textContent = n === 1 ? "Te queda 1 escucha" : n ? `Te quedan ${n} escuchas` : "No quedan escuchas";
       if (!n) box.querySelectorAll("#tPlay, #tSlow").forEach((x) => (x.disabled = true));
     }
+    if (!T.done) { T.listens++; if (slow) T.slows++; }
     playRange(clip.start, clip.end, (clip.rate || 1) * (slow ? 0.75 : 1));
     markPlaying(audio, audio.currentTime, stopAt, slow, TRIAL_BTNS);
   };
@@ -5094,11 +5279,20 @@ function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays
     if (T.done) return;
     if (!ans.value.trim()) return toast("Escribe lo que oíste");
     const r = scoreDictation(clip.words, ans.value, { extraTol: stats().typoTol, names: S.T?.names });
+    if (clip.si != null) {
+      const G = (ch.words ||= {});
+      for (const x of r.words || []) if (!x.name) RT.addWord(G, x.w, x.ok);
+      const R = T.rate ? rateApply(T.rate, { strict: r.strictAcc, plays: T.listens, slows: T.slows, hinted: T.hinted }) : { fresh: false };
+      if (T.rate?.out) save();
+      lineLog({ ev: "answer", src: "trial", trial: title.replace(/<[^>]*>/g, "").slice(0, 60), ep: S.ep, si: clip.si, ex: clip.words === S.T?.segments[clip.si]?.words ? String(clip.si) : null,
+        acc: +r.acc.toFixed(3), strict: +r.strictAcc.toFixed(3), plays: T.listens, slows: T.slows, hinted: !!T.hinted, typed: ans.value,
+        w: (r.words || []).map((x) => [x.w, x.typed ?? null, x.name ? "n" : x.ok ? 2 : x.accent ? "a" : x.near ? 1 : 0]), ...R });
+    }
     const out = onResult(r, T);
     const pct = r.acc < 1 ? Math.min(99, Math.round(r.acc * 100)) : 100;
     const html = typeof out === "string" ? out : out.html;
     T.finish(`<div class="diff">${r.html}</div><div class="you">Escribiste: <span class="typed">${esc(r.typed || "(nada)")}</span></div>${nearMissHtml(r)}
-      <div class="verdict"><b>${pct}%</b></div>${html}`);
+      <div class="verdict"><b>${pct}%</b> ${rateNote(T.rate)}</div>${html}`);
     // what the phrase means, a card for it, or "this isn't what's said", now that it's been answered
     if (clip.si != null && S.T?.segments[clip.si]) {
       const P = { si: clip.si, text: clip.words.map((w) => w.w).join(" "), start: clip.start, end: clip.end, explanation: null };
@@ -5117,6 +5311,7 @@ function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays
           fl.disabled = true;
           try { await flagLine(S.ep, clip.si); } catch (e) { fl.disabled = false; return toast(e.message); }
           S.T.segments[clip.si].flagged = true;
+          rateUndo(T.rate);
           const k = S.lines.indexOf(clip.si);
           if (k >= 0) S.lines.splice(k, 1);
           save();
@@ -5146,6 +5341,256 @@ function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays
   ans.focus();
   quiet().then(() => { if (!T.done && box.isConnected && audio.paused) play(false); });
   return T;
+}
+
+// ---------- Índice de oído: its screen, Qué te cuesta, episode difficulty, the Desafío (phase 3) ----------
+const RATE_KINDS = [["dict", "Dictado"], ["cloze", "Huecos"]];
+const RATE_COLOR = { dict: "#ab8430", cloze: "#6f86f0" }; // checked for colour blindness on the dark panel
+// What makes lines hard for you, from the learned weights: whole sentences per feature
+const COSTS = {
+  rate: { top: "La velocidad es lo que más te cuesta.", none: "La velocidad casi no te afecta.", more: "La velocidad te cuesta más de lo que se suponía al principio.", less: "La velocidad te cuesta menos de lo que se suponía al principio." },
+  len: { top: "Lo que más te cuesta es que la frase sea larga.", none: "Que la frase sea larga casi no te afecta.", more: "Las frases largas te cuestan más de lo que se suponía al principio.", less: "Las frases largas te cuestan menos de lo que se suponía al principio." },
+  rarity: { top: "Las palabras poco comunes son lo que más te cuesta.", none: "Las palabras poco comunes casi no te afectan.", more: "Las palabras poco comunes te cuestan más de lo que se suponía al principio.", less: "Las palabras poco comunes te cuestan menos de lo que se suponía al principio." },
+  maxRarity: { top: "Lo que más te cuesta es una sola palabra muy rara en la frase.", none: "Una sola palabra muy rara en la frase casi no te afecta.", more: "Una palabra muy rara en la frase te cuesta más de lo que se suponía al principio.", less: "Una palabra muy rara en la frase te cuesta menos de lo que se suponía al principio." },
+  accents: { top: "Las tildes y las eñes son lo que más te cuesta.", none: "Las tildes y las eñes casi no te afectan.", more: "Las tildes y las eñes te cuestan más de lo que se suponía al principio.", less: "Las tildes y las eñes te cuestan menos de lo que se suponía al principio." },
+  quiet: { top: "El audio bajo (el Murmullo) es lo que más te cuesta.", none: "El audio bajo (el Murmullo) casi no te afecta.", more: "El audio bajo (el Murmullo) te cuesta más de lo que se suponía al principio.", less: "El audio bajo (el Murmullo) te cuesta menos de lo que se suponía al principio." },
+};
+const COST_NAME = { rate: "Velocidad", len: "Frase larga", rarity: "Palabras poco comunes", maxRarity: "Una palabra muy rara", accents: "Tildes y eñes", quiet: "Audio bajo" };
+function costsHtml(kind) {
+  const R = ch.rating?.[kind], M = ch.ratingModel?.[kind];
+  if (!R?.n || !M) return "";
+  const w0 = RT.RATING.w0, keys = Object.keys(w0), w = (k) => M.w[k] ?? w0[k];
+  const ranked = [...keys].sort((a, b) => w(b) - w(a));
+  const lines = [COSTS[ranked[0]].top];
+  const none = keys.filter((k) => w(k) < 0.1 && k !== ranked[0]);
+  for (const k of none) lines.push(COSTS[k].none);
+  for (const k of keys) { const d = w(k) - w0[k]; if (d >= 0.1) lines.push(COSTS[k].more); else if (d <= -0.1 && !none.includes(k)) lines.push(COSTS[k].less); }
+  const max = Math.max(0.01, ...keys.map((k) => Math.abs(w(k))), ...keys.map((k) => w0[k]));
+  const bars = ranked.map((k) => `<div class="costrow"><span>${COST_NAME[k]}</span><span class="costbar" title="Peso aprendido ${w(k).toFixed(2)} (al principio ${w0[k]})"><i style="width:${Math.max(0, (w(k) / max) * 100).toFixed(1)}%;background:${RATE_COLOR[kind]}"></i><b style="left:${((w0[k] / max) * 100).toFixed(1)}%"></b></span></div>`).join("");
+  return `<ul class="costlines">${lines.map((l) => `<li>${l}</li>`).join("")}</ul><div class="costbars">${bars}</div>`;
+}
+// Every episode's fresh lines (no word of them heard yet) and the predicted dictation score on them.
+// Transcripts are fetched once and kept.
+const TS_CACHE = new Map();
+async function transcriptOf(ep) {
+  if (ep === S.ep && S.T) return S.T;
+  if (!TS_CACHE.has(ep)) TS_CACHE.set(ep, fetch(`media/${encodeURIComponent(ep)}/transcript.json`).then((r) => r.json()).catch(() => null));
+  return TS_CACHE.get(ep);
+}
+const ratedTranscript = (ep, T) => T && !T.zones && T.source !== "course" && (!T.lang || T.lang === "es") && !/-en$/.test(ep);
+function freshLines(ep, T) {
+  const H = ch.heard?.[ep] || {};
+  return T.segments.map((s, si) => si).filter((si) => { const s = T.segments[si]; return playable(s) && !RT.overlaps(H[si], 0, s.words.length) && !heardElsewhere(si, ep, T); });
+}
+function linePrediction(T, si) {
+  const feat = RT.lineFeatures(T.segments[si].words, { names: T.names, freq: wordfreq, words: ch.words || {} });
+  const stats = wordfreq?.stats?.dict;
+  return feat && stats ? RT.predict(RT.featureVector(feat, stats), modelOf("dict").w, ratingOf("dict").th) : null;
+}
+async function episodeDifficulty() {
+  await loadWordfreq();
+  const out = [];
+  for (const e of S.eps || []) {
+    const T = await transcriptOf(e.id);
+    if (!ratedTranscript(e.id, T)) continue;
+    const fresh = freshLines(e.id, T), Es = fresh.map((si) => linePrediction(T, si)).filter((x) => x != null);
+    out.push({ id: e.id, title: e.title, fresh: fresh.length, total: T.segments.filter(playable).length, E: Es.length ? Es.reduce((a, b) => a + b, 0) / Es.length : null });
+  }
+  return out;
+}
+// the episode picker shows each episode's predicted score on its fresh lines
+async function labelEpisodes() {
+  if (!ch?.ratingSeed || !S.eps) return;
+  const list = await episodeDifficulty().catch(() => []);
+  const sel = $("#episode");
+  for (const o of sel?.options || []) {
+    const d = list.find((x) => x.id === o.value), e = S.eps.find((x) => x.id === o.value);
+    o.textContent = d?.E != null && d.fresh ? `${e.title} · ${Math.round(d.E * 100)}% (${d.fresh} nuevas)` : e.title;
+    if (d?.E != null && d.fresh) o.title = `Se espera que aciertes un ${Math.round(d.E * 100)}% de sus ${d.fresh} frases nuevas, al dictado y a la primera.`;
+  }
+}
+
+// On the map: the rating, the screen and the Desafío
+function renderOidoEntry() {
+  const el = $("#oidoEntry");
+  if (!el || !ch) return;
+  const shownK = RATE_KINDS.filter(([k]) => ch.rating?.[k]?.n).map(([k, name]) => `${name} <b>${RT.shown(ch.rating[k].th)}</b>${RT.provisional(ch.rating[k]) ? ` <span class="dim">provisional</span>` : ""}`);
+  el.innerHTML = `<div class="rhead"><div><b>Índice de oído</b> <span class="dim">${shownK.length ? shownK.join(" · ") : "cuenta las frases que oyes por primera vez"}</span></div>
+    <div class="row"><button id="oidoOpen">Ver</button><button id="chalOpen" class="primary" ${ratedEp() ? "" : "disabled title=\"Solo en los episodios en español que no son cursos\""}>Desafío de oído</button></div></div>`;
+  $("#oidoOpen").onclick = () => show("oido");
+  $("#chalOpen").onclick = () => challengeIntro();
+  labelEpisodes();
+}
+
+// a line chart of the rating, one point per fresh line, one line per kind
+function ratingChart(log) {
+  const series = RATE_KINDS.map(([k, name]) => ({ k, name, pts: log.filter((x) => x.k === k) })).filter((s) => s.pts.length);
+  if (!series.length) return `<p class="dim">Aún no hay frases nuevas contadas: el gráfico empieza con la primera.</p>`;
+  // drawn at about its real size (a phone's is narrower, not a shrunk desktop one), so its text stays readable
+  const W = narrow() ? 360 : 680, H = narrow() ? 200 : 230, L = 40, Rm = 104, T = 12, B = 26;
+  const all = series.flatMap((s) => s.pts.map((p) => RT.shown(p.th)));
+  let lo = Math.min(1500, ...all), hi = Math.max(1500, ...all);
+  const padY = Math.max(20, (hi - lo) * 0.1); lo = Math.floor((lo - padY) / 50) * 50; hi = Math.ceil((hi + padY) / 50) * 50;
+  const nMax = Math.max(...series.map((s) => s.pts.length));
+  const X = (i) => L + (nMax === 1 ? (W - L - Rm) / 2 : (i * (W - L - Rm)) / (nMax - 1)), Y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo);
+  const step = (hi - lo) / 50 > 6 ? 100 : 50, ticks = [];
+  for (let v = lo; v <= hi; v += step) ticks.push(v);
+  const day = (t) => new Date(t).toLocaleDateString("es", { day: "numeric", month: "short" });
+  const grid = ticks.map((v) => `<line x1="${L}" x2="${W - Rm}" y1="${Y(v)}" y2="${Y(v)}" class="${v === 1500 ? "mid" : "grid"}"/><text x="${L - 6}" y="${Y(v) + 4}" class="ytick">${v}</text>`).join("");
+  const xl = `<text x="${L}" y="${H - 6}" class="xtick">1</text><text x="${W - Rm}" y="${H - 6}" class="xtick end">${nMax}</text><text x="${(L + W - Rm) / 2}" y="${H - 6}" class="xtick mid">frases nuevas</text>`;
+  // labels at the right end, nudged apart if they'd touch
+  const ends = series.map((s) => ({ s, y: Y(RT.shown(s.pts[s.pts.length - 1].th)) })).sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 16) ends[i].y = ends[i - 1].y + 16;
+  const lines = series.map((s) => {
+    const p = s.pts.map((x, i) => [X(i), Y(RT.shown(x.th))]);
+    return `<g class="ser" style="--c:${RATE_COLOR[s.k]}">${p.length > 1 ? `<polyline points="${p.map((q) => q.map((v) => v.toFixed(1)).join(",")).join(" ")}"/>` : ""}
+      <circle cx="${p[p.length - 1][0].toFixed(1)}" cy="${p[p.length - 1][1].toFixed(1)}" r="4"/>
+      ${s.pts.map((x, i) => `<circle class="hit" cx="${p[i][0].toFixed(1)}" cy="${p[i][1].toFixed(1)}" r="7"><title>${s.name}, frase ${i + 1} (${day(x.t)}): ${RT.shown(x.th)} · esperado ${Math.round(x.E * 100)}%, conseguido ${Math.round(x.S * 100)}%</title></circle>`).join("")}</g>`;
+  }).join("");
+  const labels = ends.map(({ s, y }) => `<g style="--c:${RATE_COLOR[s.k]}"><line x1="${W - Rm + 6}" x2="${W - Rm + 14}" y1="${y}" y2="${y}" class="key"/><text x="${W - Rm + 18}" y="${y + 4}" class="lab">${s.name} ${RT.shown(s.pts[s.pts.length - 1].th)}</text></g>`).join("");
+  const legend = series.length > 1 ? `<div class="chartkey">${series.map((s) => `<span><i style="background:${RATE_COLOR[s.k]}"></i>${s.name}</span>`).join("")}</div>` : "";
+  return `${legend}<svg class="ratechart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Índice de oído por frase nueva">${grid}${xl}${lines}${labels}</svg>
+    <details class="charttable"><summary>Ver como tabla</summary><table><tr><th></th><th>Frase</th><th>Índice</th><th>Esperado</th><th>Conseguido</th></tr>${series.flatMap((s) => s.pts.map((x, i) => `<tr><td>${s.name}</td><td>${i + 1}</td><td>${RT.shown(x.th)}</td><td>${Math.round(x.E * 100)}%</td><td>${Math.round(x.S * 100)}%</td></tr>`)).join("")}</table></details>`;
+}
+// how good the predictions are: by quarter of the predicted score, the mean actual one
+function calibrationHtml(log) {
+  if (log.length < 20) return `<p class="dim">Con ${log.length} frases nuevas aún no se puede saber; hacen falta al menos 20 (y unas 300 para fiarse).</p>`;
+  const rows = [[0, 0.25], [0.25, 0.5], [0.5, 0.75], [0.75, 1.01]].map(([a, b]) => { const P = log.filter((x) => x.E >= a && x.E < b); return { a, b, n: P.length, E: P.length ? P.reduce((s, x) => s + x.E, 0) / P.length : 0, S: P.length ? P.reduce((s, x) => s + x.S, 0) / P.length : 0 }; }).filter((r) => r.n);
+  return `<table class="calib"><tr><th>Se esperaba</th><th>Frases</th><th>Media esperada</th><th>Media conseguida</th></tr>${rows.map((r) => `<tr><td>${Math.round(r.a * 100)}–${Math.min(100, Math.round(r.b * 100))}%</td><td>${r.n}</td><td>${Math.round(r.E * 100)}%</td><td>${Math.round(r.S * 100)}%</td></tr>`).join("")}</table>
+    <p class="dim small">Si las dos últimas columnas se parecen, la predicción acierta. ${log.length < 300 ? `Con ${log.length} frases es una primera idea.` : ""}</p>`;
+}
+function renderOido() {
+  const log = ch.ratingLog || [], C = ch.challenge || {};
+  const cards = RATE_KINDS.map(([k, name]) => {
+    const R = ch.rating?.[k];
+    if (!R?.n) return `<div class="ratecard" style="--c:${RATE_COLOR[k]}"><span>${name}</span><b class="dim">—</b><small class="dim">sin frases nuevas aún</small></div>`;
+    const prev = R.hist.length > 1 ? R.hist[R.hist.length - 2][1] : 0, d = RT.shown(R.th) - RT.shown(prev);
+    return `<div class="ratecard" style="--c:${RATE_COLOR[k]}"><span>${name}</span><b>${RT.shown(R.th)}</b><small>${RT.provisional(R) ? `provisional · ${R.n} de ${RT.RATING.provisional}` : `${R.n} frases nuevas`}${d ? ` · <span class="${d > 0 ? "up" : "down"}">${d > 0 ? "+" : "−"}${Math.abs(d)} ${R.hist.length > 1 ? "desde el último día" : "desde 1500"}</span>` : ""}</small></div>`;
+  }).join("");
+  const recent = log.slice(-15).reverse();
+  screen.innerHTML = `<section class="oido">
+    <div class="maphead"><div><h2>Índice de oído</h2><p class="dim">Cómo entiendes audio nuevo, como el ranking del ajedrez. Solo cuentan las frases que oyes por primera vez; el equipo, las pociones y la dificultad no lo cambian. 1500 es acertar la mitad de una frase normal de tus episodios.</p></div>
+      <button id="oidoBack" class="ghost">Volver al mapa</button></div>
+    <div class="ratecards">${cards}</div>
+    <h3>Por frase nueva</h3>${ratingChart(log)}
+    <div class="oidogrid">
+      <div><h3>Últimas frases nuevas</h3>${recent.length ? `<table class="recent"><tr><th>Frase</th><th>Esperado</th><th>Conseguido</th><th>Cambio</th></tr>${recent.map((x) => { const i = log.indexOf(x), prev = log.slice(0, i).reverse().find((y) => y.k === x.k), d = RT.shown(x.th) - RT.shown(prev?.th ?? 0); return `<tr><td><span class="ltext" translate="no" title="${esc(x.text)}">${esc(x.text)}</span><small class="dim">${x.k === "cloze" ? "huecos" : "dictado"}${x.chal ? " · desafío" : ""}</small></td><td>${Math.round(x.E * 100)}%</td><td>${Math.round(x.S * 100)}%</td><td class="${d > 0 ? "up" : d < 0 ? "down" : ""}">${d > 0 ? "+" : d < 0 ? "−" : "±"}${Math.abs(d)}</td></tr>`; }).join("")}</table>` : `<p class="dim">Ninguna todavía.</p>`}</div>
+      <div><h3>Qué te cuesta</h3>${RATE_KINDS.map(([k, name]) => (ch.rating?.[k]?.n ? `<h4>${name}</h4>${costsHtml(k)}` : "")).join("") || `<p class="dim">Sale de lo que el modelo aprende con cada frase nueva.</p>`}
+        <p class="dim small">La barra es lo que pesa cada cosa ahora; la raya, lo que se suponía al principio. ${(ch.rating?.dict?.n || 0) + (ch.rating?.cloze?.n || 0) < 1000 ? "Con menos de unas mil frases nuevas, sobre todo repite lo que se suponía." : ""}</p>
+        <h3>¿Acierta la predicción?</h3>${calibrationHtml(log)}</div>
+    </div>
+    <h3>Episodios</h3><div id="epDiff"><p class="dim">Calculando…</p></div>
+    <h3>Desafío de oído</h3>
+    <p class="dim">${CHAL_RULES}</p>
+    <p>${C.runs ? `Tu récord: <b>${C.best.right}</b> ${C.best.right === 1 ? "frase acertada" : "frases acertadas"}; mejor subida del índice: <b>${C.best.gain > 0 ? "+" : ""}${C.best.gain}</b>. Lo has jugado ${C.runs === 1 ? "una vez" : `${C.runs} veces`}.` : "Aún no lo has jugado."}</p>
+    <div class="row"><button id="chalGo" class="primary" ${ratedEp() ? "" : "disabled"}>Empezar el desafío</button></div>
+  </section>`;
+  $("#oidoBack").onclick = () => show("map");
+  $("#chalGo").onclick = () => challengeIntro();
+  episodeDifficulty().then((list) => {
+    const el = $("#epDiff");
+    if (!el || S.view !== "oido") return;
+    const tot = list.reduce((a, d) => a + d.fresh, 0);
+    el.innerHTML = `<table class="epdiff"><tr><th>Episodio</th><th>Frases nuevas</th><th>Se espera</th></tr>${list.map((d) => `<tr class="${d.id === S.ep ? "cur" : ""}"><td>${esc(d.title)}</td><td>${d.fresh} de ${d.total}</td><td>${d.E != null && d.fresh ? `${Math.round(d.E * 100)}%` : "—"}</td></tr>`).join("")}</table>
+      <p class="dim small">Lo que se espera que aciertes, al dictado y a la primera, en las frases que aún no has oído de cada episodio. Te quedan <b>${tot}</b> frases nuevas en total: son las únicas que cuentan para el índice, y el desafío las gasta.</p>`;
+  });
+}
+
+// ---------- Desafío de oído ----------
+// Five minutes of fresh lines from this episode, whole, out of order; three misses end it. It starts on lines
+// you're expected to get about 70% of and moves toward 50% as you get them right. Gold and experience only.
+const CHAL_MS = 5 * 60 * 1000, CHAL_MISSES = 3, CHAL_RIGHT = 0.9;
+const CHAL_RULES = "Cinco minutos de frases que nunca has oído, enteras y sueltas, de este episodio. Escribes cada una; con un 90% o más (contando tildes) es un acierto, y con menos, un fallo. Tres fallos lo terminan. Empieza con frases en las que se espera que aciertes un 70% y, según vas acertando, se acerca al 50%. Da oro y experiencia, no objetos, y cuenta para dominar frases y para tus palabras flojas.";
+function challengeCands() {
+  return freshLines(S.ep, S.T).filter((si) => S.lines.includes(si)).map((si) => ({ si, E: linePrediction(S.T, si) })).filter((x) => x.E != null);
+}
+async function challengeIntro() {
+  if (!ch.ratingSeed) await seedRating();
+  await loadWordfreq();
+  const n = challengeCands().length;
+  const d = dialog(`<h3>Desafío de oído</h3><p>${CHAL_RULES}</p>
+    <p class="dim">${n ? `Quedan ${n} frases nuevas en este episodio.` : "No quedan frases nuevas en este episodio: prueba con otro."}</p>
+    <div class="row"><button id="chalYes" class="primary" ${n ? "" : "disabled"}>Empezar</button><button id="chalNo" class="ghost">Cancelar</button></div>`);
+  d.querySelector("#chalNo").onclick = closeDialog;
+  d.querySelector("#chalYes").onclick = () => startChallenge();
+}
+function startChallenge() {
+  S.chal = { t0: Date.now(), end: Date.now() + CHAL_MS, right: 0, miss: 0, n: 0, th0: ratingOf("dict").th, gold: 0, xp: 0 };
+  lineLog({ ev: "challenge", ep: S.ep, start: true, th: S.chal.th0 });
+  nextChallengeLine();
+}
+const fmtLeft = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+function chalBar() {
+  const C = S.chal;
+  return `<span class="chalbar"><span class="clock">${fmtLeft(C.end - Date.now())}</span> · aciertos <b>${C.right}</b> · fallos <b>${"●".repeat(C.miss)}${"○".repeat(CHAL_MISSES - C.miss)}</b> · índice <b>${RT.shown(ratingOf("dict").th)}</b></span>`;
+}
+function nextChallengeLine() {
+  const C = S.chal;
+  if (!C) return;
+  if (Date.now() >= C.end || C.miss >= CHAL_MISSES) return endChallenge();
+  const cands = challengeCands();
+  if (!cands.length) return endChallenge("No quedan frases nuevas en este episodio.");
+  const target = 0.7 - 0.2 * Math.min(1, C.right / 12);
+  cands.sort((a, b) => Math.abs(a.E - target) - Math.abs(b.E - target));
+  const pick = cands[Math.floor(Math.random() * Math.min(4, cands.length))];
+  C.advancing = true;
+  trial({
+    title: "Desafío de oído", sub: chalBar(), clip: segClip(pick.si),
+    onClose: () => { if (S.chal === C && !C.advancing) endChallenge(); },
+    onFlag: () => { C.flagged = true; },
+    onResult: (r, T) => {
+      const ok = r.strictAcc >= CHAL_RIGHT, pred = T.rate?.out?.E ?? pick.E;
+      C.n++;
+      // like any line: mastery and weak words
+      const M = mastery("dictation"), key = exKey({ si: pick.si, a: 0, b: S.T.segments[pick.si].words.length });
+      M[key] = Math.max(M[key] ?? 0, r.strictAcc);
+      trackWords(r, { si: pick.si, review: false });
+      ch.stats.lines++; countToday();
+      let gain = "";
+      if (ok) {
+        C.right++;
+        const gold = Math.round((10 + 3 * ch.level) * (1.5 - pred)), xp = Math.max(1, Math.round(E.xpFor(ch.level) * 0.15 * (1.5 - pred) * XP_RATE));
+        ch.gold += gold; C.gold += gold; C.xp += xp; gainXp(xp);
+        gain = ` <span class="dim">+${gold} de oro, +${xp} exp</span>`;
+        sfx.correct(C.right, r.acc >= 1);
+      } else { C.miss++; sfx.partial(); }
+      save(); renderHud();
+      const over = C.miss >= CHAL_MISSES || Date.now() >= C.end;
+      document.querySelector(".dialog.trial .chalbar")?.replaceWith(h(chalBar()));
+      return { html: `<p>${ok ? `<b class="ok">Acierto.</b>${gain}` : `<b class="miss">Fallo</b> (hace falta un 90%).`}</p>`, again: () => (over ? endChallenge() : nextChallengeLine()), againLabel: over ? "Ver el resultado" : "Siguiente frase" };
+    },
+  });
+  C.advancing = false;
+  clearInterval(C.timer);
+  C.timer = setInterval(() => {
+    const el = document.querySelector(".dialog.trial .chalbar .clock");
+    if (!el || S.chal !== C) return clearInterval(C.timer);
+    el.textContent = fmtLeft(C.end - Date.now());
+    el.classList.toggle("late", C.end - Date.now() < 30000);
+  }, 500);
+}
+function endChallenge(why = "") {
+  const C = S.chal;
+  if (!C) return;
+  S.chal = null;
+  clearInterval(C.timer);
+  const gain = RT.shown(ratingOf("dict").th) - RT.shown(C.th0);
+  const R = (ch.challenge ||= { runs: 0, best: { right: 0, gain: 0 } });
+  R.runs++;
+  const recRight = C.right > R.best.right, recGain = C.n && gain > R.best.gain;
+  if (recRight) R.best.right = C.right;
+  if (recGain) R.best.gain = gain;
+  save();
+  lineLog({ ev: "challenge", ep: S.ep, end: true, right: C.right, miss: C.miss, lines: C.n, gain, gold: C.gold, xp: C.xp, ms: Date.now() - C.t0 });
+  const left = challengeCands().length;
+  const why2 = why || (C.miss >= CHAL_MISSES ? "Tres fallos." : Date.now() >= C.end ? "Se acabó el tiempo." : "");
+  const d = dialog(`<h3>Desafío de oído</h3>${why2 ? `<p class="dim">${why2}</p>` : ""}
+    <div class="chalsum"><div><b>${C.right}</b><span>${C.right === 1 ? "acierto" : "aciertos"}${recRight ? " · ¡récord!" : ""}</span></div><div><b>${C.n}</b><span>${C.n === 1 ? "frase" : "frases"}</span></div><div><b class="${gain > 0 ? "up" : gain < 0 ? "down" : ""}">${gain > 0 ? "+" : gain < 0 ? "−" : "±"}${Math.abs(gain)}</b><span>índice de oído${recGain ? " · ¡récord!" : ""}</span></div></div>
+    <p>${C.gold ? `Ganas ${C.gold} de oro y ${C.xp} de experiencia.` : "Esta vez, sin premio."} Quedan ${left} frases nuevas en este episodio.</p>
+    <div class="row"><button id="chalAgain" class="primary" ${left ? "" : "disabled"}>Otra vez</button><button id="chalSee">Ver el índice de oído</button><button id="chalClose" class="ghost">Cerrar</button></div>`);
+  d.querySelector("#chalAgain").onclick = () => startChallenge();
+  d.querySelector("#chalSee").onclick = () => { closeDialog(); show("oido"); };
+  d.querySelector("#chalClose").onclick = () => { closeDialog(); if (S.view === "map") renderMap(); else if (S.view === "oido") renderOido(); };
 }
 
 // ---------- identifying: good drops come unidentified ----------
@@ -5559,6 +6004,7 @@ function toggleMute() {
   await Promise.all([loadFigure(), loadAnims(), loadLook(), loadBossArt()]).catch(() => {}); // the figure falls back to empty if the art is missing
   if (ch) await prepareLook(lookOfChar(ch)).catch(() => {});
   const eps = await api("api/episodes");
+  S.eps = eps;
   const sel = $("#episode");
   sel.replaceChildren(...eps.map((e) => new Option(e.title, e.id)));
   const want = new URLSearchParams(location.search).get("ep") || store.get("lastEp", null);
@@ -5598,4 +6044,4 @@ async function quickStart() {
 }
 
 // for debugging in the console
-window.leyendas = { S, get ch() { return ch; }, E, socket, toAlembic, tooltipHtml2: (it) => tooltipHtml(it), showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, renderFight, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats, zoneBoss, restartEpisode, enterEncrucijada, identify, applyZonePicks };
+window.leyendas = { S, get ch() { return ch; }, E, socket, toAlembic, tooltipHtml2: (it) => tooltipHtml(it), showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, renderFight, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats, zoneBoss, restartEpisode, enterEncrucijada, identify, applyZonePicks, rating: { RT, seedRating, heardOf, rateShow, rateClip, get wordfreq() { return wordfreq; }, episodeDifficulty, startChallenge, endChallenge, challengeCands, renderOido } };

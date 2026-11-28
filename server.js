@@ -38,7 +38,7 @@ const SAVED_FILE = path.join(DATA_DIR, "saved.json");
 const LOOKUPS_FILE = path.join(DATA_DIR, "explanations.json");
 const auth = ONLINE ? makeAuth(DATA_DIR) : null;
 // online, the only API the game may use; the rest needs things that live on the owner's computer
-const ONLINE_API = new Set(["/api/episodes", "/api/config", "/api/state", "/api/login", "/api/logout", "/api/lines"]);
+const ONLINE_API = new Set(["/api/episodes", "/api/config", "/api/state", "/api/login", "/api/logout", "/api/lines", "/api/wordfreq"]);
 // pages anyone may load before logging in
 const OPEN_FILES = new Set(["/login.html", "/favicon.png", "/apple-touch-icon.png"]);
 
@@ -133,6 +133,39 @@ async function serveFile(req, res, file) {
     "Cache-Control": type.startsWith("audio") ? "private, max-age=86400" : "no-cache",
   });
   fs.createReadStream(file).pipe(res);
+}
+
+// ---------- word frequency, for the listening rating (public/rpg/rating.js) ----------
+// Every word of every Spanish transcript, counted, and the mean and SD of each line feature over all their
+// lines, computed once and cached in data/wordfreq.json until an episode is added or changed.
+// Not counted: English transcripts (an id ending -en, or a lang other than es) and generated courses.
+const RATING_MOD = import("./public/rpg/rating.js");
+let wordfreqMem = null;
+async function wordfreq() {
+  const R = await RATING_MOD;
+  const ts = [], sig = [];
+  for (const id of (await fsp.readdir(MEDIA_DIR).catch(() => [])).sort()) {
+    const f = path.join(MEDIA_DIR, id, "transcript.json");
+    const st = await fsp.stat(f).catch(() => null);
+    if (!st) continue;
+    sig.push(`${id}:${Math.round(st.mtimeMs)}`);
+    if (/-en$/.test(id)) continue;
+    try {
+      const t = JSON.parse(await fsp.readFile(f, "utf8"));
+      if (t.source === "course" || (t.lang && t.lang !== "es")) continue;
+      ts.push({ id, segments: t.segments, names: t.names });
+    } catch { /* not readable yet */ }
+  }
+  const key = sig.join("|");
+  if (wordfreqMem?.sig === key) return wordfreqMem;
+  const file = path.join(DATA_DIR, "wordfreq.json");
+  const cached = JSON.parse(await fsp.readFile(file, "utf8").catch(() => "null"));
+  if (cached?.sig === key) return (wordfreqMem = cached);
+  const freq = R.countWords(ts);
+  const out = { sig: key, eps: ts.map((t) => t.id), total: freq.total, counts: freq.counts, stats: R.featureStats(ts, freq) };
+  await fsp.mkdir(DATA_DIR, { recursive: true });
+  await fsp.writeFile(file, JSON.stringify(out));
+  return (wordfreqMem = out);
 }
 
 // ---------- episodes ----------
@@ -575,6 +608,7 @@ const server = http.createServer(async (req, res) => {
       if (p === "/" || (p.endsWith(".html") && p !== "/rpg.html")) return send(res, 302, "", { Location: "rpg.html" });
     }
     if (p === "/api/lines") return handleLines(req, res, null);
+    if (p === "/api/wordfreq" && req.method === "GET") return send(res, 200, await wordfreq());
     if (p === "/api/episodes" && req.method === "GET") {
       return send(res, 200, await listEpisodes());
     }

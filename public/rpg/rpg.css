@@ -1856,3 +1856,72 @@ body.calm *, body.calm *::before, body.calm *::after { animation-iteration-count
 .stl-row.slim { grid-template-areas: "head head"; padding: 3px 8px; }
 .stl-row.slim .stl-lvl { width: 20px; height: 20px; font-size: 11px; }
 .stl-row.slim .stl-head > div { flex-direction: row; gap: 8px; align-items: baseline; }
+
+/* Índice de oído */
+.verdict .ratenote { margin-left: 8px; font-weight: 600; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.verdict .ratenote.up { color: var(--ok); }
+.verdict .ratenote.down { color: var(--miss); }
+.ratetag { align-self: center; font-size: 13px; font-weight: 700; padding: 1px 8px; border-radius: 10px; border: 1px solid currentColor; white-space: nowrap; }
+.ratetag.t-facil { color: var(--ok); } .ratetag.t-media { color: var(--gold); } .ratetag.t-dificil { color: var(--close); } .ratetag.t-brutal { color: var(--miss); }
+.ratingbox { margin: 4px 0 10px; }
+.ratespark { display: block; width: 100%; max-width: 320px; height: auto; margin: 4px 0 2px; }
+.ratespark .base { stroke: var(--edge); stroke-width: 1; stroke-dasharray: 3 3; }
+.ratespark .line { fill: none; stroke: var(--gold); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ratespark .dot { fill: var(--gold); stroke: var(--panel); stroke-width: 2; }
+.ratespark .hit { fill: transparent; }
+.ratespark .hit:hover { fill: rgba(232, 223, 202, 0.06); }
+.repaso.oidoentry { border-left-color: #6f86f0; }
+.repaso.oidoentry .row { margin: 0; gap: 8px; flex-wrap: wrap; }
+.oido { max-width: 980px; margin: 0 auto; }
+.oido .maphead { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; }
+.oido .maphead button { white-space: nowrap; }
+.oido h3 { margin: 22px 0 8px; }
+.oido h4 { margin: 10px 0 4px; color: var(--dim); font-weight: 600; }
+.ratecards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 14px; }
+.ratecard { background: var(--panel); border: 1px solid var(--edge); border-top: 3px solid var(--c); border-radius: 6px; padding: 10px 14px; display: flex; flex-direction: column; }
+.ratecard > span { color: var(--dim); }
+.ratecard > b { font: 600 40px/1.1 var(--serif); font-variant-numeric: tabular-nums; }
+.ratecard small { color: var(--dim); }
+.up { color: var(--ok); } .down { color: var(--miss); }
+.ratechart { display: block; width: 100%; max-width: 720px; height: auto; background: var(--panel); border: 1px solid var(--edge); border-radius: 6px; }
+.ratechart .grid { stroke: #3a3025; stroke-width: 1; }
+.ratechart .mid { stroke: #6a5a44; stroke-width: 1; stroke-dasharray: 4 3; }
+.ratechart text { fill: var(--dim); font: 12px var(--sans); font-variant-numeric: tabular-nums; }
+.ratechart .ytick { text-anchor: end; }
+.ratechart .xtick.end { text-anchor: end; } .ratechart .xtick.mid { text-anchor: middle; }
+.ratechart .ser polyline { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ratechart .ser circle { fill: var(--c); stroke: var(--panel); stroke-width: 2; }
+.ratechart .ser circle.hit { fill: transparent; stroke: none; }
+.ratechart .ser circle.hit:hover { fill: var(--c); fill-opacity: 0.35; }
+.ratechart .key { stroke: var(--c); stroke-width: 2; }
+.ratechart .lab { fill: var(--text); font-weight: 600; }
+.chartkey { display: flex; gap: 16px; font-size: 14px; color: var(--dim); margin-bottom: 6px; }
+.chartkey i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.charttable summary { cursor: pointer; color: var(--dim); font-size: 14px; margin-top: 6px; }
+.charttable table { max-height: 240px; overflow: auto; display: block; }
+.oido table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+.oido th { text-align: left; color: var(--dim); font-weight: 500; border-bottom: 1px solid var(--edge); padding: 4px 8px 4px 0; }
+.oido td { border-bottom: 1px dotted #3a3025; padding: 4px 8px 4px 0; vertical-align: top; }
+.oido tr.cur td { color: var(--gold); }
+.oidogrid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; }
+.recent td:first-child { max-width: 0; width: 60%; }
+.recent .ltext { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent small { display: block; }
+.costlines { margin: 4px 0 8px; padding-left: 18px; }
+.costlines li { margin: 2px 0; }
+.costbars { display: grid; gap: 4px; margin-bottom: 6px; }
+.costrow { display: grid; grid-template-columns: 11em 1fr; gap: 8px; align-items: center; font-size: 14px; }
+.costbar { position: relative; height: 8px; background: #14110d; border: 1px solid var(--edge); border-radius: 4px; }
+.costbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
+.costbar b { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--text); }
+.chalbar { font-variant-numeric: tabular-nums; }
+.chalbar .clock.late { color: var(--miss); font-weight: 700; }
+.chalsum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; text-align: center; }
+.chalsum b { display: block; font: 600 32px/1.1 var(--serif); }
+.chalsum span { color: var(--dim); font-size: 14px; }
+.dialog b.ok { color: var(--ok); } .dialog b.miss { color: var(--miss); }
+@media (max-width: 700px) {
+  .oidogrid { grid-template-columns: 1fr; gap: 0; }
+  .oido .maphead { flex-direction: column; }
+  .costrow { grid-template-columns: 9em 1fr; }
+}

@@ -189,9 +189,9 @@ export function scoreDictation(allWords, typedText, opts = {}) {
 // Non-Spanish proper names (the episode's transcript.json `names`, from scripts/find_names.mjs: Kramer,
 // Puddy, Play Now...): a learner can't be expected to spell them from hearing them, so one typed wrong (or
 // left out) counts as right. Only the word as written in the line, capitalised, is a name.
-const bare = (w) => w.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, "");
+export const bare = (w) => w.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, "");
 export const nameSet = (names) => (names instanceof Set ? names : new Set(names || []));
-const isNameWord = (names, w) => names.size > 0 && /^\p{Lu}/u.test(bare(w)) && names.has(bare(w));
+export const isNameWord = (names, w) => names.size > 0 && /^\p{Lu}/u.test(bare(w)) && names.has(bare(w));
 function scoreWords(words, typedText, { extraTol = 0, nearIsExact = false, names } = {}) {
   names = nameSet(names);
   const typedRaw = typedText.trim().split(/\s+/).filter(Boolean);

@@ -51,6 +51,7 @@ Key ideas:
 - **Each zone has three bosses** (`ZONES` `bosses`). An episode meets one, picked at random and kept in `ch.bossPick` until the episode is restarted; always go through `zoneBoss(z)` in `main.js`, never `z.boss`.
 - **Each slot of the road draws one of five zones** (`ZONE_VARIANTS` in `data.js`), kept per episode in `ch.zonePick` until it's restarted. `applyZonePicks()` in `main.js` copies the drawn zone's name, monsters, bosses, scene and music onto the slot's object; progress stays keyed by slot id. The hells' Abismos name their descents (`descentName`).
 - **The Abismo's descents** carry on to the episode's end.
+- **Índice de oído** (`rating.js`, README): a listening rating measured only on fresh lines (`ch.heard` remembers every word range of audio played). Phases 1 (data), 2 (model, sheet, post-answer change) and 3 (its own screen, Qué te cuesta, episode difficulty, the Desafío) are in; the spec is `data/spec-indice-de-oido.md`. Tests: `node --test scripts/rating/`. In browser tests, route `**/segments/*/flag` too: clicking *No coincide* flags the real transcript.
 - **El Remolino** is the last level. It opens when the whole episode is mastered and is rebuilt from the lines you struggled with most.
 - **Progress is per episode** (`ch.zonesByEp`), and a new episode's zone levels are shifted to the character's level.
 - The character is saved in `localStorage` (`rpg`), or on the server when `ONLINE=1`.
