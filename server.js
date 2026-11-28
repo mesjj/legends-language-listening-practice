@@ -604,8 +604,8 @@ const server = http.createServer(async (req, res) => {
       }
       if (p === "/api/lines") return handleLines(req, res, user.id);
       if (p.startsWith("/api/") && !ONLINE_API.has(p)) return send(res, 404, { error: "No disponible en la versión en línea" });
-      // only the game: the listening and dictation pages need the owner's tools
-      if (p === "/" || (p.endsWith(".html") && p !== "/rpg.html")) return send(res, 302, "", { Location: "rpg.html" });
+      // only the games (Leyendas and Rumbo): the listening and dictation pages need the owner's tools
+      if (p === "/" || (p.endsWith(".html") && p !== "/rpg.html" && p !== "/rumbo.html")) return send(res, 302, "", { Location: "rpg.html" });
     }
     if (p === "/api/lines") return handleLines(req, res, null);
     if (p === "/api/wordfreq" && req.method === "GET") return send(res, 200, await wordfreq());

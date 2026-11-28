@@ -5,7 +5,7 @@ import * as acorn from "acorn";
 import { simple } from "acorn-walk";
 // usage: node scripts/i18n/extract.mjs  (writes scripts/i18n/strings.json)
 const ROOT = new URL("../../", import.meta.url).pathname;
-const files = process.argv.length > 2 ? process.argv.slice(2) : ["rpg/main.js", "rpg/data.js", "rpg/engine.js", "rpg/boss.js", "rpg/figure.js", "rpg/look.js", "listen-core.js", "sources.js", "rpg.html", "rpg/lpc/look.json"].map((f) => ROOT + "public/" + f);
+const files = process.argv.length > 2 ? process.argv.slice(2) : ["rpg/main.js", "rpg/data.js", "rpg/engine.js", "rpg/boss.js", "rpg/figure.js", "rpg/look.js", "listen-core.js", "sources.js", "rpg.html", "rpg/lpc/look.json", "rumbo/main.js", "rumbo/data.js", "rumbo.html"].map((f) => ROOT + "public/" + f);
 const ENT = { "&nbsp;": " ", "&middot;": "·", "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "&times;": "×", "&mdash;": "—", "&ndash;": "–", "&hellip;": "…", "&rarr;": "→", "&larr;": "←" };
 const dec = (t) => t.replace(/&[a-z#0-9]+;/g, (m) => ENT[m] ?? m);
 const out = new Map();

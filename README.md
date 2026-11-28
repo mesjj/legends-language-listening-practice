@@ -4,6 +4,8 @@ Listen to real Spanish audio with a transcript you can hide, loop, shadow and mi
 
 **Leyendas**, the listening RPG in `rpg.html`: every attack is a line you hear and type. It's set in original Colombian folklore and has loot, sets, bosses and a village.
 
+**Rumbo**, the listening trading game in `rumbo.html`: prices, rumors and contracts arrive only as audio, and you trade on what you understood (see [Rumbo](#rumbo-listening-space-trading-game)).
+
 | | |
 |---|---|
 | ![A fight: two monsters on the páramo, and the line to work on below](docs/images/fight.png) | ![The village with the inventory open: equipped gear on the paper doll, and the bag](docs/images/inventory.png) |
@@ -253,6 +255,58 @@ Each deck shows Anki's own three numbers, in Anki's colours: **new** (blue, what
 
 Monsters come from the furthest zone you've reached, at your level. When the cards run out the rest flee and you keep the loot. Only the review schedule changes: the game never edits note text, and the server refuses to answer cards outside these four decks (`REVIEW_DECKS` in server.js).
 
+## Rumbo (listening space-trading game)
+
+`rumbo.html`: a turn-based trading game where prices, rumors and contracts arrive only as audio. Leyendas trains accurate transcription; Rumbo trains understanding and acting on what you heard. **Information is money:** mishear a price and you buy wrong; take a hedge (*a lo mejor*) for a fact and you overbet. The spec is `data/Spec Rumbo — a Spanish listening space-trading game (v1).md`.
+
+**The loop.** A session is 12 jumps (or less: *Terminar la sesión*). At each station:
+
+- **The price board** shows only prices you confirmed, with their age in turns and where they came from: *lo que oíste*, *de tu recibo* (a trade's real price) or *se comenta en el muelle* (≈, see below).
+- **Three sources**, each one clip:
+  - *Radio* (free): 2 to 4 of the station's prices, read fast. Type each number (digits or words: *342* or *trescientos cuarenta y dos*) into the fields of the goods you heard. A wrong number goes on the board as confirmed.
+  - *Cantina* (a drink, 20 cr): two regulars drink there each turn. Each tells one rumor about a coming event. Answer three questions: what will happen, where, and how sure the speaker is (*seguro / probable / solo un rumor*). Your answers go in the *Libreta*. Whether it comes true depends on the speaker's hidden reliability (from 90% for la capitana Rocío down to 30% for el Chato) times their certainty (100% for *seguro*, 75% for *probable*, 50% for *solo un rumor*). Once the event's turn has passed, the Libreta shows whether it happened, and each speaker's record (*acertó 3 de 5*) is kept across sessions.
+  - *Contrato* (free): a client says the good, quantity, destination, deadline in jumps, pay and penalty. Fill the six fields, then accept or decline. The client's real terms bind you, not your notes: arrive at the true destination in time with the goods to get the *Entregar* button; late, and the penalty is charged.
+- **Playing a clip:** once free, *Otra vez* 5 cr, *Despacio* (0.75×) 10 cr. You can answer after the first play. There's no answer key: you find out through results.
+- **The market** estimates a trade from *your* price (with its impact), but fills at the true one, unit by unit: each unit bought raises the price 1%, each sold lowers it 1% (a unit sold lowers the price before it's paid, so a round trip always loses). The fill reveals a price you heard wrong (*anotaste 626, pero el precio era 619*). At Puerto Bachué you can enlarge the hold from 20 to 40 units for 2,500 cr.
+- **The map** shows the three stations, fuel to each (40 or 70 cr) and the last confirmed prices everywhere.
+- **The end of a session** shows net worth before and after (credits plus cargo at the hub's true price), the best trade, earnings per turn over recent sessions, the Rumbo rating, and every clip you got wrong, with its transcript, your answer, the truth and a play button.
+
+During a session the header's worth counts cargo at what it cost, so it never gives away a true price. Credits, cargo, hold, position, the board, speakers' records and which clips you've heard carry over between sessions (`localStorage` key `rumbo`, or the server with `ONLINE=1`).
+
+**Stations and goods.** Mina Tequendama (mining moon, noisy radio) makes ore and ice cheap and pays well for food and medicine. Huerta Iguaque (agricultural ring) makes food cheap and wants ore and machinery. Puerto Bachué (the hub, clean radio) pays a fair price for everything. Goods: mineral, hielo, comida, medicinas, maquinaria.
+
+**The economy** (`public/rumbo/economy.js`, pure and seeded). Every price is an anchor times the active events. Each turn the anchor takes a random ±3% step and reverts 12% toward the station's base (producers ~0.6 of a good's base, buyers ~1.4). **Events** are price shocks of ±30–80% for 2–4 turns: three unannounced per session, plus those set off by true rumors. **The bank decides, the economy follows:** on arrival the game picks the station's broadcast among unheard clips whose prices are within ~12% of the true ones (least recently heard first), then sets the true prices to the spoken ones. Over 300 simulated sessions every turn found a fitting clip (median distance 5%).
+
+**The market prices difficulty.** Each clip gets a difficulty from the Índice de oído's features (speech rate, length, word rarity, accents) plus its radio noise:
+
+- A hard rumor announces its event earlier: 1, 2 or 3 turns ahead.
+- An easy broadcast is *priced in*: its prices show on the board as ≈ (rounded to tens) before you listen.
+- Hard-to-follow clients pay more: 1.2×, 1.4× or 1.7× the goods' value, set when the clip is written.
+
+Each source shows its difficulty for you (*fácil / media / difícil / brutal*, from your rating).
+
+**Radio filter** (`public/rumbo/audio.js`): WebAudio adds a 300–3,400 Hz band-pass, static and short dropouts, by station and source. The mine's band is noisy (0.55), the ring's a little (0.25), the port's clean; the cantina adds 0.3, contracts 0.1. Music and effects never play over a clip.
+
+**Rating.** A clip heard for the first time and answered counts toward a separate rating, `rumbo`, with the same model as the Índice de oído (`rpg/rating.js`). The score is the share of fields right, reduced for replays and slow plays as in Leyendas. It's in the header and on the end screen.
+
+**Event log.** `api/lines` (as in Leyendas), with `game: "rumbo"`: `rumboClip` (clip, source, plays, slows, your answer, the truth, score), `rumboTrade`, `rumboContract` and `rumboTurn` (net worth).
+
+**The clip bank** (`media/rumbo/`, committed: it's generated, not copyrighted) holds 300 broadcasts, 150 rumors and 60 contracts: an mp3 per clip and `bank.json` (text, facts, speaker, word timings, what Whisper heard). Every recurring speaker keeps one Fish Audio voice (`SPEAKERS` in `public/rumbo/data.js`); a clip's tier (1 clear to 3 fast and colloquial) sets its register and speed. To rebuild or extend it:
+
+```sh
+node scripts/rumbo/write_clips.mjs            # scripts → courses/rumbo/clips.json (claude CLI)
+.venv/bin/python scripts/rumbo/build_bank.py  # Fish voices, Whisper, alignment → media/rumbo/
+node scripts/rumbo/check_bank.mjs             # marks clips whose numbers don't match; the game skips them
+node --test scripts/rumbo/                    # the economy's tests and the balance check
+```
+
+**Balance check** (`scripts/rumbo/balance.test.mjs`): bots play 120 sessions on the real economy and bank. One trades blind on the stations' base prices, one hears each station's broadcast when it docks, and one knows every true price. The listener must make at least 1.4× the blind trader's profit; today it's about 1.6× (median +18k against +11k from 1,500 cr), and knowing everything adds only about 10% more. Run it after changing prices, events or the bank.
+
+- `write_clips.mjs` makes the facts in code (broadcast prices sampled from simulated sessions, so the bank covers what the game needs). Claude writes the Spanish, with numbers in words. A clip is rejected and rewritten unless the numbers in its text are exactly its facts' numbers, and a second Claude, who never sees the facts, fills in the player's form from the text and gets the facts back. It keeps what's written and only makes what's missing.
+- `build_bank.py` caches Fish output in `courses/rumbo/audio/` (not committed) and only rebuilds clips whose text, voice or speed changed. `--say` uses macOS voices instead, for development without a Fish key.
+
+**Not in v1:** combat, travel events, more stations and goods, and Leyendas' transmissions sold as cargo.
+
 ## Courses (sentences written for a learner)
 
 A course is a set of sentences written for a lesson, spoken by Fish Audio, and played in the game with its own zones instead of an episode's. The first is `courses/verbos-irregulares/` (from the irregular-verbs list in `external-data/`), for the online version:
@@ -277,7 +331,7 @@ python3 scripts/build_course.py courses/verbos-irregulares --check   # Whisper l
 The game can also run online on a small server, for a friend who speaks Spanish and is learning English. It's the same code with `ONLINE=1`:
 
 - **Login.** Everyone logs in (`auth.js`), and each player's game is saved on the server, so it carries over between devices. A change is kept in the browser at once and sent to the server a moment later; if it never arrives (no signal), the browser's newer copy wins on the next visit.
-- **Only the game.** The listening and dictation pages, Anki (the crypt), Claude (Explicar, La encrucijada's feedback) and the voice (spells, grimoire) all need this computer, so they're switched off and their buttons hidden. `/` goes to the game.
+- **Only the games.** Leyendas and Rumbo. The listening and dictation pages, Anki (the crypt), Claude (Explicar, La encrucijada's feedback) and the voice (spells, grimoire) all need this computer, so they're switched off and their buttons hidden. `/` goes to the game.
 - **English.** `LEARN_LANG=en`: the menus stay in Spanish, and missed verbs get no tense names (those are Spanish grammar). Apostrophes don't count in any language (phones type ’ for ').
 - **New players** start straight in the village with a random heroine named after their account; they can change her look under Personaje → Cambiar aspecto.
 - **Phones.** Below 760px wide the header is two rows, panels open one at a time and close when you change screen, the stash and alembic show your bag inline, the fight is compact, and the HUD hides while the keyboard is up.
@@ -361,6 +415,8 @@ Every explanation Claude gives (Explain, Ask about this phrase, Explicar in the 
 
 - `server.js`: static files, audio with range requests, saved items (`data/saved.json`), Claude, ffmpeg clips, AnkiConnect
 - `public/`: the app (no build step). `listen-core.js` holds the answer scoring shared by the dictation game and the RPG. `rpg/` holds the RPG: `data.js` (content), `engine.js` (rules), `main.js` (UI), `figure.js` (the character figure and item icons, from `rpg/lpc/`).
+- `public/rumbo/`: Rumbo: `data.js` (stations, goods, events, speakers), `economy.js` (pure rules), `audio.js` (the radio filter), `main.js` (screens)
+- `media/rumbo/`: Rumbo's clip bank
 - `media/<id>/`: `audio.mp3` (CBR, so seeking is exact) and `transcript.json`
 - `scripts/`: episode pipeline
 

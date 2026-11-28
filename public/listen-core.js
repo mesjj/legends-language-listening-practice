@@ -284,3 +284,63 @@ export function scoreCloze(words, blanks, typed, { extraTol = 0, nearIsExact = f
 export function flagLine(ep, si, flagged = true) {
   return api(`api/episodes/${encodeURIComponent(ep)}/segments/${si}/flag`, { method: "POST", body: { flagged } });
 }
+
+// ---------- Spanish numbers (Rumbo's price fields and its clip checks) ----------
+// "trescientos cuarenta y dos" → 342, "mil doscientos" → 1200, "342" / "1.342" → the number.
+const NUM_WORDS = (() => {
+  const m = { cero: 0, uno: 1, una: 1, un: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10,
+    once: 11, doce: 12, trece: 13, catorce: 14, quince: 15, dieciseis: 16, diecisiete: 17, dieciocho: 18, diecinueve: 19, veinte: 20,
+    veintiuno: 21, veintiun: 21, veintiuna: 21, veintidos: 22, veintitres: 23, veinticuatro: 24, veinticinco: 25, veintiseis: 26,
+    veintisiete: 27, veintiocho: 28, veintinueve: 29, treinta: 30, cuarenta: 40, cincuenta: 50, sesenta: 60, setenta: 70, ochenta: 80,
+    noventa: 90, cien: 100, ciento: 100, quinientos: 500, quinientas: 500, setecientos: 700, setecientas: 700, novecientos: 900, novecientas: 900, mil: 1000 };
+  for (const [w, n] of [["dos", 2], ["tres", 3], ["cuatro", 4], ["seis", 6], ["ocho", 8]]) m[w + "cientos"] = m[w + "cientas"] = n * 100;
+  return m;
+})();
+// the kind of a number word: what may follow it inside the same number
+const numKind = (n) => (n === 1000 ? "mil" : n >= 100 ? "hund" : n >= 30 && n % 10 === 0 ? "tens" : "unit");
+// Every number said in a text, in order. A lone "un"/"una" is an article, not a number.
+export function numbersIn(text) {
+  const toks = String(text).split(/\s+/).filter(Boolean);
+  const out = [];
+  let total = 0, cur = 0, last = null, open = false, pendingY = false;
+  const close = () => { if (open) out.push(total + cur); total = cur = 0; last = null; open = false; pendingY = false; };
+  for (let i = 0; i < toks.length; i++) {
+    const raw = toks[i], endsHard = /[.,;:!?…)»"]$/.test(raw) && !/^\d[\d.,]*\d$/.test(raw);
+    const k = norm(raw);
+    if (/^\d[\d.,]*$/.test(raw.replace(/[.,;:!?…)»"]+$/, "")) && /\d/.test(raw)) {
+      close();
+      const digits = raw.replace(/[.,;:!?…)»"]+$/, "").replace(/[.,](?=\d{3}(\D|$))/g, "");
+      const n = Number(digits.replace(",", "."));
+      if (Number.isFinite(n)) out.push(n);
+      continue;
+    }
+    if (k === "y" && open && last === "tens" && !/[.,;:]$/.test(toks[i - 1] || "")) { pendingY = true; continue; }
+    const n = NUM_WORDS[k];
+    if (n == null) { close(); continue; }
+    const kind = numKind(n);
+    let cont = open && (
+      (last === "mil" && kind !== "mil") ||
+      (last === "hund" && (kind === "tens" || kind === "unit") && n < 100) ||
+      (last === "hund" && kind === "mil") ||
+      (last === "tens" && pendingY && kind === "unit" && n < 10) ||
+      ((last === "tens" || last === "unit") && kind === "mil" && total === 0));
+    if (!cont) close();
+    // a lone article: "un rumor", "una veta" (but "noventa y un créditos" is a number)
+    if (!cont && (k === "un" || k === "una") && !NUM_WORDS[norm(toks[i + 1] || "")]) continue;
+    if (kind === "mil") { cur = (cur || 1) * 1000; total += cur; cur = 0; }
+    else cur += n;
+    open = true; last = kind; pendingY = false;
+    if (endsHard) close();
+  }
+  close();
+  return out;
+}
+// A typed price: digits or words. null when it isn't exactly one number.
+export function parseNumber(s) {
+  const t = String(s ?? "").trim();
+  if (!t) return null;
+  if (/^\d{1,3}([.,\s]\d{3})+$/.test(t)) return Number(t.replace(/[.,\s]/g, ""));
+  if (/^\d+$/.test(t)) return Number(t);
+  const ns = numbersIn(t.replace(/\b(un|una)\b(?!\s+\S)/i, "uno"));
+  return ns.length === 1 ? ns[0] : null;
+}

@@ -15,12 +15,16 @@ deploy/
 # episodes: only the built-in irregular-verbs course is shared; add your own under media/<id>/
 media/*
 !media/verbos-irregulares/
+!media/rumbo/
 media/*/audio16k.wav
 media/*/whisper*.json
 scripts/i18n/strings.json
 
 # private instances (their own service, nginx and deploy files)
 deploy/private/
+
+# Rumbo: Fish Audio's raw output (media/rumbo/ holds the encoded clips)
+courses/rumbo/audio/
 
 # video files dropped in to import (copyrighted; never commit)
 episodes/

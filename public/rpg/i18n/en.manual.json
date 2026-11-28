@@ -391,5 +391,9 @@
  "Ballena de las nubes gris": "Grey cloud whale",
  "Ballena de las nubes rosada": "Pink cloud whale",
  "Búfalo de agua de barro": "Mud water buffalo",
- "Anaconda amarilla": "Yellow anaconda"
+ "Anaconda amarilla": "Yellow anaconda",
+ "fácil": "easy",
+ "media": "medium",
+ "difícil": "hard",
+ "brutal": "brutal"
 }

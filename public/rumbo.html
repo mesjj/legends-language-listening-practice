@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rumbo</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="rumbo/rumbo.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Rumbo</h1>
+    <nav>
+      <a href="rpg.html" id="rpgLink">Leyendas</a>
+      <a href="./" id="listenLink">Escuchar</a>
+      <a href="episodes.html" id="epLink">Episodios</a>
+    </nav>
+  </div>
+  <div class="status" id="status"></div>
+  <button id="langBtn" class="ghost" translate="no" title="Idioma del juego / Game language">English</button>
+</header>
+<main id="screen"></main>
+<div class="toast" id="toast" role="status"></div>
+<audio id="audio" preload="auto"></audio>
+<script type="module" src="rumbo/main.js"></script>
+</body>
+</html>

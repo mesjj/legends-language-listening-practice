@@ -4,10 +4,11 @@ Read this first, then `README.md`. The README describes every feature in detail 
 
 ## What this is
 
-Oído is a local Spanish listening trainer. It has two parts:
+Oído is a local Spanish listening trainer. It has three parts:
 
 - **Listening pages:** `index.html`, `play.html` and `episodes.html`, written in English.
 - **Leyendas:** `rpg.html`, an action RPG where every attack is a listening exercise on the next line of an episode. Its interface is in Spanish, and all its content is original, drawn from Colombian legends.
+- **Rumbo:** `rumbo.html`, a turn-based space-trading game where prices, rumors and contracts arrive only as audio. Interface in Spanish, clips generated (Fish Audio).
 
 The owner is an advanced learner training listening at native speed, so **transcripts must be close to 100% accurate**. Never "fix" a line by guessing; when in doubt, flag it.
 
@@ -56,6 +57,17 @@ Key ideas:
 - **Progress is per episode** (`ch.zonesByEp`), and a new episode's zone levels are shifted to the character's level.
 - The character is saved in `localStorage` (`rpg`), or on the server when `ONLINE=1`.
 - In the browser console, `window.leyendas` exposes `S`, `ch`, `E` and render functions for debugging.
+
+## Rumbo (`public/rumbo/`)
+
+A trading game where prices, rumors and contracts arrive only as audio (README, *Rumbo*; spec in `data/`).
+
+- `economy.js` is pure and seeded: never use `Math.random` there. Tests: `node --test scripts/rumbo/` (the economy, plus `balance.test.mjs`: listening must pay at least 1.4× trading blind; rerun it after tuning).
+- **The bank decides, the economy follows:** a broadcast clip sets the true prices to what it says (`bindBroadcast`), and every event comes from a rumor clip that exists.
+- Clips are generated: `scripts/rumbo/write_clips.mjs` (claude CLI, with a blind check by a second reader), then `build_bank.py` (Fish, Whisper, `align.py`), then `check_bank.mjs`. Never hand-edit `media/rumbo/bank.json`: edit `courses/rumbo/clips.json` and rebuild.
+- Numbers in clip text are always words. `numbersIn` and `parseNumber` in `listen-core.js` read Spanish numbers.
+- In the browser console, `window.rumbo` exposes `S`, `G`, `E`, `W()` and `render`; `rumbo.reset()` starts over.
+- Its strings go through the same i18n as Leyendas (`extract.mjs` includes the Rumbo files).
 
 ## Art
 
