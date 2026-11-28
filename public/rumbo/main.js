@@ -2,11 +2,11 @@
 // Screens: station (price board, the three sources, contracts, notes), clip (listen and answer),
 // market, map, end of session. The rules live in economy.js; this file is the flow and the screens.
 // See README.md (Rumbo) and data/ for the spec.
-import { $, esc, store, CFG, parseNumber, nameSet } from "../listen-core.js";
+import { $, esc, store, CFG, parseNumber, nameSet, playable, scoreDictation } from "../listen-core.js";
 import { startI18n, lang, setLang } from "../rpg/i18n.js";
 import { lineFeatures, LINE_FEATURES, featureVector, difficulty, predict, sigmoid, rateUpdate, newRating, newModel, answerScore, shown, provisional, tagOf, RATING } from "../rpg/rating.js";
 import * as E from "./economy.js";
-import { GOODS, GOOD_IDS, STATIONS, STATION_IDS, EVENTS, CERTAINTY, SPEAKERS, REGULARS, CLIENTS, SESSION_TURNS, START, HOLD_UPGRADE, COST, SLOW_RATE, SOURCE_NOISE, fuel } from "./data.js";
+import { GOODS, GOOD_IDS, STATIONS, STATION_IDS, EVENTS, CERTAINTY, SPEAKERS, REGULARS, CLIENTS, SESSION_TURNS, START, HOLD_UPGRADE, COST, SLOW_RATE, SOURCE_NOISE, TRANSMISSION, fuel } from "./data.js";
 import { playClip, stop } from "./audio.js";
 
 const audioEl = $("#audio");
@@ -37,16 +37,32 @@ const clipX = (c, st) => featureVector({ ...(FEAT[c.id] || {}), quiet: levelOf(c
 // the market's difficulty of a clip, 0 to 1, the same for every player: it sets the edge it gives
 const diffOf = (c, st) => sigmoid(difficulty(clipX(c, st), RATING.w0));
 
+// ---------------------------------------------------------------- Leyendas' lines, for the transmissions
+// Only read: the Leyendas save (store "rpg") says which episode you're on (lastEp) and which of its lines
+// you've heard whole there (ch.heard[ep][si] === 1), so a transmission is never a fresh line Leyendas
+// would rate. Lines you struggled with there (ch.struggle) come first.
+const LEY = await (async () => {
+  const ch = store.get("rpg", null), ep = store.get("lastEp", null), H = ch?.heard?.[ep];
+  if (!ep || !H) return null;
+  const T = await fetch(`media/${encodeURIComponent(ep)}/transcript.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  if (!T?.segments || (T.lang && T.lang !== "es") || /-en$/.test(ep)) return null;
+  const lines = Object.keys(H).map(Number).filter((si) => H[si] === 1 && T.segments[si] && playable(T.segments[si]));
+  return lines.length ? { ep, T, lines, hard: ch.struggle?.[ep] || {}, names: nameSet(T.names) } : null;
+})();
+const txKey = (ep, si) => `${ep}:${si}`;
+const txSeg = (t) => (LEY && LEY.ep === t.ep ? LEY.T.segments[t.si] : null);
+
 // ---------------------------------------------------------------- the saved game
 function fresh() {
   return {
     v: 1, turn: 0,
     ship: { credits: START.credits, hold: START.hold, at: START.station, cargo: {} },
     board: {}, heard: {}, speakers: {}, history: [], session: null,
-    rating: newRating(), model: newModel(),
+    rating: newRating(), model: newModel(), archive: {},
   };
 }
 let G = store.get(KEY, null) || fresh();
+G.ship.tx ||= []; G.archive ||= {}; // transmissions carried, and your last score on each line archived
 const save = () => store.set(KEY, G);
 const S = { view: "station", clip: null, msg: null, market: {} }; // what's on screen (not saved)
 const ses = () => G.session;
@@ -60,7 +76,7 @@ const cr = (n) => `${nf.format(Math.round(n))} cr`;
 const goodName = (g) => GOODS[g].name;
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const ageText = (t) => { const a = G.turn - t; return a <= 0 ? "este turno" : a === 1 ? "hace 1 turno" : `hace ${a} turnos`; };
-const cargoN = () => E.cargoCount(G.ship);
+const cargoN = () => E.cargoCount(G.ship) + G.ship.tx.length; // a transmission takes a unit of the hold
 // net worth on screen: credits plus cargo at what it cost (true prices stay hidden until the end)
 const worthAtCost = () => G.ship.credits + Object.values(G.ship.cargo).reduce((a, c) => a + c.cost, 0);
 function toast(msg) {
@@ -130,7 +146,79 @@ function arrive() {
   const oldest = Math.min(Infinity, ...offers.map((c) => G.heard[c.id] || 0));
   const offer = E.pick(offers.filter((c) => (G.heard[c.id] || 0) === oldest), w.seed, "offer", w.turn, st) || null;
   if (offer) s.used.push(offer.id);
-  s.visit = { turn: w.turn, st, broadcast: b?.id || null, answered: {}, regs: E.regularsAt(w, st, REGULARS), drinks: {}, offer: offer?.id || null };
+  s.visit = { turn: w.turn, st, broadcast: b?.id || null, answered: {}, regs: E.regularsAt(w, st, REGULARS), drinks: {}, offer: offer?.id || null, tx: TRANSMISSION.from.includes(st) ? pickTransmission() : null };
+}
+
+// ---------------------------------------------------------------- recovered transmissions
+// The line an antenna picks up here: not one you carry; lines never archived first (those you struggled
+// with in Leyendas before the rest), then the one you transcribed worst.
+function pickTransmission() {
+  if (!LEY) return null;
+  const carried = new Set(G.ship.tx.map((t) => txKey(t.ep, t.si)));
+  const cand = LEY.lines.filter((si) => !carried.has(txKey(LEY.ep, si)));
+  if (!cand.length) return null;
+  const rank = (si) => { const a = G.archive[txKey(LEY.ep, si)]; return a == null ? (LEY.hard[si] ? 0 : 1) : 2 + a; };
+  const best = Math.min(...cand.map(rank));
+  return E.pick(cand.filter((si) => rank(si) === best), W().seed, "tx", W().turn, here());
+}
+function loadTransmission() {
+  const v = ses().visit;
+  if (v.tx == null || v.txTaken) return;
+  if (G.ship.tx.length >= TRANSMISSION.max) return toast(`Ya llevas ${TRANSMISSION.max} transmisiones: el archivo del puerto te las compra.`);
+  if (cargoN() >= G.ship.hold) return toast("No te queda espacio en la bodega.");
+  G.ship.tx.push({ ep: LEY.ep, si: v.tx, found: STATIONS[here()].short });
+  v.txTaken = true;
+  save();
+  toast("Cargaste la transmisión. El archivo de Puerto Bachué la paga según lo bien que la transcribas.");
+  render();
+}
+function openTransmission(i) {
+  const t = G.ship.tx[i];
+  if (!t || !txSeg(t)) return toast("Esa transmisión es de otro episodio de Leyendas: vuelve a él para transcribirla.");
+  stop(audioEl);
+  S.tx = { t, plays: 0, slows: 0, playing: false, result: null };
+  S.view = "tx";
+  render();
+}
+async function playTransmission(slow = false) {
+  const X = S.tx;
+  if (!X || X.playing || X.result) return;
+  const cost = X.plays === 0 && !slow ? 0 : slow ? COST.slow : COST.replay;
+  if (cost && G.ship.credits < cost) return toast("No te alcanza para oírla otra vez.");
+  G.ship.credits -= cost;
+  X.plays++;
+  if (slow) X.slows++;
+  save();
+  renderStatus();
+  const seg = txSeg(X.t);
+  const sync = () => {
+    if (S.view !== "tx" || S.tx !== X) return;
+    $("#clipPlay")?.classList.toggle("on", X.playing);
+    document.querySelectorAll(".clipbtns button").forEach((x) => (x.disabled = X.playing));
+    const sub = $("#answer button"); if (sub) sub.disabled = false;
+    const l = $("#clipPlay .plabel"); if (l) l.textContent = X.playing ? "Sonando…" : "Escuchada";
+    const n = $("#playCount"); if (n) n.textContent = `La oíste ${X.plays} ${X.plays === 1 ? "vez" : "veces"}.`;
+  };
+  await playClip(audioEl, `media/${encodeURIComponent(X.t.ep)}/audio.mp3`, {
+    rate: slow ? SLOW_RATE : 1, start: seg.start, end: seg.end,
+    onState: (on) => { X.playing = on; sync(); },
+  });
+  sync();
+}
+function submitTransmission(form) {
+  const X = S.tx, seg = txSeg(X.t), typed = form.elements.text.value.trim();
+  if (!typed) return toast("Escribe lo que oíste.");
+  const r = scoreDictation(seg.words, typed, { names: LEY.names });
+  const pay = r.exact * TRANSMISSION.word + r.near * TRANSMISSION.near;
+  G.ship.credits += pay;
+  G.ship.tx.splice(G.ship.tx.indexOf(X.t), 1);
+  const key = txKey(X.t.ep, X.t.si), acc = +r.acc.toFixed(3);
+  G.archive[key] = acc;
+  X.result = { html: r.html, pay, acc, exact: r.exact, near: r.near, n: seg.words.length };
+  ses().log.push({ id: key, kind: "tx", ep: X.t.ep, si: X.t.si, text: seg.text, html: r.html, strict: acc, pay, plays: X.plays, slows: X.slows, turn: W().turn - W().start, st: here() });
+  logEv({ ev: "rumboTransmission", ep: X.t.ep, si: X.t.si, plays: X.plays, slows: X.slows, acc, exact: r.exact, near: r.near, words: seg.words.length, pay });
+  save();
+  render();
 }
 
 function jump(to) {
@@ -381,6 +469,7 @@ function render() {
   if (S.view === "end") return renderEnd();
   if (!G.session) return renderIntro();
   if (S.view === "clip" && S.clip) return renderClip();
+  if (S.view === "tx" && S.tx && txSeg(S.tx.t)) return renderTransmission();
   if (S.view === "market") return renderMarket();
   if (S.view === "map") return renderMap();
   renderStation();
@@ -452,11 +541,15 @@ function renderStation() {
           <span class="sname">Contrato${offer ? `: ${SPEAKERS[offer.speaker].name} ${tag(offer)}` : ""}</span>
           <span class="sdesc">${!offer ? "Nadie ofrece contratos hoy." : v.answered.contract ? "Ya respondiste esta oferta." : "Gratis · una oferta de entrega"}</span>
         </button>
+        ${v.tx != null ? `<button class="source" data-txload="1" ${v.txTaken ? "disabled" : ""}>
+          <span class="sname">Transmisión perdida</span>
+          <span class="sdesc">${v.txTaken ? "Ya la cargaste." : `La antena captó una frase de Leyendas · cárgala (1 espacio) y el archivo del puerto te la paga`}</span>
+        </button>` : ""}
       </div>
       <div class="card">
         <h3>Tu nave</h3>
         <p>${cr(G.ship.credits)} · bodega ${cargoN()}/${G.ship.hold}</p>
-        ${cargo.length ? `<ul class="cargo">${cargo.map(([g, c]) => `<li>${c.qty} de ${goodName(g)} <span class="dim">(te costó ${cr(c.cost)})</span></li>`).join("")}</ul>` : `<p class="dim">La bodega va vacía.</p>`}
+        ${cargo.length || G.ship.tx.length ? `<ul class="cargo">${cargo.map(([g, c]) => `<li>${c.qty} de ${goodName(g)} <span class="dim">(te costó ${cr(c.cost)})</span></li>`).join("")}${G.ship.tx.length ? `<li>${G.ship.tx.length === 1 ? "1 transmisión perdida" : `${G.ship.tx.length} transmisiones perdidas`} <span class="dim">(para el archivo del puerto)</span></li>` : ""}</ul>` : `<p class="dim">La bodega va vacía.</p>`}
         ${open.length ? `<h4>Contratos (según tus notas)</h4><ul class="contracts">${open.map((k) => `<li><b>${SPEAKERS[k.client].name}</b>: ${k.notes.qty ?? "?"} de ${k.notes.good ? goodName(k.notes.good) : "?"} a ${k.notes.destination ? STATIONS[k.notes.destination].name : "?"}, en ${k.notes.deadline ?? "?"} saltos desde el turno ${k.accepted - w.start}. Pago ${k.notes.pay != null ? cr(k.notes.pay) : "?"}, multa ${k.notes.penalty != null ? cr(k.notes.penalty) : "?"}.</li>`).join("")}</ul>` : ""}
       </div>
       <div class="card">
@@ -465,11 +558,48 @@ function renderStation() {
         ${s.notes.slice(0, 8).map((n) => `<p class="note ${n.kind}"><span class="dim">Turno ${n.turn}:</span> ${n.text}</p>`).join("")}
       </div>
     </div>
+    ${st === TRANSMISSION.at ? archiveHtml() : ""}
     <div class="actions">
       <button class="primary" data-go="market">Mercado</button>
       <button class="primary" data-go="map">${turnsLeft() > 0 ? "Saltar a otra estación" : "Ver el mapa"}</button>
       <button class="ghost" id="endBtn">Terminar la sesión</button>
     </div>
+  </section>`;
+}
+
+function archiveHtml() {
+  const tx = G.ship.tx;
+  return `<div class="card archive">
+    <h3>Archivo del puerto</h3>
+    ${tx.length ? `<p>Compra las transmisiones perdidas que traes: ${cr(TRANSMISSION.word)} por palabra bien escrita, ${cr(TRANSMISSION.near)} por una casi bien. Se oyen como en Leyendas, sin estática.</p>
+      <div class="actions">${tx.map((t, i) => { const seg = txSeg(t); return `<button data-tx="${i}" ${seg ? "" : "disabled"}>Transcribir la de ${esc(t.found)}${seg ? ` · ${seg.words.length} palabras` : " · de otro episodio"}</button>`; }).join("")}</div>`
+    : `<p class="dim">Compra transmisiones perdidas: frases de Leyendas que ya oíste allá. Las captan las antenas de ${STATIONS.tequendama.name} y ${STATIONS.iguaque.name}; tráelas y te paga por transcribirlas bien.${LEY ? "" : " Todavía no hay ninguna: juega Leyendas, y las frases que oigas allá llegarán aquí."}</p>`}
+  </div>`;
+}
+
+function renderTransmission() {
+  const X = S.tx, seg = txSeg(X.t), R = X.result;
+  screen.innerHTML = `<section class="card clip">
+    <button class="ghost back" data-go="station">← Volver a la estación</button>
+    <h2>Transmisión perdida</h2>
+    <p class="who">Captada en ${esc(X.t.found)} · ${esc(LEY.T.title || X.t.ep)} · ${seg.words.length} palabras · señal restaurada</p>
+    <div class="player">
+      <button id="clipPlay" class="play ${X.playing ? "on" : ""}" aria-label="Escuchar" ${R ? "disabled" : ""}>
+        <span class="bars"><i></i><i></i><i></i><i></i><i></i></span>
+        <span class="plabel">${X.plays ? "Escuchada" : "Escuchar (gratis)"}</span>
+      </button>
+      ${R ? "" : `<div class="clipbtns">
+        <button class="ghost" id="replayBtn" ${X.plays ? "" : "disabled"}>Otra vez · ${cr(COST.replay)}</button>
+        <button class="ghost" id="slowBtn" ${X.plays ? "" : "disabled"}>Despacio · ${cr(COST.slow)}</button>
+      </div>`}
+      <p class="dim small" id="playCount">${X.plays ? `La oíste ${X.plays} ${X.plays === 1 ? "vez" : "veces"}.` : "Se oye una vez gratis. Escribe la frase entera, palabra por palabra."}</p>
+    </div>
+    ${R ? `<p class="diff" translate="no">${R.html}</p>
+      <p class="msg">El archivo te pagó <b>${cr(R.pay)}</b>: ${R.exact} de ${R.n} palabras bien${R.near ? `, ${R.near} casi bien` : ""} (${Math.round(R.acc * 100)}%).</p>
+      <p><button class="primary" data-go="station">Volver a la estación</button></p>`
+    : `<form id="answer" class="dict" autocomplete="off">
+        <textarea name="text" rows="3" spellcheck="false" autocapitalize="off" placeholder="Lo que dice la transmisión"></textarea>
+        <button class="primary" ${X.plays ? "" : "disabled"}>Entregar al archivo</button></form>`}
   </section>`;
 }
 
@@ -582,7 +712,12 @@ function renderEnd() {
     <p>Índice de oído en Rumbo: ${L.rating0 != null ? `${shown(L.rating0)} → ` : ""}<b>${shown(G.rating.th)}</b>${provisional(G.rating) ? " (provisional)" : ""}.</p>
     ${hist.length > 1 ? `<p class="dim small">Ganancia por turno en tus últimas sesiones: ${hist.map((h) => `${h.perTurn >= 0 ? "+" : ""}${nf.format(h.perTurn)}`).join(" · ")}</p>` : ""}
     <h3>${L.log.length ? "Lo que se te escapó" : "No se te escapó nada"}</h3>
-    ${L.log.map((e, i) => { const c = BY_ID[e.id]; return c ? `<div class="lesson">
+    ${L.log.map((e, i) => { if (e.kind === "tx") return `<div class="lesson">
+      <button class="ghost" data-txreplay="${esc(e.id)}">▶</button>
+      <div><p class="dim small">Transmisión perdida · ${Math.round(e.strict * 100)}% · ${cr(e.pay)}</p>
+      <p class="transcript" translate="no">${esc(e.text)}</p>
+      <p class="small diff" translate="no">${e.html}</p></div></div>`;
+      const c = BY_ID[e.id]; return c ? `<div class="lesson">
       <button class="ghost" data-replay="${e.id}">▶</button>
       <div><p class="dim small">${{ broadcast: "Radio", rumor: "Cantina", contract: "Contrato" }[e.kind]} · ${SPEAKERS[c.speaker].name}</p>
       <p class="transcript" translate="no">${esc(c.text)}</p>
@@ -596,14 +731,22 @@ screen.addEventListener("click", (e) => {
   const t = e.target.closest("button");
   if (!t || t.disabled) return;
   if (t.id === "startBtn") { startSession(); S.view = "station"; return render(); }
-  if (t.dataset.go) { stop(audioEl); S.view = t.dataset.go; S.clip = t.dataset.go === "station" ? null : S.clip; return render(); }
+  if (t.dataset.go) { stop(audioEl); S.view = t.dataset.go; if (t.dataset.go === "station") { S.clip = null; S.tx = null; } return render(); }
   if (t.id === "endBtn") { if (turnsLeft() > 0 && !confirm("¿Terminar la sesión ahora?")) return; return endSession(); }
   if (t.dataset.src === "broadcast") return openClip(BY_ID[ses().visit.broadcast], "broadcast");
   if (t.dataset.src === "contract") return openClip(BY_ID[ses().visit.offer], "contract");
   if (t.dataset.drink) return buyDrink(t.dataset.drink);
-  if (t.id === "clipPlay") return play(false);
-  if (t.id === "replayBtn") return play(false);
-  if (t.id === "slowBtn") return play(true);
+  if (t.dataset.txload) return loadTransmission();
+  if (t.dataset.tx) return openTransmission(+t.dataset.tx);
+  if (t.dataset.txreplay) {
+    const [ep, si] = [t.dataset.txreplay.slice(0, t.dataset.txreplay.lastIndexOf(":")), +t.dataset.txreplay.split(":").pop()];
+    const seg = LEY?.ep === ep && LEY.T.segments[si];
+    return seg ? playClip(audioEl, `media/${encodeURIComponent(ep)}/audio.mp3`, { start: seg.start, end: seg.end }) : toast("Esa frase es de otro episodio de Leyendas.");
+  }
+  const P = S.view === "tx" ? playTransmission : play;
+  if (t.id === "clipPlay") return P(false);
+  if (t.id === "replayBtn") return P(false);
+  if (t.id === "slowBtn") return P(true);
   if (t.dataset.jump) return jump(t.dataset.jump);
   if (t.dataset.deliver) return deliver(ses().contracts.find((k) => k.clip === t.dataset.deliver));
   if (t.dataset.buy || t.dataset.sell) {
@@ -623,6 +766,7 @@ screen.addEventListener("click", (e) => {
 screen.addEventListener("submit", (e) => {
   e.preventDefault();
   const f = e.target;
+  if (S.view === "tx" && S.tx) return submitTransmission(f);
   if (!S.clip) return;
   const kind = S.clip.c.kind;
   if (kind === "broadcast") return submitBroadcast(f);
@@ -644,6 +788,6 @@ $("#langBtn").onclick = () => setLang(lang() === "es" ? "en" : "es");
 if (CFG.online) { $("#listenLink").hidden = true; $("#epLink").hidden = true; }
 
 // debugging, as window.leyendas: S, G, E and the renderers
-window.rumbo = { S, get G() { return G; }, E, W, render, BY_ID, CLIPS, diffOf, reset: () => { G = fresh(); save(); render(); } };
+window.rumbo = { S, get G() { return G; }, E, W, render, BY_ID, CLIPS, diffOf, LEY, reset: () => { G = fresh(); G.ship.tx = []; save(); render(); } };
 await startI18n();
 render();

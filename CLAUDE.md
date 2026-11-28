@@ -68,6 +68,7 @@ A trading game where prices, rumors and contracts arrive only as audio (README, 
 - Numbers in clip text are always words. `numbersIn` and `parseNumber` in `listen-core.js` read Spanish numbers.
 - In the browser console, `window.rumbo` exposes `S`, `G`, `E`, `W()` and `render`; `rumbo.reset()` starts over.
 - Its strings go through the same i18n as Leyendas (`extract.mjs` includes the Rumbo files).
+- **Recovered transmissions** read the Leyendas save (`rpg`, `lastEp`) but never write it: only lines already heard whole in Leyendas are used, so Leyendas' fresh-line rating stays clean. `playClip` in `rumbo/audio.js` takes `start`/`end` for a line of an episode's mp3.
 
 ## Art
 

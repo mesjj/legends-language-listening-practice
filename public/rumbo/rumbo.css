@@ -125,3 +125,19 @@ legend { color: var(--amber); font-family: var(--head); padding: 0 0.3em; }
   .mkt td:nth-child(5) { grid-column: 3; grid-row: 2; align-self: start; }
   form.prices, form.terms { grid-template-columns: 1fr 1fr; }
 }
+
+/* recovered transmissions: the archive and the dictation */
+.archive { margin: 0 0 1rem; border-color: var(--amber-dim); }
+.archive .actions { margin-top: 0.5rem; }
+form.dict { display: flex; flex-direction: column; gap: 0.6rem; }
+form.dict textarea { font: 1.05rem/1.5 "IBM Plex Sans", system-ui, sans-serif; color: var(--ink); background: #0a1020; border: 1px solid var(--line); border-radius: 6px; padding: 0.6em; resize: vertical; width: 100%; }
+form.dict textarea:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+form.dict button { align-self: start; }
+.diff { font-size: 1.1rem; line-height: 1.7; }
+.diff .ok { color: var(--good); }
+.diff .close { color: var(--amber); }
+.diff .miss { color: var(--bad); text-decoration: underline wavy; text-underline-offset: 3px; }
+.diff .accent { color: var(--amber); }
+.diff .extra { color: var(--bad); text-decoration: line-through; opacity: 0.8; }
+.diff .edge, .diff .sound { color: var(--dim); }
+.diff .name { color: var(--teal); }

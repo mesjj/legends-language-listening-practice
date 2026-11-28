@@ -68,19 +68,31 @@ function stopStatic() {
 }
 
 // Play a clip through the radio. Resolves when it ends (or is stopped). onState(true/false) for the
-// play indicator.
-export async function playClip(el, url, { rate = 1, level = 0, onState = () => {} } = {}) {
+// play indicator. start/end (seconds) play only that stretch of a longer file (a Leyendas line).
+export async function playClip(el, url, { rate = 1, level = 0, start = null, end = null, onState = () => {} } = {}) {
   if (!ctx) setup(el);
   if (ctx.state === "suspended") await ctx.resume();
   stop(el);
-  el.src = url;
+  if (el.src !== new URL(url, location.href).href) el.src = url;
+  if (el.readyState < 1) await new Promise((r) => { el.addEventListener("loadedmetadata", r, { once: true }); el.addEventListener("error", r, { once: true }); });
+  el.currentTime = start != null ? Math.max(0, start - 0.12) : 0;
   el.playbackRate = rate;
   el.preservesPitch = el.mozPreservesPitch = el.webkitPreservesPitch = true;
   setLevel(level);
+  const stopAt = end != null ? end + 0.2 : null;
   return new Promise((resolve) => {
-    const done = () => { el.onended = el.onpause = el.onerror = null; stopStatic(); onState(false); resolve(); };
+    let raf = 0;
+    const check = () => { if (stopAt != null && !el.paused && el.currentTime >= stopAt) el.pause(); };
+    const loop = () => { check(); if (!el.paused) raf = requestAnimationFrame(loop); };
+    const done = () => {
+      el.onended = el.onpause = el.onerror = null;
+      el.removeEventListener("timeupdate", check); cancelAnimationFrame(raf);
+      stopStatic(); onState(false); resolve();
+    };
     el.onended = done; el.onpause = done; el.onerror = done;
-    el.play().then(() => { startStatic(level); onState(true); }).catch(done);
+    // frames stop in a background tab: timeupdate still ends the stretch there
+    if (stopAt != null) el.addEventListener("timeupdate", check);
+    el.play().then(() => { startStatic(level); onState(true); if (stopAt != null) loop(); }).catch(done);
   });
 }
 export function stop(el) {

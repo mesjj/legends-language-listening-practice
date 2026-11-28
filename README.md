@@ -289,7 +289,7 @@ Each source shows its difficulty for you (*fácil / media / difícil / brutal*, 
 
 **Rating.** A clip heard for the first time and answered counts toward a separate rating, `rumbo`, with the same model as the Índice de oído (`rpg/rating.js`). The score is the share of fields right, reduced for replays and slow plays as in Leyendas. It's in the header and on the end screen.
 
-**Event log.** `api/lines` (as in Leyendas), with `game: "rumbo"`: `rumboClip` (clip, source, plays, slows, your answer, the truth, score), `rumboTrade`, `rumboContract` and `rumboTurn` (net worth).
+**Event log.** `api/lines` (as in Leyendas), with `game: "rumbo"`: `rumboClip` (clip, source, plays, slows, your answer, the truth, score), `rumboTrade`, `rumboContract`, `rumboTransmission` and `rumboTurn` (net worth).
 
 **The clip bank** (`media/rumbo/`, committed: it's generated, not copyrighted) holds 300 broadcasts, 150 rumors and 60 contracts: an mp3 per clip and `bank.json` (text, facts, speaker, word timings, what Whisper heard). Every recurring speaker keeps one Fish Audio voice (`SPEAKERS` in `public/rumbo/data.js`); a clip's tier (1 clear to 3 fast and colloquial) sets its register and speed. To rebuild or extend it:
 
@@ -305,7 +305,9 @@ node --test scripts/rumbo/                    # the economy's tests and the bala
 - `write_clips.mjs` makes the facts in code (broadcast prices sampled from simulated sessions, so the bank covers what the game needs). Claude writes the Spanish, with numbers in words. A clip is rejected and rewritten unless the numbers in its text are exactly its facts' numbers, and a second Claude, who never sees the facts, fills in the player's form from the text and gets the facts back. It keeps what's written and only makes what's missing.
 - `build_bank.py` caches Fish output in `courses/rumbo/audio/` (not committed) and only rebuilds clips whose text, voice or speed changed. `--say` uses macOS voices instead, for development without a Fish key.
 
-**Not in v1:** combat, travel events, more stations and goods, and Leyendas' transmissions sold as cargo.
+**Recovered transmissions** (Leyendas lines as cargo). At Mina Tequendama and Huerta Iguaque the antenna picks up one *transmisión perdida* per visit: a line of your current Leyendas episode (`lastEp`) that you've already heard whole there (`ch.heard[ep][si] === 1`), so it's never a fresh line Leyendas would rate. Load it (free, but it takes a unit of the hold; at most 3 aboard), and at Puerto Bachué the *Archivo del puerto* buys it: you take it down as a dictation, scored by `scoreDictation` as in Leyendas (names don't count, sounds don't count), and paid 25 cr per word right and 10 cr per word nearly right. It plays clean, at 1× (first play free, *Otra vez* 5 cr, *Despacio* 10 cr). Lines you've never archived come first, starting with those you struggled with in Leyendas (`ch.struggle`); after that, the one you transcribed worst. Rumbo only reads the Leyendas save, never writes it. Your last score per line is kept in Rumbo's save (`archive`), a transcription you didn't get fully right goes on the end screen's lesson with the scored line, and each one is logged as `rumboTransmission`. With no Leyendas episode played, the archive says so and the antennas pick up nothing.
+
+**Not in v1:** combat, travel events, more stations and goods.
 
 ## Courses (sentences written for a learner)
 

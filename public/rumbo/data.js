@@ -105,3 +105,8 @@ export const CONTRACT_QTY = [3, 20];
 
 // Fish Audio speed per tier
 export const TIER_SPEED = { 1: 0.9, 2: 1.0, 3: 1.12 };
+
+// Recovered transmissions: lines of your Leyendas episode, already heard there. The mine's and the
+// farm's antennas pick one up each visit; it takes a unit of the hold, and the archive at the port pays
+// for your dictation of it: per word right, half for a word nearly right.
+export const TRANSMISSION = { at: "bachue", from: ["tequendama", "iguaque"], max: 3, word: 25, near: 10 };
