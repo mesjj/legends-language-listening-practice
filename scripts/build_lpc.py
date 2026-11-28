@@ -611,6 +611,65 @@ SETS = {  # each set has its own colours
     "samantabhadra": {"metal": "gold", "cloth": "navy", "wood": "gold"},
     "cincobudas": {"metal": "gold", "cloth": "blue", "wood": "gold"},
     "ruedadharma": {"metal": "gold", "cloth": "white", "wood": "gold"},
+    "villaleyva": {"metal": "iron", "cloth": "brown", "wood": "medium"},
+    "chicamocha": {"metal": "iron", "cloth": "brown", "wood": "dark"},
+    "tequendama": {"metal": "bronze", "cloth": "navy", "wood": "dark"},
+    "cocora": {"metal": "iron", "cloth": "forest", "wood": "dark"},
+    "tarablanca": {"metal": "gold", "cloth": "white", "wood": "medium"},
+    "barichara": {"metal": "iron", "cloth": "orange", "wood": "medium"},
+    "chibchacum": {"metal": "bronze", "cloth": "brown", "wood": "dark"},
+    "laslajas": {"metal": "iron", "cloth": "purple", "wood": "medium"},
+    "gorgona": {"metal": "iron", "cloth": "forest", "wood": "dark"},
+    "longchenpa": {"metal": "gold", "cloth": "maroon", "wood": "dark"},
+    "sibundoy": {"metal": "iron", "cloth": "maroon", "wood": "dark"},
+    "furatena": {"metal": "bronze", "cloth": "forest", "wood": "dark"},
+    "cocuy": {"metal": "iron", "cloth": "navy", "wood": "dark"},
+    "shambhala": {"metal": "gold", "cloth": "navy", "wood": "gold"},
+    "raquira": {"metal": "iron", "cloth": "red", "wood": "dark"},
+    "vajrapani": {"metal": "gold", "cloth": "blue", "wood": "dark"},
+    "popayan": {"metal": "silver", "cloth": "white", "wood": "medium"},
+    "galeras": {"metal": "bronze", "cloth": "maroon", "wood": "dark"},
+    "sumapaz": {"metal": "iron", "cloth": "forest", "wood": "dark"},
+    "maitreya": {"metal": "gold", "cloth": "yellow", "wood": "gold"},
+    "cienagagrande": {"metal": "iron", "cloth": "forest", "wood": "dark"},
+    "juantama": {"metal": "bronze", "cloth": "forest", "wood": "dark"},
+    "duende": {"metal": "iron", "cloth": "forest", "wood": "dark"},
+    "atisha": {"metal": "gold", "cloth": "red", "wood": "dark"},
+    "mamos": {"metal": "silver", "cloth": "white", "wood": "medium"},
+    "cuchavira": {"metal": "bronze", "cloth": "purple", "wood": "medium"},
+    "buziraco": {"metal": "iron", "cloth": "maroon", "wood": "dark"},
+    "dorjephagmo": {"metal": "gold", "cloth": "red", "wood": "dark"},
+    "kailash": {"metal": "gold", "cloth": "white", "wood": "gold"},
+    "marimonda": {"metal": "iron", "cloth": "blue", "wood": "dark"},
+    "tsongkhapa": {"metal": "bronze", "cloth": "yellow", "wood": "medium"},
+    "chiva": {"metal": "iron", "cloth": "red", "wood": "dark"},
+    "hayagriva": {"metal": "gold", "cloth": "maroon", "wood": "dark"},
+    "purace": {"metal": "iron", "cloth": "brown", "wood": "dark"},
+    "mandarava": {"metal": "bronze", "cloth": "red", "wood": "medium"},
+    "amazonas": {"metal": "iron", "cloth": "forest", "wood": "dark"},
+    "rechungpa": {"metal": "gold", "cloth": "white", "wood": "medium"},
+    "silleteros": {"metal": "iron", "cloth": "forest", "wood": "dark"},
+    "tarumama": {"metal": "iron", "cloth": "forest", "wood": "dark"},
+    "vairochana": {"metal": "gold", "cloth": "white", "wood": "gold"},
+    "garabdorje": {"metal": "bronze", "cloth": "blue", "wood": "medium"},
+    "providencia": {"metal": "iron", "cloth": "teal", "wood": "medium"},
+    "palden": {"metal": "gold", "cloth": "navy", "wood": "dark"},
+    "kaliawiri": {"metal": "iron", "cloth": "forest", "wood": "dark"},
+    "vimalamitra": {"metal": "bronze", "cloth": "purple", "wood": "medium"},
+    "boraro": {"metal": "iron", "cloth": "maroon", "wood": "dark"},
+    "virupa": {"metal": "gold", "cloth": "red", "wood": "dark"},
+    "hojarasquin": {"metal": "iron", "cloth": "forest", "wood": "dark"},
+    "saraha": {"metal": "bronze", "cloth": "brown", "wood": "dark"},
+    "pollomaligno": {"metal": "iron", "cloth": "maroon", "wood": "dark"},
+    "kurukulla": {"metal": "gold", "cloth": "red", "wood": "gold"},
+    "ekajati": {"metal": "gold", "cloth": "navy", "wood": "dark"},
+    "poira": {"metal": "iron", "cloth": "navy", "wood": "dark"},
+    "akshobhya": {"metal": "gold", "cloth": "blue", "wood": "gold"},
+    "patrul": {"metal": "gold", "cloth": "brown", "wood": "dark"},
+    "jigme": {"metal": "bronze", "cloth": "navy", "wood": "dark"},
+    "ratnasambhava": {"metal": "gold", "cloth": "yellow", "wood": "gold"},
+    "amoghasiddhi": {"metal": "gold", "cloth": "forest", "wood": "gold"},
+    "dharmakaya": {"metal": "gold", "cloth": "navy", "wood": "gold"},
 }
 
 
@@ -1496,6 +1555,19 @@ def build():
         mon_imgs[mid] = creature(spec)
         if spec.get("scale"):
             mon_scale[mid] = spec["scale"]
+    # the 2026-11-27 monsters, drawn in code by build_monsters.py (the easy ones a touch bigger on screen)
+    import build_monsters as BM
+    import build_monsters_kit as BK  # the 2026-11-27 zones' monsters
+    for mid in BK.MONSTERS:
+        f = os.path.join(BK.OUT, f"{mid}.png")
+        mon_imgs[mid] = Image.open(f).convert("RGBA") if os.path.exists(f) else BK.build(mid)
+        if BK.MONSTERS[mid]["art"][2].get("style") == "lantern":
+            mon_scale[mid] = 1.4
+    for mid in BM.MONSTERS:
+        f = os.path.join(BM.OUT, f"{mid}.png")
+        mon_imgs[mid] = Image.open(f).convert("RGBA") if os.path.exists(f) else BM.build(mid)
+        if mid in BM.SMALL:
+            mon_scale[mid] = 1.25
     mon_rects = shelf_pack(mon_imgs, os.path.join(OUT, "monsters.png"))
     for k, v in mon_scale.items():
         mon_rects[k].append(v)

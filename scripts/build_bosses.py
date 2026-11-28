@@ -2044,6 +2044,9 @@ BOSSES = {"silbon": silbon, "mohan": mohan, "madremonte": madremonte, "bolafuego
 
 
 def build(ids):
+    from build_bosses_more import BOSSES as MORE  # the eighteen added on 2026-11-27
+    for k, v in MORE.items():
+        BOSSES.setdefault(k, v)
     os.makedirs(OUT, exist_ok=True)
     meta_path = os.path.join(OUT, "bosses.json")
     meta = json.load(open(meta_path)) if os.path.exists(meta_path) else {}
@@ -2061,4 +2064,5 @@ def build(ids):
 
 
 if __name__ == "__main__":
-    build(sys.argv[1:] or list(BOSSES))
+    from build_bosses_more import BOSSES as MORE
+    build(sys.argv[1:] or list(BOSSES) + list(MORE))

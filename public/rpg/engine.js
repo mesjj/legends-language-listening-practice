@@ -146,7 +146,7 @@ export const TOP = {
 };
 export function makeTopItem(rarity, ilvl, slot = null) {
   // about a third of the time, a piece of the tier's own set, once you're near its level
-  const sets = setsNear(SETS.filter((s) => s.tier === rarity && s.lvl <= ilvl + 4), ilvl).flatMap((s) => s.pieces.filter((p) => !slot || BASE[p.base].slot === slot).map((p) => [s, p]));
+  const sets = setPool((s) => s.tier === rarity, ilvl, 4).flatMap((s) => s.pieces.filter((p) => !slot || BASE[p.base].slot === slot).map((p) => [s, p]));
   if (sets.length && chance(0.35)) {
     const [set, piece] = pick(sets);
     // the best-made version of its base you could find at this level, and some of the tier's extras
@@ -286,18 +286,19 @@ function plainRoll(mf, bonus) {
 }
 
 const UNIQUE_SPAN = 15;
-// Sets drop from the ones near the item's level (up to opts.setSpan below it), as uniques do; with none
-// that near (there are fewer sets than uniques), the nearest ones below. The player picks the span in
-// Opciones (main.js makes opts.setSpan read the character's choice); 0 turns it off: any set up to the level.
+// Sets drop from the ones near a level, up to SET_SPAN below it, as uniques do; with none that near
+// (there are fewer sets than uniques), the nearest ones below. The level is the item's own, or the one the
+// player picks in Opciones (main.js makes opts.setLevel read it, never above the character's level).
 export const SET_SPAN = 40;
-export const opts = { setSpan: SET_SPAN };
-function setsNear(list, ilvl) {
-  const span = opts.setSpan;
-  if (!(span > 0)) return list;
-  const near = list.filter((s) => s.lvl >= ilvl - span);
+export const opts = { setLevel: 0 };
+// ok: which sets (tier); slack: how far above the item's level one may be when it follows the item
+function setPool(ok, ilvl, slack) {
+  const pick = opts.setLevel > 0 ? opts.setLevel : 0, at = pick || ilvl;
+  const list = SETS.filter((s) => ok(s) && s.lvl <= at + (pick ? 0 : slack));
+  const near = list.filter((s) => s.lvl >= at - SET_SPAN);
   if (near.length || !list.length) return near;
   const top = Math.max(...list.map((s) => s.lvl));
-  return list.filter((s) => s.lvl >= top - span);
+  return list.filter((s) => s.lvl >= top - SET_SPAN);
 }
 export function randomItem(ilvl, mf = 0, bonus = 1, slot = null, D = null, good = 1, force = null, luck = 1) {
   let rarity = force || rollRarity(mf, bonus, D, good, luck);
@@ -311,7 +312,7 @@ export function randomItem(ilvl, mf = 0, bonus = 1, slot = null, D = null, good 
     return makeRandomUnique(ilvl, slot);
   }
   if (rarity === "set") {
-    const list = setsNear(SETS.filter((s) => !s.tier && s.lvl <= ilvl + 2), ilvl).flatMap((s) => s.pieces.filter((p) => !slot || BASE[p.base].slot === slot).map((p) => [s, p]));
+    const list = setPool((s) => !s.tier, ilvl, 2).flatMap((s) => s.pieces.filter((p) => !slot || BASE[p.base].slot === slot).map((p) => [s, p]));
     if (list.length) { const [s, p] = pick(list); return makeSetItem(s, p, ilvl); }
     rarity = "rare";
   }
@@ -746,7 +747,7 @@ export function streakRoll(n, lvl, st, D = DIFFICULTY.medio, easy = false) {
   // Fácil never gives the three top tiers: they become a unique
   if (easy && ["mitico", "legendario", "ancestral"].includes(kind)) [kind, label] = ["item", "un objeto único"];
   Object.assign(out, { face, bonus, total, kind, label });
-  if (kind === "gold") out.gold = Math.round(D.gold * (20 + lvl * 6) * (1 + n / 10) * (0.8 + Math.random() * 0.4) * (1 + (st.gf || 0) / 100));
+  if (kind === "gold") out.gold = Math.round(D.gold * (200 + lvl * 60) * (1 + n / 10) * (0.8 + Math.random() * 0.4) * (1 + (st.gf || 0) / 100));
   else if (kind === "gem") out.item = makeGem(pick(Object.keys(GEMS)), Math.min(2, gemGrade(lvl) + 1));
   else if (kind === "item") out.item = randomItem(lvl + 2, st.mf || 0, 5, null, D, 1, easy && label.includes("único") ? "unique" : chance(0.25) ? "unique" : chance(0.2) ? "set" : "rare");
   else out.item = randomItem(lvl + 2, st.mf || 0, 5, null, D, 1, kind);

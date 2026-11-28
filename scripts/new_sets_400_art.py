@@ -198,12 +198,22 @@ def _effects(sid, tier, base, slot, fx, lvl):
     return out
 
 
+# the sets of 404-600 (new_sets_600.py): their gloves, shoes, belt, shield and wings from the 204-400 set
+# at the same place, their own hat, body, colours, motif and effects
+import new_sets_600 as N6  # noqa: E402
+LEVEL = {x[0]: round(204 + i * (400 - 204) / (len(SETS) - 1)) for i, x in enumerate(SETS)}
+LEVEL.update({x[0]: round(N6.LO + i * (N6.HI - N6.LO) / (len(N6.SETS) - 1)) for i, x in enumerate(N6.SETS)})
+for sid6, v in N6.LOOK.items():
+    _h, _b, wings_t, gloves_t, feet_t, belt_t, shield_t, *_ = LOOK[v["template"]]
+    LOOK[sid6] = ("x", v["body"], wings_t if v["wings"] is False else v["wings"], gloves_t, feet_t, belt_t, shield_t, v["main"], v["acc"], v["motif"], v["fx"])
+SETS = list(SETS) + list(N6.SETS)
+
 NEW_RECIPES, NEW_FX, NEW_ICONS, NEW_STOPS = {}, {}, {}, {}
 from new_sets_400 import KIT, JEWEL  # noqa: E402
 for i, (sid, name, tier, elem, listen, kit, weapon, slots, names, neck, lpc) in enumerate(SETS):
     head, body, wings, gloves, feet, belt, shield, main_c, acc_c, motif, fx = LOOK[sid]
     NEW_STOPS[sid] = (ramp(main_c), ramp(acc_c))
-    lvl = round(204 + i * (400 - 204) / (len(SETS) - 1))
+    lvl = LEVEL[sid]
     for code in "hbw" + slots:
         base = weapon if code == "w" else JEWEL[code] if code in "ar" else KIT[kit][code]
         icon = {"g": ICON_OF[gloves], "f": ICON_OF[feet], "t": ICON_OF[belt], "a": "pendant", "r": "ring"}.get(code)
@@ -469,13 +479,18 @@ WEAPON_DRAW = {  # base -> kinds (picked by the set's place)
 SHIELD_DRAW = {"kite": "kite", "round": "round", "scutum": "tower", "heater": "kite", "paint": "sun", "lozenge": "tower"}
 
 
+HAT_OF_LIFT = {pic: lift for pic, lift in HAT_OF.values()}
+HATS.update(N6.HATS)
+HAT_OF.update({sid6: (v["hat"], N6.LIFT.get(v["hat"], dict(HAT_OF_LIFT).get(v["hat"], 3))) for sid6, v in N6.LOOK.items()})
+
+
 def orig_tables(O):
     """{set: {base: [(layer, draw)]}}, {(set, base): weapon}, {(set, base): shield}, in orig_art's terms."""
     m, c, GOLD = O.m, O.c, O.GOLD
 
     def hat_pal(M, A_):
         return {"D": M[1], "M": M[3], "m": M[4], "A": A_[2], "a": A_[3], "B": A_[4], "w": A_[5], "W": "#ffffff", "k": "#141010",
-                "Y": GOLD[3], "y": GOLD[2], "g": "#30c050", "r": "#e03030", "b": "#2a5ae0"}
+                "Y": GOLD[3], "y": GOLD[2], "g": "#30c050", "G": "#80e060", "r": "#e03030", "b": "#2a5ae0"}
 
     def bodies(kind, wing):
         back = [("back", lambda pen, P, side, M, A_: O.wings(pen, P, A_[3], side, tips=A_[5]))] if wing else []

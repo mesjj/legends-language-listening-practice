@@ -49,6 +49,7 @@ TV, film and talk-show episodes are **not** in the repo: they're copyrighted, so
 Key ideas:
 - **Zones are fixed stretches of the episode.** Its lines are shared among the normal groups. The boss only appears once half of them are mastered, and brings the unheard and most-missed ones.
 - **Each zone has three bosses** (`ZONES` `bosses`). An episode meets one, picked at random and kept in `ch.bossPick` until the episode is restarted; always go through `zoneBoss(z)` in `main.js`, never `z.boss`.
+- **Each slot of the road draws one of five zones** (`ZONE_VARIANTS` in `data.js`), kept per episode in `ch.zonePick` until it's restarted. `applyZonePicks()` in `main.js` copies the drawn zone's name, monsters, bosses, scene and music onto the slot's object; progress stays keyed by slot id. The hells' Abismos name their descents (`descentName`).
 - **The Abismo's descents** carry on to the episode's end.
 - **El Remolino** is the last level. It opens when the whole episode is mastered and is rebuilt from the lines you struggled with most.
 - **Progress is per episode** (`ch.zonesByEp`), and a new episode's zone levels are shifted to the character's level.

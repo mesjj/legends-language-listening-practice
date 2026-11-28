@@ -958,6 +958,9 @@ def build(kind, coat, fn, pal, mount):
 
 
 def main():
+    from stable_more import MOUNTS_MORE, PETS_MORE  # levels 21-40
+    SPECIES_PET.update(PETS_MORE)
+    SPECIES_MOUNT.update(MOUNTS_MORE)
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     sheet_out = sys.argv[sys.argv.index("--sheet") + 1] if "--sheet" in sys.argv else None
     if sheet_out in args:

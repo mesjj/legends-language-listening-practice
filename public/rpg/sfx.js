@@ -147,7 +147,46 @@ const BOSS_SOUND = {
   candileja: () => { [0, 0.3, 0.6].forEach((t, i) => { noise(t, 0.5, 0.35, 1200 + i * 400, 0.6); tone("sine", [300 + i * 120, 600 + i * 160], t, 0.3, 0.12); }); rumble(0.6, 1, 0.6, 260, 1400); },
   // chains dragging, a lament
   anima: () => { for (let i = 0; i < 10; i++) noise(i * 0.07 + Math.random() * 0.03, 0.05, 0.3, 5000, 3); voice("triangle", 560, 380, 0.7, 1.3, 0.22, { vib: 16, vibHz: 4, band: 800, q: 2 }); },
+  // the 2026-11-27 bosses
+  // a stag's bark in the fog, twice
+  venadonegro: () => [0, 0.6].forEach((t) => { voice("sawtooth", 260, 150, t, 0.35, 0.3, { band: 800, q: 3, attack: 0.01 }); noise(t, 0.2, 0.1, 1200, 1); }),
+  // wings beating slowly, an icy wind
+  condorhielo: () => { [0, 0.5, 1].forEach((t) => noise(t, 0.35, 0.45, 500, 0.6)); noise(0.1, 1.5, 0.15, 5000, 1.5); },
+  // mule bells and a whistle on the road
+  arrierofantasma: () => { [0, 0.25, 0.5].forEach((t) => voice("triangle", 1320, 1310, t, 0.4, 0.12)); voice("sine", 1500, 1800, 0.9, 0.5, 0.18, { vib: 10, vibHz: 6 }); },
+  // water, and a woman humming
+  mohana: () => { noise(0, 0.5, 0.25, 600, 0.8); [0, 0.5, 1].forEach((t, i) => voice("sine", [392, 440, 349][i], [392, 440, 349][i], 0.3 + t, 0.45, 0.16, { vib: 5, vibHz: 5 })); },
+  // a river dolphin's whistle and a splash
+  bufeoencantado: () => { voice("sine", 1800, 2600, 0, 0.3, 0.15); voice("sine", 2400, 1600, 0.35, 0.3, 0.15); noise(0.8, 0.5, 0.5, 800, 0.6); },
+  // a cracked old scream
+  tarumama: () => { voice("sawtooth", 900, 520, 0, 1.1, 0.28, { vib: 40, vibHz: 11, band: 1200, q: 2 }); noise(0, 1, 0.12, 2400, 1); },
+  // a crow like a lost man calling
+  pollomaligno: () => { voice("sawtooth", 500, 900, 0, 0.25, 0.3, { band: 1200, q: 3 }); voice("sawtooth", 900, 380, 0.25, 0.7, 0.3, { vib: 20, vibHz: 12, band: 1200, q: 3 }); },
+  // heavy steps, a grunt
+  boraro: () => { [0, 0.4, 0.8].forEach((t) => rumble(t, 0.25, 0.6, 110, 40)); voice("sawtooth", 110, 80, 1.1, 0.5, 0.3, { band: 400, q: 2 }); },
+  // dry leaves rising
+  hojarasquin: () => { for (let i = 0; i < 14; i++) noise(i * 0.08 + Math.random() * 0.05, 0.1, 0.22, 3800 + Math.random() * 2000, 1.5); },
+  // a gallop in three beats
+  mulatrespatas: () => [0, 0.15, 0.3, 0.6, 0.75, 0.9].forEach((t) => { rumble(t, 0.1, 0.5, 200, 60); noise(t, 0.04, 0.2, 3000, 1); }),
+  // a machete on a stone, and coins
+  juanmachete: () => { [0, 0.3].forEach((t) => noise(t, 0.22, 0.35, 6000, 3)); [0.8, 0.9, 1.0, 1.08].forEach((t) => voice("triangle", 2600, 2500, t, 0.15, 0.1)); },
+  // a jaguar's roar
+  tigremariposo: () => { voice("sawtooth", 150, 90, 0, 1.2, 0.38, { vib: 18, vibHz: 14, band: 600, q: 2 }); rumble(0, 1.2, 0.5, 90, 50); },
+  // a spell muttered, a chime
+  poira: () => { [0, 0.15, 0.3, 0.45].forEach((t, i) => voice("triangle", 220 + i * 30, 200, t, 0.14, 0.15, { band: 700, q: 4 })); voice("sine", 1600, 2400, 0.7, 0.6, 0.15, { vib: 20, vibHz: 8 }); },
+  // stones on a roof, a giggle
+  duendemayor: () => { [0, 0.18, 0.3, 0.5].forEach((t) => noise(t, 0.06, 0.4, 1500, 2)); [0.8, 0.92, 1.04].forEach((t) => voice("square", 900, 800, t, 0.09, 0.1, { band: 1500, q: 3 })); },
+  // stone grinding awake
+  centinela: () => { noise(0, 1.3, 0.5, 300, 1); rumble(0.2, 1.2, 0.6, 60, 40); },
+  // the earth shaking, water rushing
+  chibchacum: () => { rumble(0, 1.6, 0.9, 50, 30); noise(0.2, 1.4, 0.35, 900, 0.6); },
+  // a goat's bleat in fire
+  buziraco: () => { voice("sawtooth", 420, 380, 0, 0.8, 0.3, { vib: 30, vibHz: 16, band: 1100, q: 3 }); rumble(0, 1.2, 0.6, 400, 1600); },
+  // many voices crying at once
+  madreespantos: () => [520, 610, 700].forEach((f, i) => voice("triangle", f, f * 0.6, i * 0.12, 1.5, 0.14, { vib: 24, vibHz: 5 + i, band: 900, q: 2.5 })),
 };
+// the 2026-11-27 zones' bosses borrow the sound of the old boss most like them (scripts/zones_bosses.py)
+for (const [k, v] of Object.entries({ cacicaguatavita: "llorona", hombredorado: "juanmachete", serpientelaguna: "hombrecaiman", senornevado: "arrierofantasma", avalancha: "centinela", loboventisca: "venadonegro", guardianpalmas: "madremonte", viudaniebla: "llorona", osoviejo: "venadonegro", viejovolcan: "juanmachete", nubeamarilla: "anima", gigantelava: "centinela", madredeagua: "llorona", bambero: "juanmachete", pulpogigante: "bufeoencantado", champanfantasma: "duendemayor", bagreviejo: "bufeoencantado", damario: "llorona", guando: "duendemayor", anacondamadre: "hombrecaiman", senorlluvia: "anima", macarenia: "madremonte", arcoirisagua: "hombrecaiman", guardiansierra: "centinela", yacumama: "hombrecaiman", chullachaqui: "juanmachete", madreceiba: "madremonte", jaguarpintura: "tigremariposo", duenoanimales: "juanmachete", cascadaviva: "anima", reyguacharos: "condorhielo", bocacueva: "duendemayor", aranamadre: "patasola", hombresincamino: "anima", tigredarien: "tigremariposo", cienagatraga: "bufeoencantado", gliptodonte: "venadonegro", espantotatacoa: "anima", estrellacaida: "anima", vientohabla: "anima", piratacabo: "juanmachete", toroarena: "venadonegro", hormigareina: "patasola", diablocanon: "buziraco", condorviejo: "condorhielo", senorvolcan: "centinela", serpientefuego: "hombrecaiman", pajarolava: "condorhielo", duenotumba: "juanmachete", granurna: "duendemayor", serpientepintada: "hombrecaiman", corsario: "juanmachete", castillovivo: "centinela", galeonhundido: "duendemayor", noviamompox: "llorona", orfebreplata: "juanmachete", relojplaza: "duendemayor", gigantesal: "centinela", vetaviva: "hombrecaiman", capataz: "juanmachete", guardianlinea: "buziraco", ira: "buziraco", montanasaplastan: "centinela", carcelerofrio: "arrierofantasma", granloto: "anima", ventiscaeterna: "llorona", shalmali: "madremonte", barquerorio: "juanmachete", cuervomayor: "condorhielo", puertaviva: "duendemayor", fogoneterno: "duendemayor", piedrarecuerda: "centinela" })) BOSS_SOUND[k] ||= BOSS_SOUND[v];
 // pentatonic steps, so a long streak keeps climbing without sounding wrong
 const STEP = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
 const note = (base, k) => base * Math.pow(2, STEP[Math.min(k, STEP.length - 1)] / 12);

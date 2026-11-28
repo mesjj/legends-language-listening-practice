@@ -252,15 +252,25 @@ def obj(d):
     return "{" + ", ".join(f"{k}: {js(v)}" for k, v in d.items()) + "}"
 
 
+def level(i, n, lo, hi):
+    return round(lo + i * (hi - lo) / (n - 1))
+
+
 def main():
+    write(SETS, 204, 400, "  // levels 204-400 (2026-11-27, scripts/new_sets_400.py): Colombian places and legends, and the Buddhist lineages",
+          {"": "canocristales", "ancestral": "huitaca", "legendario": "sombreron", "mitico": "dzogchen"})
+
+
+def write(SETS, lo, hi, comment, tiers_old):
+    """Writes the sets into data.js, their colours into build_lpc.py and build_scenes.py; refuses if there."""
     data_p = os.path.join(ROOT, "public", "rpg", "data.js")
     data = open(data_p, encoding="utf-8").read()
-    if 'id: "teyuna"' in data:
+    if f'id: "{SETS[0][0]}"' in data:
         raise SystemExit("already there")
     n = len(SETS)
-    lines = ["  // levels 204-400 (2026-11-27, scripts/new_sets_400.py): Colombian places and legends, and the Buddhist lineages"]
+    lines = [comment]
     for i, (sid, name, tier, elem, listen, kit, weapon, slots, names, neck, lpc) in enumerate(SETS):
-        L = round(204 + i * (400 - 204) / (n - 1))
+        L = level(i, n, lo, hi)
         m = TIER[tier]
         codes = "hbw" + slots
         assert len(codes) == len(names), sid
@@ -317,14 +327,13 @@ def main():
     order = re.findall(r'"(\w+)"', m.group(1))
     by_tier = {t: [x[0] for x in SETS if x[2] == t] for t in TIER}
     # insert each tier's new sets after the last old set of that tier
-    tiers_old = {"": "canocristales", "ancestral": "huitaca", "legendario": "sombreron", "mitico": "dzogchen"}
     for t, after in tiers_old.items():
         j = order.index(after) + 1
         order[j:j] = by_tier[t]
     new = "NECK_ORDER = [" + ",\n              ".join(", ".join(f'"{x}"' for x in order[k:k + 12]) for k in range(0, len(order), 12)) + "]\n"
     s = s[:m.start()] + new + s[m.end():]
     open(sc_p, "w", encoding="utf-8").write(s)
-    print(f"{n} sets, levels 204-400")
+    print(f"{n} sets, levels {lo}-{hi}")
 
 
 if __name__ == "__main__":

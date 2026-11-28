@@ -1,6 +1,6 @@
 // Leyendas: a listening RPG. Every attack is a listening exercise on a line of the episode.
 import { $, esc, store, api, md, CFG, logout, playable, chooseBlanks, isSound, scoreDictation, scoreCloze, flagLine, norm, hash, accentKey } from "../listen-core.js";
-import { RARITY, SLOTS, BASE, CLASSES, ZONES, BOSSES, EASY_ROSTER, MONSTER_MODS, POTIONS, SETS, GEMS, RUNE, CRAFT, TIERS, BANDS, SPELLS, PETS, PET_KIND, MOUNTS, COMPANION_MIN_SECONDS, STABLE_LEVELS, STABLE_KINDS, STABLE_DROP, PROPS, TUNJO_ITEMS, POWERS, RUNAS, RUNA, RUNA_TIERS, RUNA_SETS } from "./data.js";
+import { RARITY, SLOTS, BASE, CLASSES, ZONES, ZONE_VARIANTS, BOSSES, EASY_ROSTER, MONSTER_MODS, POTIONS, SETS, GEMS, RUNE, CRAFT, TIERS, BANDS, SPELLS, PETS, PET_KIND, MOUNTS, COMPANION_MIN_SECONDS, STABLE_LEVELS, STABLE_KINDS, STABLE_DROP, PROPS, TUNJO_ITEMS, POWERS, RUNAS, RUNA, RUNA_TIERS, RUNA_SETS } from "./data.js";
 import * as E from "./engine.js";
 import { figureSvg, itemIconSvg, monsterSvg, loadFigure, loadAnims, fightFigure, attackAnim, lookOfChar, stanceLoop, SHOW_SLOTS, setPieceFor, shirtChoice } from "./figure.js";
 import { loadLook, lookData, prepareLook, defaultLook, randomLook, fixLook, fits } from "./look.js";
@@ -99,8 +99,18 @@ const modeOf = (zid) => ch.zones[zid]?.mode || "verb";
 // Which drops fall unidentified: set (green), ancestral (pink), legendary (red) and mythic (light blue).
 // Rare and unique pieces come identified; any left unidentified from before are identified on load.
 const UNID = new Set(["set", "ancestral", "legendario", "mitico"]);
+// What you've identified once you know: the same item (rarity, base and name) falls identified after that
+// (ch.knownIds). Saves from before it learn from what you own already identified.
+const idKey = (it) => `${it.rarity}|${it.base}|${it.set || ""}|${it.name || ""}`;
+const knownId = (it) => !!ch.knownIds?.[idKey(it)];
+function markUnid(it) {
+  if (it && !it.kind && UNID.has(it.rarity) && !knownId(it)) it.unid = true;
+  return it;
+}
 function identifyOld() {
-  for (const it of [...ch.inv, ...(ch.stash || [])]) if (it?.unid && !UNID.has(it.rarity)) delete it.unid;
+  const all = [...Object.values(ch.equip || {}), ...ch.inv, ...(ch.stash || [])].filter(Boolean);
+  if (!ch.knownIds) { ch.knownIds = {}; for (const it of all) if (!it.kind && !it.unid && UNID.has(it.rarity)) ch.knownIds[idKey(it)] = 1; }
+  for (const it of all) if (it.unid && (!UNID.has(it.rarity) || knownId(it))) { delete it.unid; delete it.idLine; }
 }
 // Runes were taken out of the game. In an older save, loose ones are sold at their price, socketed
 // ones come out (refunded the same, so the socket is free again), and a runeword keeps everything it
@@ -184,13 +194,35 @@ function useEpisodeZones() {
   }
   ch.zonesEp = S.ep;
   ch.zones = by[S.ep];
+  applyZonePicks();
 }
 const epShift = () => ch?.epShift?.[S.ep] || 0;
+// Each slot of the road (the five zones and the Abismo) can be one of several zones (data.js ZONE_VARIANTS, its
+// own first): an episode draws one per slot the first time it's opened and keeps it (ch.zonePick, per episode)
+// until it's restarted. The variant lends the slot its name, blurb, scene, monsters, bosses, easy roster,
+// particles, music and the Abismo's named descents; levels and progress stay the slot's (ch.zones by slot id).
+const ZONE_BASE = Object.fromEntries(GAME_ZONES.map((z) => [z.id, { id: z.id, name: z.name, blurb: z.blurb, monsters: z.monsters, bosses: z.bosses }]));
+const zoneChoices = (slot) => [ZONE_BASE[slot], ...(ZONE_VARIANTS[slot] || [])];
+function applyZonePicks() {
+  const picks = ch && S.ep && !S.T?.zones ? ((ch.zonePick ||= {})[S.ep] ||= {}) : null;
+  let changed = false;
+  for (const z of GAME_ZONES) {
+    const opts = zoneChoices(z.id);
+    let v = picks ? opts.find((o) => o.id === picks[z.id]) : opts[0];
+    if (!v) { v = opts[Math.floor(Math.random() * opts.length)]; picks[z.id] = v.id; changed = true; }
+    Object.assign(z, { name: v.name, blurb: v.blurb, monsters: v.monsters, bosses: v.bosses, boss: v.bosses[0], scene: v.id, variant: v.id, easy: v.easy, descents: v.descents });
+  }
+  if (changed) save();
+}
+// a descent's name: the hells name theirs, the rest are numbered
+const descentName = (z, d) => (z?.descents?.[d] ? `Descenso ${d + 1}: ${z.descents[d]}` : `Descenso ${d + 1}`);
 // the button on the map: this episode's zones as if opening it for the first time, at your level now
 function restartEpisode() {
   ch.zonesByEp[S.ep] = { paramo: { pack: 0, cleared: false, depth: 0 } };
   ch.epShift[S.ep] = Math.max(0, (ch.level || 1) - 1);
   if (ch.bossPick) delete ch.bossPick[S.ep]; // and maybe other bosses this time
+  if (ch.zonePick) delete ch.zonePick[S.ep]; // and other zones
+  applyZonePicks();
   ch.zones = ch.zonesByEp[S.ep];
   save();
 }
@@ -2053,9 +2085,9 @@ function descentList(z, zp) {
   const rows = [];
   for (let d = 0; d < n; d++) {
     const zl = zoneLines(z, d);
-    rows.push(row(d, `Descenso ${d + 1}`, `${fmtTime(S.T.segments[zl[0]].start)}–${fmtTime(S.T.segments[zl[zl.length - 1]].end)}`));
+    rows.push(row(d, descentName(z, d), `${fmtTime(S.T.segments[zl[0]].start)}–${fmtTime(S.T.segments[zl[zl.length - 1]].end)}`));
   }
-  if (deep >= n) rows.push(row(deep === cur ? cur : deep, `Descenso ${(deep === cur ? cur : deep) + 1}`, "el episodio vuelve a empezar"));
+  if (deep >= n) rows.push(row(deep === cur ? cur : deep, descentName(z, deep === cur ? cur : deep), "el episodio vuelve a empezar"));
   return `<p class="dim small">${n} descensos hasta el final del episodio; cada uno es el tramo siguiente. Más hondo, el episodio vuelve a empezar, más duro.</p><ol class="descents">${rows.join("")}</ol>`;
 }
 function renderMap() {
@@ -2078,7 +2110,7 @@ function renderMap() {
         ${ZONES.map((z, i) => {
           const zp = ch.zones[z.id] || { pack: 0 };
           const open = unlocked(i);
-          const prog = z.endless ? `Descenso ${(zp.depth || 0) + 1} · ${zp.pack < z.packs ? `grupo ${zp.pack + 1}` : bossReady(z, zp.depth || 0) ? `te espera ${BOSSNAME(z)}` : `${BOSSNAME(z)} aparece cuando domines la mitad de las frases (${bossNeed(z, zp.depth || 0)})`}`
+          const prog = z.endless ? `${descentName(z, zp.depth || 0)} · ${zp.pack < z.packs ? `grupo ${zp.pack + 1}` : bossReady(z, zp.depth || 0) ? `te espera ${BOSSNAME(z)}` : `${BOSSNAME(z)} aparece cuando domines la mitad de las frases (${bossNeed(z, zp.depth || 0)})`}`
             : zp.cleared ? `Liberada. Puedes volver a por botín.`
             : zp.pack >= z.packs && !bossReady(z) ? `${BOSSNAME(z)} aparece cuando domines la mitad de las frases (${bossNeed(z)})`
             : zp.pack >= z.packs ? `Te espera ${BOSSNAME(z)}`
@@ -2093,12 +2125,12 @@ function renderMap() {
         }).join("")}
         ${remolinoCard()}
       </ol>
-      ${S.T.zones ? "" : `<p class="restartep"><button id="restartEp">Empezar este episodio de nuevo</button> <span class="dim">Vuelve al Páramo con las zonas a tu nivel (${ch.level}), como la primera vez. Lo que has dominado y tus puntos débiles se quedan.</span></p>`}
+      ${S.T.zones ? "" : `<p class="restartep"><button id="restartEp">Empezar este episodio de nuevo</button> <span class="dim">Vuelve a la primera zona con todas a tu nivel (${ch.level}), como la primera vez, y quizá con otras zonas. Lo que has dominado y tus puntos débiles se quedan.</span></p>`}
     </section>`;
   $("#toTown").onclick = () => show("town");
   const re = $("#restartEp");
   if (re) re.onclick = () => {
-    const d = dialog(`<h3>¿Empezar este episodio de nuevo?</h3><p>Las zonas vuelven a cerrarse y empiezan en tu nivel actual (${ch.level}): el Páramo será nivel ${ch.level}–${ch.level + 4}. Pierdes el avance por las zonas y los descensos de este episodio; las frases dominadas, los premios ya recibidos y tus puntos débiles se quedan.</p>
+    const d = dialog(`<h3>¿Empezar este episodio de nuevo?</h3><p>Las zonas vuelven a cerrarse y empiezan en tu nivel actual (${ch.level}): la primera será nivel ${ch.level}–${ch.level + 4}. Cada zona se vuelve a sortear, así que pueden tocarte otras zonas y otros jefes. Pierdes el avance por las zonas y los descensos de este episodio; las frases dominadas, los premios ya recibidos y tus puntos débiles se quedan.</p>
       <p class="row"><button class="primary" id="reYes">Empezar de nuevo</button> <button id="reNo">Cancelar</button></p>`);
     d.querySelector("#reNo").onclick = closeDialog;
     d.querySelector("#reYes").onclick = () => { restartEpisode(); closeDialog(); renderMap(); toast("El episodio empieza de nuevo a tu nivel"); };
@@ -2176,7 +2208,7 @@ function cardFight(name) {
   const home = reached[reached.length - 1] || ZONES[0];
   const lvl = Math.max(home.lvl[0], Math.min(ch.level, home.lvl[1]));
   // flat: it stays at this level however many cards you do (a long review shouldn't get deadlier)
-  S.zone = { id: "repaso", name, review: true, lvl: [lvl, lvl], monsters: home.monsters, easy: EASY_ROSTER[home.id], boss: zoneBoss(home), packs: 9999, endless: true, flat: true };
+  S.zone = { id: "repaso", name, review: true, lvl: [lvl, lvl], monsters: home.monsters, easy: home.easy || EASY_ROSTER[home.id], boss: zoneBoss(home), packs: 9999, endless: true, flat: true };
   ch.zones.repaso = { pack: 0, cleared: false, depth: 0 };
   try { startEncounter(); }
   catch (e) { console.error(e); S.F = null; S.review = null; show("map"); toast(`No se pudo abrir el repaso: ${e.message}`, "", 5000); }
@@ -2772,7 +2804,7 @@ function renderFight() {
   screen.innerHTML = `
     <section class="fight">
       <div class="fighthead">
-        <div><b>${esc(S.zone.name)}</b> <span class="dim">${F.review ? `${S.review?.source === "subj" ? "Subjuntivo o no" : "Repaso de Anki"} · grupo ${zp.pack + 1}` : S.zone.fights ? `${LEVEL_NAME[courseFight(S.zone, zp.pack).mode]}${F.enc.boss ? " · jefe" : ` · combate ${zp.pack + 1} de ${S.zone.packs}`}` : F.enc.boss ? "Jefe" : F.extra ? `${S.zone.endless ? `Descenso ${(zp.depth || 0) + 1} · ` : ""}grupo extra · ${bossNeed(S.zone, zp.depth || 0)} frases para el jefe` : S.zone.endless ? `Descenso ${(zp.depth || 0) + 1} · grupo ${zp.pack + 1}` : `Grupo ${zp.pack + 1} de ${S.zone.packs}`} · nivel ${F.enc.lvl} · ${E.diffOf(ch).name}</span>
+        <div><b>${esc(S.zone.name)}</b> <span class="dim">${F.review ? `${S.review?.source === "subj" ? "Subjuntivo o no" : "Repaso de Anki"} · grupo ${zp.pack + 1}` : S.zone.fights ? `${LEVEL_NAME[courseFight(S.zone, zp.pack).mode]}${F.enc.boss ? " · jefe" : ` · combate ${zp.pack + 1} de ${S.zone.packs}`}` : F.enc.boss ? "Jefe" : F.extra ? `${S.zone.endless ? `${descentName(S.zone, zp.depth || 0)} · ` : ""}grupo extra · ${bossNeed(S.zone, zp.depth || 0)} frases para el jefe` : S.zone.endless ? `${descentName(S.zone, zp.depth || 0)} · grupo ${zp.pack + 1}` : `Grupo ${zp.pack + 1} de ${S.zone.packs}`} · nivel ${F.enc.lvl} · ${E.diffOf(ch).name}</span>
           <div class="dim small fsub"><span id="groupMastery"></span><span class="tmini" id="today">${todayHtml(true)}</span></div></div>
         <div class="combo" id="combo"></div>
         <button id="portal" class="ghost" title="${F.review ? "Vuelves a la aldea con el oro que llevas ganado." : "Vuelves a la aldea. El grupo actual se reinicia."}">Volver a la aldea</button>
@@ -2990,7 +3022,7 @@ function streakDice(F, kind = "racha") {
   lineLog({ ev: "dice", kind, streak: K.n(F), roll: r.roll, need: r.need, win: !!r.win, prize: r.win ? (r.gold ? { gold: r.gold } : { rarity: r.item?.rarity, name: r.item ? E.itemName(r.item) : null }) : null });
   if (!r.win) return addLog(`${dieIco(kind)} ${K.name}: sale <b>${r.roll}</b>; ganabas con ${r.need === 1 ? "un 1" : `1 a ${r.need}`} (${r.need}% de probabilidad). Sin premio.`, "dice"), r;
   ch.stats.diceWins = (ch.stats.diceWins || 0) + 1;
-  if (!r.gold && !r.item.kind && UNID.has(r.item.rarity)) r.item.unid = true;
+  if (!r.gold) markUnid(r.item);
   // The prize is yours, but it shows up (purse, bag, log) only when the dice reveal it, so the inventory
   // doesn't give it away first. r.grant() is called by the show at the reveal, and also if the show is
   // closed early, after a while in any case, or when the page goes away: it can't be lost.
@@ -3336,7 +3368,7 @@ function currentTarget() {
 // streak adds. Streak tiers: 3 (gold), 5 (fire), 7 (crimson), 10 (the cap: electric blue).
 const STREAK = [[10, "max", "¡Racha máxima!"], [7, "t3", "¡Imparable!"], [5, "t2", "¡En llamas!"], [3, "t1", "¡Racha!"], [0, "t0", ""]];
 // Zone backdrops behind the fight (scripts/build_scenes.py). ?scene=<id> in the address tries one in every zone.
-const SCENES = new Set(["paramo", "cienaga", "selva", "llano", "ruinas", "abismo"]);
+const SCENES = new Set(["paramo", "cienaga", "selva", "llano", "ruinas", "abismo", ...Object.values(ZONE_VARIANTS).flat().map((v) => v.id)]);
 // What moves in each scene: [kind, how many]. Each particle gets a random place, size, speed and
 // delay (CSS custom properties); the motion itself is in rpg.css (.sfx-<kind>).
 const SCENE_FX = {
@@ -3347,6 +3379,7 @@ const SCENE_FX = {
   ruinas: [["shaft", 3], ["dust", 22], ["mist", 3]],
   abismo: [["spark", 26], ["glow", 1], ["ash", 14]],
 };
+for (const v of Object.values(ZONE_VARIANTS).flat()) { SCENE_FX[v.id] = v.fx; MUSIC.addTrack(v.id, v.music); }
 function sceneFx(id) {
   const r = (a, b) => (a + Math.random() * (b - a)).toFixed(2);
   return `<div class="scenefx" aria-hidden="true">${(SCENE_FX[id] || []).flatMap(([k, n]) => Array.from({ length: n }, (_, i) =>
@@ -3995,15 +4028,14 @@ function zoneRewardsAt(z, depth) {
     const key = zoneRewardKey(z, depth, kind);
     if (ch.zoneRewards?.[key] || mastered(lines, kind) < lines.length) continue;
     const rarity = kind === "dict" || Math.random() < 0.3 ? "mitico" : "legendario";
-    const it = E.randomItem(Math.max(ch.level, atLevel(z).lvl?.[0] || 1) + 2, 0, 1, null, null, 1, rarity);
-    it.unid = true;
+    const it = markUnid(E.randomItem(Math.max(ch.level, atLevel(z).lvl?.[0] || 1) + 2, 0, 1, null, null, 1, rarity));
     const where = stow(it);
     if (!where && S.F?.ground) S.F.ground.items.push(it);
     else if (!where) continue; // nowhere to put it: try again later
     (ch.zoneRewards ||= {})[key] = true;
     save();
     const what = kind === "dict" ? "todas las frases escritas enteras" : "todos los huecos rellenados";
-    const zname = z.endless ? `${z.name}, descenso ${depth + 1}` : z.name;
+    const zname = z.endless ? `${z.name}, ${descentName(z, depth).replace(/^D/, "d")}` : z.name;
     if (S.F) addLog(`<b>¡${esc(zname)} dominada!</b> ${what} al 100%. Premio: un objeto <span style="color:${E.itemColor(it)}">${RARITY[rarity].name.toLowerCase()}</span> (${where || "en el suelo"}).`, "good");
     celebrate({ z, kind, n: lines.length, it, where: where || "al suelo: recógelo al terminar el combate" });
   }
@@ -4047,7 +4079,7 @@ function awardCompanion(type) {
   let it = null, where = null;
   if (id) addAnimal(type, id);
   else { // every coat already: a legendary instead
-    it = E.randomItem(ch.level + 2, 0, 1, null, null, 1, "legendario"); it.unid = true;
+    it = markUnid(E.randomItem(ch.level + 2, 0, 1, null, null, 1, "legendario"));
     where = stow(it);
     if (!where && S.F?.ground) S.F.ground.items.push(it);
   }
@@ -4454,7 +4486,7 @@ function kill(m) {
   // flash cards (Anki's, La encrucijada's) pay gold only: nothing falls to pick up
   const items = F.review ? [] : mul < 1 ? loot.items.filter(() => Math.random() < mul) : loot.items;
   // good things fall unidentified: you find out what they are by ear (Identificar)
-  for (const it of items) if (!it.kind && UNID.has(it.rarity)) it.unid = true;
+  for (const it of items) markUnid(it); // unless you've identified one just like it before
   m.drops = items;
   logDrops(items, m);
   if (items.some((it) => it.kind === "relic")) addLog(`<b style="color:${RARITY.relic.color}">¡Un Transformador del montón!</b> Cae muy rara vez: en la aldea, en el Montón, convierte cada ${MOUND_STEP} gemas perfectas en un mítico, una mascota o una montura.`, "good");
@@ -4641,8 +4673,7 @@ function victory() {
   if (wasBoss) {
     if (S.zone.dynamic) {
       const rarity = zp.wins ? "legendario" : "mitico";
-      const it = E.randomItem(S.zone.lvl[0] + 2, 0, 1, null, null, 1, rarity);
-      it.unid = true;
+      const it = markUnid(E.randomItem(S.zone.lvl[0] + 2, 0, 1, null, null, 1, rarity));
       const where = stow(it);
       if (!where) F.ground.items.push(it);
       addLog(`<b>¡El Remolino, superado!</b> Lo que más te costaba de este episodio, vencido. Premio: un objeto <span style="color:${E.itemColor(it)}">${RARITY[rarity].name.toLowerCase()}</span> (${where || "en el suelo"}). La próxima vez se arma con lo que te cueste entonces.`, "good");
@@ -4763,9 +4794,10 @@ const pickingAll = () => [...PICKUP_KEYS].every((k) => ch.pickup?.[k] !== false)
 
 // Background animations (fog, rain, embers, glows that loop forever) can be turned off: the CPU and GPU
 // rest. One-off effects (hits, dice, celebrations) still play. A setting of this device, like the sound.
-// How far below an item's level its set can be (Opciones; per character, 0 = any set up to the level).
-const setSpan = () => (Number.isFinite(ch?.setSpan) ? ch.setSpan : E.SET_SPAN);
-Object.defineProperty(E.opts, "setSpan", { get: setSpan });
+// The level sets drop at (Opciones; per character): the 40 levels below it and itself. Never above the
+// character's level; unset (0) follows each item's own level.
+const setLevel = () => (ch?.setLevel > 0 ? Math.min(ch.setLevel, ch.level) : 0);
+Object.defineProperty(E.opts, "setLevel", { get: setLevel });
 const calmOn = () => localStorage.getItem("rpgCalm") === "1";
 const applyCalm = () => document.body.classList.toggle("calm", calmOn());
 applyCalm();
@@ -4779,8 +4811,8 @@ function openOptions() {
     <label class="pickopt"><input type="checkbox" id="optAnim" ${calmOn() ? "" : "checked"}><span>Animaciones de fondo</span></label>
     <p class="dim">La niebla, la lluvia y las chispas de las escenas, y los brillos que laten sin parar. Sin ellas, el ordenador trabaja menos y se calienta menos. Los golpes, los dados y las celebraciones se ven igual.</p>
     <h4>Conjuntos que caen</h4>
-    <label class="pickopt spanopt">Solo conjuntos de hasta <input type="number" id="optSpan" min="0" max="400" step="1" value="${setSpan()}" inputmode="numeric"> niveles por debajo del objeto</label>
-    <p class="dim">Con 40, un objeto de nivel 300 trae un conjunto de entre el nivel 260 y el 300. Con 0 no hay límite: puede salir cualquier conjunto hasta su nivel, también los más bajos.</p>
+    <label class="pickopt spanopt">Conjuntos de nivel <input type="number" id="optSetLvl" min="1" max="${ch.level}" step="1" value="${setLevel() || ""}" placeholder="—" inputmode="numeric"> y hasta ${E.SET_SPAN} niveles por debajo</label>
+    <p class="dim">Con 300, caen conjuntos de entre el nivel 260 y el 300, estés donde estés. No puede pasar de tu nivel (${ch.level}). En blanco, cada objeto trae conjuntos de cerca de su propio nivel.</p>
     <h4>Qué recoge el botón de recoger</h4>
     <p class="dim">Al acabar un combate, el botón principal recoge solo lo que marques aquí; lo demás se queda en el suelo, y siempre puedes recogerlo a mano con un clic.</p>
     ${PICKUP.map((g) => `<fieldset class="pickgroup"><legend>${g.title}${g.hint ? ` <span class="dim">· ${g.hint}</span>` : ""}</legend>${g.keys.map(box).join("")}</fieldset>`).join("")}
@@ -4792,10 +4824,10 @@ function openOptions() {
     <div class="row"><button id="pickAll" class="ghost">Marcarlo todo</button><button id="pickNone" class="ghost">No marcar nada</button><button id="optClose" class="primary">Listo</button></div>`, { cls: "optdlg" });
   d.querySelectorAll("[data-lang]").forEach((b) => (b.onclick = () => { if (b.dataset.lang !== lang()) setLang(b.dataset.lang); }));
   d.querySelector("#optAnim").onchange = (e) => { localStorage.setItem("rpgCalm", e.target.checked ? "0" : "1"); applyCalm(); };
-  d.querySelector("#optSpan").onchange = (e) => {
-    const n = Math.max(0, Math.min(400, Math.round(Number(e.target.value))));
-    ch.setSpan = Number.isFinite(n) ? n : E.SET_SPAN;
-    e.target.value = ch.setSpan;
+  d.querySelector("#optSetLvl").onchange = (e) => {
+    const n = Math.round(Number(e.target.value));
+    ch.setLevel = e.target.value.trim() && n > 0 ? Math.min(n, ch.level) : 0;
+    e.target.value = ch.setLevel || "";
     save();
   };
   const sync = () => { save(); renderGround(); };
@@ -5122,6 +5154,8 @@ function trial({ title, sub = "", clip, buttons = [], onResult, onFlag, maxPlays
 const ID_WORDS = { rare: [4, 8], set: [6, 11], unique: [8, 15], ancestral: [9, 16], legendario: [10, 18], mitico: [12, 22] };
 function revealItem(it) {
   delete it.unid; delete it.idLine;
+  (ch.knownIds ||= {})[idKey(it)] = 1;
+  for (const x of [...ch.inv, ...ch.stash]) if (x.unid && knownId(x)) { delete x.unid; delete x.idLine; } // others just like it
   ch.stats.identified = (ch.stats.identified || 0) + 1;
   save(); renderPanels(); if (S.view === "town" && S.townTab === "stash") renderTown(); // the stash shows the identify button's count
   sfx.identify();
@@ -5564,4 +5598,4 @@ async function quickStart() {
 }
 
 // for debugging in the console
-window.leyendas = { S, get ch() { return ch; }, E, socket, toAlembic, tooltipHtml2: (it) => tooltipHtml(it), showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats, zoneBoss, restartEpisode, enterEncrucijada, identify };
+window.leyendas = { S, get ch() { return ch; }, E, socket, toAlembic, tooltipHtml2: (it) => tooltipHtml(it), showDice, streakDice, tooltipHtml, zoneLines, exKey, chunks, renderMap, renderFight, perfectMap, checkCompanions, epPerfect, renderMe, renderTown, wanted, isUpgrade, victory, powerWith, stats, zoneBoss, restartEpisode, enterEncrucijada, identify, applyZonePicks };

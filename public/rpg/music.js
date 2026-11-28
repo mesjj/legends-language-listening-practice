@@ -257,5 +257,13 @@ function play(c, n, t) {
   }
   if (T.fx && s === 0 && Math.random() < T.fx[1]) FX[T.fx[0]](dest, t + Math.random() * barLen * 0.5);
 }
+// A zone added on 2026-11-27 (data.js ZONE_VARIANTS) plays a piece built on one of these: the same band, its own
+// seed (another tune), and its own key, mode and tempo.
+const SCALES = { MAJ, MIN, DOR, PHR, HARM, LOC };
+export function addTrack(id, { base, seed, root, scale, tempo = 1 }) {
+  const T = TRACKS[base];
+  if (!T || TRACKS[id]) return;
+  TRACKS[id] = { ...T, seed, root: root ?? T.root, scale: SCALES[scale] || T.scale, step: T.step * tempo };
+}
 export const PLACES = Object.keys(TRACKS);
 export const nowPlaying = () => cur?.id || null;
